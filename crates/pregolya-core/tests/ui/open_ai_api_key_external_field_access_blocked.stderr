@@ -1,11 +1,11 @@
 error[E0532]: cannot match against a tuple struct which contains private fields
-  --> tests/ui/open_ai_api_key_match_without_dots_fails.rs:14:9
+  --> tests/ui/open_ai_api_key_external_field_access_blocked.rs:16:9
    |
-14 |     let pregolya_core::OpenAiApiKey(_inner) = key;
+16 |     let pregolya_core::OpenAiApiKey(_inner) = key;
    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
    |
 note: constructor is not visible here due to private fields
-  --> tests/ui/open_ai_api_key_match_without_dots_fails.rs:14:37
+  --> tests/ui/open_ai_api_key_external_field_access_blocked.rs:16:37
    |
-14 |     let pregolya_core::OpenAiApiKey(_inner) = key;
+16 |     let pregolya_core::OpenAiApiKey(_inner) = key;
    |                                     ^^^^^^ private field

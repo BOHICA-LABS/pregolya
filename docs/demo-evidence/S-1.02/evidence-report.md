@@ -222,482 +222,44 @@ Gate outputs remain valid because the syn rewrite finds the same 0 violations on
 
 The fix-burst-26 evidence-report docs commit (this commit) is docs-only and does NOT trigger clause (d).
 
-## fix-burst-27 re-verification
+## fix-burst-49 re-verification
 
-**Clause (d) analysis:** `check_client_timeout.rs` was modified (new `visit_expr_macro`/`visit_stmt_macro`/`visit_item_macro` methods, `scan_macro_tokens_for_timeout_violations` function, `classify_client_new` and `classify_builder_constructor` extended, `analyze_build_chain` OBS-001 fix). Evidence-report validity requires per-detection-class test attestation for scanner logic changes.
+**Adversary pass 47 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH + 4 MED + 5 LOW.
 
-**Per-detection-class test attestation:**
+| Finding | Severity | Detection class | Load-bearing artifact |
+|---------|----------|-----------------|-----------------------|
+| F-P47-HIGH-001 | HIGH | Structural regression (probe coupled to transient branch) | `run_self_probes` probe G now creates PID-unique `refs/heads/feature/records-lint-selfprobe-g-$$`; synthetic STATE.md references that branch with mismatched frozen HEAD `000...001`; `check_l13 "$PROBE_L13G"` resolves disposable ref to real HEAD (≠ `000...001`) → FAIL → `probe_must_fail` passes; disposable ref deleted in both success and error paths; no `feature/S-1.02` reference anywhere in probe |
+| F-P47-MED-001 | MED | Silent-skip detection gap | `check_l13` PASS line now emits `LIVE_HEAD_COVERAGE` suffix: `[live-HEAD: checked(feature/S-1.02=matched)]` when branch resolved and SHA matched, `[live-HEAD: skipped(branch-not-found)]` when unresolvable, `[live-HEAD: skipped(no-frozen-sha-in-checkpoint)]` when no frozen SHA; observable difference between executed and skipped paths |
+| F-P47-MED-002 | MED | TD-VSDD-059 paper-fix (non-discriminating fixtures) | Fail fixtures renamed to `open_ai_api_key_external_field_access_blocked.rs` / `anthropic_api_key_external_field_access_blocked.rs`; `.stderr` files updated; `FAIL_FIXTURES` in `non_exhaustive_external_gate::ui()` updated; pass fixtures now call `expose_secret()` (discriminating: fails if `expose_secret` removed or made private); gate doc comment corrected to state E0532 mechanism; story spec v1.25 §File Structure Requirements rows updated |
+| F-P47-MED-003 | MED | TD-VSDD-091 volatile-SHA citation | evidence-report fix-burst-48 MED-001 Load-bearing-artifact cell: SHA tokens `2d71869` and `489584d` removed; replaced with behavioral anchors describing the state-manager burst content |
+| F-P47-MED-004 | MED | Structural defect (destructive backup in trap-deleted PROBE_TMP) | `check_l13` now accepts optional first arg `check_l13 [state_md_path]` defaulting to `${FACTORY_DIR}/STATE.md`; all 7 probes (A–G) call `check_l13 "$PROBE_L13X"` directly with synthetic file; `_L13_CHECK` mirror retired entirely (0 remaining calls); all 3 swap-and-restore windows eliminated; canonical STATE.md never overwritten by probes |
+| F-P47-LOW-001 | LOW | Records accuracy | CHANGELOG fix-burst-48 HIGH-001: "§Session Resume Checkpoint §DEVELOP STATE" corrected to "§Session Resume Checkpoint section (whole awk-delimited section)" |
+| F-P47-LOW-002 | LOW | Records accuracy (conflation) | evidence-report fix-burst-48 HIGH-001 row: Load-bearing-artifact split into two distinct assertions — `probe_must_fail "L13-probe-G"` (asserts on `_L13_CHECK` mirror) and `L13-probe-G-real` inline guard (swap-and-restore on shipped `check_l13`) |
+| F-P47-LOW-003 | LOW | Rust semantics accuracy | CHANGELOG fix-burst-48 MED-004 and evidence-report fix-burst-47 re-verification LOW-002 row: "accessible within the crate" / "accessible within the crate's module tree" corrected to "accessible within the defining module and its descendants" |
+| F-P47-LOW-004 | LOW | Records omission (missing §File Structure Requirements rows) | Story spec v1.24: `open_ai_api_key_match_with_dots_passes.rs` (CREATE), `anthropic_api_key_match_with_dots_passes.rs` (CREATE), `non_exhaustive_external_gate.rs` (MODIFY) rows added; v1.25: fail fixture rows updated to `_external_field_access_blocked` names, pass fixture descriptions corrected |
+| F-P47-LOW-005 | LOW | Records ordering (non-monotonic) | evidence-report.md: all 22 `## fix-burst-N re-verification` sections reordered to strict descending order (48→27) |
 
-| Detection class | Representative tests | Pass |
-|----------------|----------------------|------|
-| Pattern A — direct `Client::new` / `Client::builder` | `test_timeout_scanner_still_flags_reqwest_client_new`, `test_timeout_scanner_flags_clientbuilder_new_without_timeout` | 8/8 |
-| Pattern A — `Client::default` / UFCS | `test_timeout_checker_detects_client_default_qualified`, `test_timeout_checker_detects_client_default_bare` | 4/4 |
-| Pattern B — builder chain via `analyze_build_chain` | `test_timeout_scanner_flags_builder_build_without_timeout_single_line`, `test_timeout_scanner_does_not_flag_builder_with_timeout` | 10/10 |
-| Macro scanning — `scan_macro_tokens_for_timeout_violations` | `test_timeout_checker_detects_reqwest_client_in_thread_local`, `test_timeout_checker_detects_builder_in_lazy_static`, `test_timeout_checker_detects_builder_with_timeout_in_lazy_static` | 3/3 |
-| Test context suppression (including `#[tokio::test]`) | `test_timeout_checker_ignores_tokio_test_fns` | 5/5 |
-| Monotonic-OR / zero-timeout semantics | `test_timeout_checker_last_zero_timeout_overrides_valid` | 2/2 |
+## fix-burst-48 re-verification
 
-Total: 309 pass, 7 skipped (pre-existing `#[ignore]` tests requiring live API keys).
+**Adversary pass 46 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH + 4 MED + 1 OBS.
 
-**Known limitations after fix-burst-27:** KL-1 (bare name via use import), KL-2 (split-statement builder chains), KL-3 (constant-valued ZERO timeout), KL-macro (best-effort flat-token macro scanning for complex nested bodies).
+Fix-burst-48 closed all 5 non-OBS findings from adversary pass-46 (1 HIGH + 4 MED). Test counts unchanged: **253 run: 253 passed, 5 skipped** (xtask per-crate: `cargo nextest run -p xtask`). Full workspace: **345 run: 345 passed, 7 skipped** (`cargo nextest run --workspace`). No Rust code changes — records-only fixes plus `records-lint.sh` L13 live-HEAD check + probe G.
 
-**Docs-only note:** The CHANGELOG and evidence-report update commit that follows the fix-burst-27 code commit is docs-only — no `xtask/src/**/*.rs` files changed, no fixture directory changes, no `CREDENTIAL_FIXTURE_COUNT` changed. Clause (d) does not fire for the docs commit.
+**Detection-class attestation:**
 
----
+| Finding | Load-bearing artifact | Status |
+|---------|----------------------|--------|
+| HIGH-001 (L13 vacuous live-HEAD check) | `check_l13` Step 3.5 updated: live branch HEAD check via `git rev-parse --verify refs/heads/<branch>`; `probe_must_fail "L13-probe-G"` (asserts on `_L13_CHECK` mirror: synthetic frozen HEAD `000...001` != live branch HEAD → FAIL); `L13-probe-G-real` inline guard: swap-and-restore invokes real `check_l13` against same synthetic file and asserts FAIL output; `records-lint.sh` exits 0 | pass |
+| MED-001 (STATE.md stale) | Self-resolved: state-manager burst that recorded D-415 COMPLETE (fix-burst-47 done) and D-416 IN FLIGHT (adversary pass-46 dispatched); no code action required in the feature branch | pass |
+| MED-002 (probes exercised mirror not shipped) | Bundled: probe F extended to invoke real `check_l13` via swap-and-restore; listed with HIGH-001 | pass |
+| MED-003 (banner "Five probes") | Bundled: `run_self_probes` L13 banner updated to "Seven probes (A–G)"; listed with HIGH-001 | pass |
+| MED-004 (false Rust semantics in 3 artifacts) | Story spec AC-008 parenthetical corrected (v1.23); CHANGELOG fix-burst-47 LOW-002 paragraph corrected; evidence-report fix-burst-47 re-verification LOW-002 row corrected. Accurate claim: tests use `from_raw_for_tests()` because it is the explicit `#[cfg(test)]`-gated validation-bypass helper, not because the tuple-struct form is unavailable from within the crate | pass |
 
-## fix-burst-28 re-verification
+**Clause (d) analysis:** fix-burst-48 modifies `.factory/hooks/records-lint.sh` (live-HEAD check added to `check_l13` and `_L13_CHECK`; probe G added; probe F extended; banner updated). No `xtask/src/**/*.rs` scanner logic changed. Clause (d) does NOT fire. Gate output counts remain valid and unchanged.
 
-**Clause (d) analysis:** `check_client_timeout.rs` was modified (new `scan_macro_body_as_ast` function replacing flat-token `scan_macro_tokens_for_timeout_violations`; `analyze_build_chain` extended for UFCS `ClientBuilder` qself; `visit_trait_item_fn` added; module docs updated; KNOWN-LIMITATION 1 and 4 updated). Clause (d) fires — per-detection-class test attestation required.
+**Gate output:** unchanged (25 analyzed / 16 exempt / 0 violations per gate; 14/17 fixture-mode; 148 codes / 0 collisions).
 
-**Per-detection-class test attestation:**
-
-| Detection class | Representative tests | Pass |
-|----------------|----------------------|------|
-| Pattern A — direct `Client::new` / `Client::default` construction | `test_timeout_scanner_still_flags_reqwest_client_new`, `test_timeout_checker_detects_client_default_qualified` | pass |
-| Pattern A — UFCS `<reqwest::Client as Default>::default()` (qself) | `test_timeout_checker_detects_client_ufcs_default_qualified` (positive), `test_timeout_checker_ufcs_non_reqwest_client_as_default_clean` (negative) | pass |
-| Pattern B — builder chain via `analyze_build_chain` | `test_timeout_scanner_flags_builder_build_without_timeout_single_line`, `test_timeout_checker_detects_builder_default_qualified` | pass |
-| Pattern B — UFCS `<reqwest::ClientBuilder as Default>::default()` | `test_timeout_checker_detects_clientbuilder_ufcs_default_no_timeout` | pass |
-| Macro scanning — recursive AST via `scan_macro_body_as_ast` | `test_timeout_checker_detects_reqwest_client_in_thread_local`, `test_timeout_checker_detects_builder_in_lazy_static`, `test_timeout_checker_macro_nested_config_timeout_suppressed_violation` | pass |
-| Macro negative — `Client::builder().timeout().build()` in lazy_static | `test_timeout_checker_macro_client_builder_with_timeout_in_lazy_static` | pass |
-| Test context suppression (including `#[tokio::test]`, trait `#[cfg(test)]`) | `test_timeout_checker_ignores_tokio_test_fns`, `test_timeout_checker_ignores_cfg_test_trait_default_method` | pass |
-| Monotonic-OR / zero-timeout semantics | `test_timeout_checker_last_zero_timeout_overrides_valid` | pass |
-
-All 222 xtask tests pass (314 workspace-wide per pre-push hook). 5 skipped (pre-existing `#[ignore]` tests requiring live API keys).
-
-**Known limitations after fix-burst-28:** KL-1 (bare name via use import), KL-2 (split-statement builder chains), KL-3 (constant-valued ZERO timeout), KL-macro (macro bodies failing all four parse strategies skipped).
-
-**Docs-only note:** The docs commit that follows the fix-burst-28 code commit is docs-only — no `xtask/src/**/*.rs` files changed, no fixture directory changes, no `CREDENTIAL_FIXTURE_COUNT` changed. Clause (d) does not fire for the docs commit.
-
-**Note:** the Pattern-A UFCS (`<reqwest::Client as Default>::default()`) test was added in fix-burst-29 (`test_timeout_checker_detects_client_ufcs_default_qualified`); this attestation row has been back-corrected to reference the load-bearing test.
-
----
-
-## fix-burst-29 re-verification
-
-**Clause (d) analysis:** `check_client_timeout.rs` was modified (UFCS qself extended; Strategy 3 removed; module doc and KL sections updated; two test renames). `tests.rs` was modified (new UFCS tests added; test renames). Clause (d) fires.
-
-**Per-detection-class test attestation:**
-
-| Detection class | Representative tests | Pass |
-|----------------|----------------------|------|
-| Pattern A — `Client::new` | `test_timeout_scanner_still_flags_reqwest_client_new` | pass |
-| Pattern A — `Client::default` (plain path) | `test_timeout_checker_detects_client_default_qualified` | pass |
-| Pattern A — UFCS `<reqwest::Client as Default>::default()` (qself) | `test_timeout_checker_detects_client_ufcs_default_qualified` | pass |
-| Pattern A — UFCS `<reqwest::Client>::new()` | `test_timeout_checker_detects_client_ufcs_new_qualified` | pass |
-| Pattern B — builder chain `analyze_build_chain` | `test_timeout_scanner_flags_builder_build_without_timeout_single_line` | pass |
-| Pattern B — UFCS `<reqwest::ClientBuilder as Default>::default()` | `test_timeout_checker_detects_clientbuilder_ufcs_default_no_timeout` | pass |
-| Pattern B — UFCS `<reqwest::ClientBuilder>::new()` | `test_timeout_checker_detects_clientbuilder_ufcs_new_no_timeout` | pass |
-| Pattern B — UFCS `<reqwest::Client>::builder()` | `test_timeout_checker_detects_client_ufcs_builder_no_timeout` | pass |
-| Macro scanning — `scan_macro_body_as_ast` (3 strategies) | `test_timeout_checker_detects_reqwest_client_in_thread_local`, `test_timeout_checker_detects_builder_in_lazy_static` | pass |
-| Test context suppression | `test_timeout_checker_ignores_tokio_test_fns`, `test_timeout_checker_ignores_cfg_test_trait_default_method` | pass |
-| Known-limitation pinning (KL-1, KL-2, KL-5) | `test_timeout_checker_detects_client_default_bare`, `test_timeout_scanner_split_statement_false_negative_known_limitation`, `test_timeout_checker_module_alias_false_negative_known_limitation` | pass |
-
-Total: 229 xtask tests pass (approximately 320 workspace-wide per pre-push hook). 5 skipped.
-
-**Known limitations after fix-burst-29:** KL-1 (bare name via use import — conservative false positive), KL-2 (split-statement builder chains), KL-3 (constant-valued ZERO), KL-macro (macro bodies failing all three parse strategies), KL-5 (module-alias re-export false negative).
-
-**Docs-only note:** The docs commit following the fix-burst-29 code commits (adding this CHANGELOG + evidence-report section) is docs-only — no `xtask/src/**/*.rs` behavioral changes. Clause (d) does not fire for the docs commit.
-
----
-
-## fix-burst-30 re-verification
-
-**Adversary pass 28 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 2 HIGH + 4 MED + 4 LOW findings.
-
-**Clause (d) analysis:** `check_client_timeout` and `check_no_panic` were modified (`has_cfg_test_attr` / `syn_has_cfg_test` guards added to `visit_expr_macro` and `visit_stmt_macro`; dead `"builder"` arm removed from Pattern-A UFCS qself branch in `visit_expr_call`; angle-bracket depth tracking added to `syn_macro_has_bc_id`). Clause (d) fires — per-detection-class test attestation required.
-
-**Per-detection-class test attestation:**
-
-| Detection class | Representative tests | Pass |
-|----------------|----------------------|------|
-| Pattern A — direct `Client::new` / `Client::default` construction | `test_timeout_scanner_still_flags_reqwest_client_new`, `test_timeout_checker_detects_client_default_qualified` | pass |
-| Pattern A — UFCS `<reqwest::Client as Default>::default()` (qself) | `test_timeout_checker_detects_client_ufcs_default_qualified` (positive), `test_timeout_checker_ufcs_non_reqwest_client_as_default_clean` (negative) | pass |
-| Pattern A — UFCS `<reqwest::Client>::new()` (qself) | `test_timeout_checker_detects_client_ufcs_new_qualified` | pass |
-| Pattern B — builder chain via `analyze_build_chain` | `test_timeout_scanner_flags_builder_build_without_timeout_single_line`, `test_timeout_checker_detects_builder_default_qualified` | pass |
-| Macro scanning — `scan_macro_body_as_ast` Strategy 1 | `test_timeout_checker_detects_reqwest_client_in_thread_local` | pass |
-| Macro scanning — `scan_macro_body_as_ast` Strategy 2 positive detection | `test_timeout_checker_strategy2_detects_statement_macro_violation` | pass |
-| Macro scanning — `scan_macro_body_as_ast` Strategy 3 | `test_timeout_checker_detects_builder_in_lazy_static` | pass |
-| `#[cfg(test)]` stmt macro exempt — `check_client_timeout` | `test_timeout_checker_cfg_test_stmt_macro_not_flagged` | pass |
-| `#[cfg(test)]` stmt macro exempt — `check_no_panic` | `test_no_panic_cfg_test_stmt_macro_not_flagged` | pass |
-| Known-limitation pinning — CT-KL-macro (opaque macro body) | `test_timeout_checker_unparseable_macro_body_known_limitation` | pass |
-| Test context suppression | `test_timeout_checker_ignores_tokio_test_fns`, `test_timeout_checker_ignores_cfg_test_trait_default_method` | pass |
-
-Total: 233 xtask tests pass, 5 skipped.
-
-**Updated known limitations (namespaced IDs):**
-
-| ID | Gate | Status | Description |
-|----|------|--------|-------------|
-| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
-| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
-| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
-| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
-| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
-| NP-KL-1 | `check-no-panic` | Active | Exemption-blind flat-token macro scan (conservative FP direction) |
-| NP-KL-2 | `check-no-panic` | **RESOLVED in fix-burst-30** | Turbofish comma miscounting — angle-bracket depth tracking implemented in `syn_macro_has_bc_id` |
-| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` false negative |
-
-**Clause-(d) coverage summary:** All HIGH and MED findings closed with load-bearing tests. LOW findings: LOW-001 closed with doc expansion (three doc sites updated); LOW-002 closed with `test_timeout_checker_unparseable_macro_body_known_limitation`; LOW-003 closed with doc correction (fix-burst-29 `F-P27-MED-002` attribution "Six" → "Four"); LOW-004 closed by product-owner BC amendment (BC-2.14.004 v1.15).
-
-**Docs-only note:** The docs commit for this fix-burst-30 CHANGELOG and evidence-report update is docs-only — no `xtask/src/**/*.rs` behavioral changes. Clause (d) does not fire for the docs commit.
-
----
-
-## fix-burst-31 re-verification
-
-**Adversary pass 29 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH + 3 MED + 1 LOW findings.
-
-**Clause (d) analysis:** `check_no_panic` was modified (`syn_macro_has_bc_id` turbofish-vs-comparison disambiguation — `<` is now treated as a turbofish opener only when preceded by `::`; `Spacing` imported alongside `TokenTree`). Three new pinning tests added in test-writer commit. Clause (d) fires — per-detection-class test attestation required.
-
-**Per-detection-class test attestation:**
-
-| Detection class | Representative tests | Pass |
-|----------------|----------------------|------|
-| Pattern A — direct `Client::new` / `Client::default` construction | `test_timeout_scanner_still_flags_reqwest_client_new`, `test_timeout_checker_detects_client_default_qualified` | pass |
-| Pattern A — UFCS `<reqwest::Client as Default>::default()` (qself) | `test_timeout_checker_detects_client_ufcs_default_qualified` (positive), `test_timeout_checker_ufcs_non_reqwest_client_as_default_clean` (negative) | pass |
-| Pattern A — UFCS `<reqwest::Client>::new()` (qself) | `test_timeout_checker_detects_client_ufcs_new_qualified` | pass |
-| Pattern B — builder chain via `analyze_build_chain` | `test_timeout_scanner_flags_builder_build_without_timeout_single_line`, `test_timeout_checker_detects_builder_default_qualified` | pass |
-| Macro scanning — `scan_macro_body_as_ast` Strategy 1 | `test_timeout_checker_detects_reqwest_client_in_thread_local` | pass |
-| Macro scanning — `scan_macro_body_as_ast` Strategy 2 | `test_timeout_checker_strategy2_detects_statement_macro_violation` | pass |
-| Macro scanning — `scan_macro_body_as_ast` Strategy 3 | `test_timeout_checker_detects_builder_in_lazy_static` | pass |
-| `#[cfg(test)]` stmt macro exempt — `check_client_timeout` | `test_timeout_checker_cfg_test_stmt_macro_not_flagged` | pass |
-| `#[cfg(test)]` stmt macro exempt — `check_no_panic` | `test_no_panic_cfg_test_stmt_macro_not_flagged` | pass |
-| Exemption-2 BC-ID detection (turbofish condition) | `test_no_panic_exemption2_bc_id_with_turbofish_condition` — EXEMPT, zero findings | pass |
-| Exemption-2 BC-ID detection (comparison condition, HIGH-001 regression) | `test_no_panic_exemption2_bc_id_with_comparison_condition` — EXEMPT, zero findings | pass |
-| Exemption-2 BC-ID negative control | `test_no_panic_comparison_condition_no_bc_id_flagged` — FLAGGED, 1 finding | pass |
-| Test context suppression | `test_timeout_checker_ignores_tokio_test_fns`, `test_timeout_checker_ignores_cfg_test_trait_default_method` | pass |
-
-Total: 236 xtask tests pass, 5 skipped.
-
-**Clause-(d) coverage summary:**
-- HIGH-001: load-bearing test `test_no_panic_exemption2_bc_id_with_comparison_condition`
-- MED-001: three tests close the paper-fix; `NP-KL-2` confirmed RESOLVED; `test_no_panic_exemption2_angle_depth_multi_arg_turbofish_false_negative_guard` (added fix-burst-32) is the mechanism pin for the `angle_depth` counter
-- MED-002: BC amendment (v1.16), no code test needed (spec corrected to match code)
-- MED-003: doc rename across 4 files; grepped clean (zero `KNOWN-LIMITATION` in source)
-- LOW-001: defense-in-depth annotation; no test (stable Rust cannot express `#[cfg(test)]` on expr-position macro)
-
-**Updated known limitations (namespaced IDs):**
-
-| ID | Gate | Status | Description |
-|----|------|--------|-------------|
-| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
-| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
-| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
-| CT-KL-4 | `check-client-timeout` | **RETIRED in fix-burst-26** | Parenthesized/braced base subexpression — eliminated by syn AST visitor; see `test_timeout_scanner_parenthesized_base_subexpr_handled_by_syn` and `test_timeout_scanner_braced_base_subexpr_handled_by_syn` |
-| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
-| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
-| NP-KL-1 | `check-no-panic` | Active | Exemption-blind flat-token macro scan (conservative FP direction) |
-| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Turbofish comma miscounting — angle-bracket depth tracking + turbofish-vs-comparison disambiguation; `test_no_panic_exemption2_bc_id_with_turbofish_condition` and `test_no_panic_exemption2_bc_id_with_comparison_condition` validate the resolution |
-| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` false negative |
-
-**Docs-only note:** The docs commit for this fix-burst-31 CHANGELOG and evidence-report update is docs-only — no `xtask/src/**/*.rs` behavioral changes. Clause (d) does not fire for the docs commit.
-
----
-
-## fix-burst-32 re-verification
-
-**Adversary pass 30 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 0 HIGH + 2 MED + 1 LOW findings.
-
-**Clause (d) analysis:** `check_no_panic` was modified (two new load-bearing tests added; doc comment on `test_no_panic_exemption2_bc_id_with_turbofish_condition` corrected). Clause (d) fires — per-detection-class test attestation required.
-
-**Per-detection-class test attestation:**
-
-| Detection class | Representative tests | Pass |
-|----------------|----------------------|------|
-| `angle_depth` mechanism positive — Exemption-2 fires with multi-arg turbofish (MED-002) | `test_no_panic_exemption2_angle_depth_multi_arg_turbofish_exempt` — EXEMPT, zero findings | pass |
-| `angle_depth` mechanism load-bearing pin — without `angle_depth` counter, returns EXEMPT instead of FLAGGED (MED-002) | `test_no_panic_exemption2_angle_depth_multi_arg_turbofish_false_negative_guard` — FLAGGED, 1 finding; test FAILS if `angle_depth` tracking is removed | pass |
-| BC-2.14.003 amendment (MED-001) | BC spec change only (v1.6), no new gate behavior, no new test required | pass |
-
-Total: 238 xtask tests pass, 5 skipped.
-
-**Clause-(d) coverage summary:**
-- MED-001: BC-2.14.003 amended by product-owner (v1.6) to enumerate all three test-code contexts; no behavioral change to gate
-- MED-002: two load-bearing tests added; `NP-KL-2` **CONFIRMED RESOLVED** — `test_no_panic_exemption2_angle_depth_multi_arg_turbofish_false_negative_guard` is the mechanism pin for the `angle_depth` counter
-- LOW-001: CT-KL-4 RETIRED row added to evidence-report fix-burst-31 KL table (records-only fix)
-
-**Updated known limitations (namespaced IDs):**
-
-| ID | Gate | Status | Description |
-|----|------|--------|-------------|
-| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
-| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
-| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
-| CT-KL-4 | `check-client-timeout` | **RETIRED in fix-burst-26** | Parenthesized/braced base subexpression — eliminated by syn AST visitor; see `test_timeout_scanner_parenthesized_base_subexpr_handled_by_syn` and `test_timeout_scanner_braced_base_subexpr_handled_by_syn` |
-| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
-| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
-| NP-KL-1 | `check-no-panic` | Active | Exemption-blind flat-token macro scan (conservative FP direction) |
-| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32) | Turbofish comma miscounting — angle-bracket depth tracking + turbofish-vs-comparison disambiguation; `test_no_panic_exemption2_angle_depth_multi_arg_turbofish_false_negative_guard` is the mechanism pin |
-| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` false negative |
-| NP-KL-3 | `check-no-panic` | **DOCUMENTED in fix-burst-33** | Path-call form `Result::unwrap(r)` — see fix-burst-33 |
-
-**Docs-only note:** The docs commit for this fix-burst-32 CHANGELOG and evidence-report update is docs-only — no `xtask/src/**/*.rs` behavioral changes. Clause (d) does not fire for the docs commit.
-
----
-
-## fix-burst-33 re-verification
-
-**Adversary pass 31 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 0 HIGH + 2 MED + 1 LOW + 1 OBS findings.
-
-**Clause (d) analysis:** Fix-burst-33 modifies `xtask/src/check_no_panic.rs` (three function visitors gained last-path-segment `test` guard; `NP-KL-3` minted in module doc) and adds tests to `xtask/src/tests.rs`. Clause (d) fires for `check_no_panic.rs` scanner logic changes — per-detection-class test attestation required.
-
-**Per-detection-class test attestation:**
-
-| Detection class | Representative tests | Pass |
-|----------------|----------------------|------|
-| MED-001 `#[test]`-family guard — `visit_item_fn` / `visit_impl_item_fn` / `visit_trait_item_fn` | `test_no_panic_tokio_test_attr_fn_exempt` — EXEMPT (load-bearing: fails without guard) | pass |
-| MED-002 NP-KL-3 path-call form pin | `test_no_panic_np_kl3_path_call_form_known_gap` — 0 findings (known gap, `ExprCall` path-call form not detected without type inference) | pass |
-
-Total: 240 xtask tests pass, 5 skipped.
-
-**Gate output (2026-09-23):**
-
-| Gate | Stdout output |
-|------|--------------|
-| `check-no-panic` | `check-no-panic PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
-| `check-client-timeout` | `check-client-timeout PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
-| `deny-bare-api-key` | `deny-bare-api-key PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
-| `check-error-code-registry` | `error-code-registry PASSED: 148 codes validated, 0 collisions.` |
-| `deny-anyhow-in-lib` | `deny-anyhow-in-lib PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
-| `deny-description-cache-key` | `deny-description-cache-key PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
-| `check-file-size` | `check-file-size PASSED (2 warnings, 45 files measured, 2 allowlisted).` |
-| `check-no-panic --fixture-mode xtask/tests/fixtures/violations` | `fixture-mode: 14/17 fixture files had findings` |
-
-**Clause-(d) coverage summary:**
-- MED-001: load-bearing test `test_no_panic_tokio_test_attr_fn_exempt` (fails without the last-path-segment guard in all three function visitors)
-- MED-002: pinning test `test_no_panic_np_kl3_path_call_form_known_gap` pins zero-finding behavior for known-gap path-call form; any "fix" introducing false positives will break this test
-- LOW-001: gate output re-attestation — all 8 gates re-run; clause (d) satisfied
-- OBS-001: process gap — the dispatch prompt's mislabelled KL descriptions were NOT the cause of the artifact content (those descriptions were independently set by the technical-writer for fix-burst-33); the KL table descriptions in fix-burst-33 require correction per F-P32-HIGH-001
-
-**Updated known limitations:**
-
-| ID | Gate | Status | Description |
-|----|------|--------|-------------|
-| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
-| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
-| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
-| CT-KL-4 | `check-client-timeout` | **RETIRED in fix-burst-26** | Parenthesized/braced base subexpression — eliminated by syn AST visitor; see `test_timeout_scanner_parenthesized_base_subexpr_handled_by_syn` and `test_timeout_scanner_braced_base_subexpr_handled_by_syn` |
-| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
-| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
-| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic (cfg(test), `# Panics` doc, arm-context) not applied in macro arg scan |
-| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Turbofish comma miscounting — angle-bracket depth tracking + turbofish-vs-comparison disambiguation; `test_no_panic_exemption2_angle_depth_multi_arg_turbofish_false_negative_guard` is the mechanism pin |
-| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
-| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
-
-**Docs-only note:** This fix-burst-33 CHANGELOG and evidence-report docs commit is docs-only — no `xtask/src/**/*.rs` scanner logic changes beyond those already in the fix-burst-33 code commits. Clause (d) does not fire for the docs commit itself.
-
----
-
-## fix-burst-34 re-verification
-
-**Adversary pass 32 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 0 CRIT + 1 HIGH + 2 MED + 1 LOW + 1 OBS findings.
-
-**Clause (d) analysis:** Fix-burst-34 modifies `xtask/src/check_no_panic.rs` and `xtask/src/check_client_timeout.rs` (both gained `visit_item_trait` override). Clause (d) fires — per-detection-class test attestation required.
-
-**Per-detection-class test attestation:**
-
-| Detection class | Representative tests | Pass |
-|----------------|----------------------|------|
-| HIGH-001 KL registry restore | `NP-KL-1` and `BAK-KL-1` corrected in CHANGELOG and evidence-report — records fix, no new tests |
-| MED-001 `#[cfg(test)]` ItemTrait guard — `check_no_panic` | `test_no_panic_cfg_test_item_trait_exempt` — EXEMPT (load-bearing: fails without `visit_item_trait` guard in `PanicVisitor`) | pass |
-| MED-001 `#[cfg(test)]` ItemTrait guard — `check_client_timeout` | `test_timeout_checker_cfg_test_item_trait_exempt` — EXEMPT (load-bearing: fails without `visit_item_trait` guard in `TimeoutChecker`) | pass |
-| MED-002 story spec correction | Three sites amended in story spec, v1.18 (on factory-artifacts) — spec-only fix, no new gate tests |
-| LOW-001 `TYPE_SUFFIXES` reorder | Reordered longest-first in `is_zero_literal` — ordering fix, no new tests |
-| OBS-001 process gap | Partially addressed by HIGH-001 restore; orchestrator cycle-closing checklist follow-up required |
-
-Total: 242 xtask tests pass, 5 skipped.
-
-**Gate output re-attestation (clause (d) — behavioral scanner changes):** `visit_item_trait` added to both `PanicVisitor` and `TimeoutChecker`. Gate output re-recorded at fix-burst-33 baseline — counts unchanged (25 analyzed, 16 exempt, 0 violations for all scanning gates). No `crates/`-rooted production files changed in fix-burst-34; all 8 gate counts remain identical to the baseline recorded in the fix-burst-32 re-verification.
-
-| Gate | Stdout output |
-|------|--------------|
-| `check-no-panic` | `check-no-panic PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
-| `check-client-timeout` | `check-client-timeout PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
-| `deny-bare-api-key` | `deny-bare-api-key PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
-| `check-error-code-registry` | `error-code-registry PASSED: 148 codes validated, 0 collisions.` |
-| `deny-anyhow-in-lib` | `deny-anyhow-in-lib PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
-| `deny-description-cache-key` | `deny-description-cache-key PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
-| `check-file-size` | `check-file-size PASSED (2 warnings, 45 files measured, 2 allowlisted).` |
-| `check-no-panic --fixture-mode xtask/tests/fixtures/violations` | `fixture-mode: 14/17 fixture files had findings` |
-
-**Updated known limitations:**
-
-| ID | Gate | Status | Description |
-|----|------|--------|-------------|
-| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
-| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
-| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
-| CT-KL-4 | `check-client-timeout` | **RETIRED in fix-burst-26** | Parenthesized/braced base subexpression — eliminated by syn AST visitor; see `test_timeout_scanner_parenthesized_base_subexpr_handled_by_syn` and `test_timeout_scanner_braced_base_subexpr_handled_by_syn` |
-| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
-| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
-| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
-| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
-| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
-| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
-
-**Docs-only note:** This fix-burst-34 CHANGELOG and evidence-report docs commit is docs-only for the evidence-report portion — the technical-writer KL restore is records-tier content in documentation files only. The behavioral scanner changes are in the implementer and test-writer commits for fix-burst-34.
-
----
-
-## fix-burst-35 re-verification
-
-**Adversary pass 33 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 0 CRIT + 0 HIGH + 3 MED + 3 LOW + 1 OBS findings.
-
-All pass-33 findings closed. See CHANGELOG fix-burst-35 for details.
-
-**Test count: 244 xtask tests pass, 5 skipped.**
-
-**Gate output (stable counts, unchanged from prior bursts):**
-
-| Gate | Output |
-|------|--------|
-| `check-no-panic` | PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations |
-| `check-client-timeout` | PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations |
-| `deny-bare-api-key` | PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations |
-| `check-error-code-registry` | PASSED: 148 codes validated, 0 collisions |
-| `deny-anyhow-in-lib` | PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations |
-| `deny-description-cache-key` | PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations |
-| `check-file-size` | PASSED (2 warnings, 45 files measured, 2 allowlisted) |
-| `check-no-panic --fixture-mode` | fixture-mode: 14/17 fixture files had findings |
-
-**Per-detection-class attestation:**
-
-- MED-001 (`{PC-001}` re-citation): behavioral anchor correction only — text change, no load-bearing test needed
-- MED-002 (`walkdir` portability): behavioral change in file-discovery path (`collect_rust_files()` helper replaces `Command::new("find")`); gate output counts unchanged (25 analyzed / 16 exempt / 0 violations per scanning gate)
-- MED-003 (clause (d) re-attestation): gate output recorded (see gate output table above); SHA-pin removed by TD-VSDD-091 sweep
-- LOW-001 (hex radix fix): `test_timeout_checker_hex_literal_with_f64_suffix_not_zero` — NOT flagged (non-zero hex with `f64` suffix; LOAD-BEARING: fails without radix-first fix); `test_timeout_checker_hex_zero_literal_flagged` — flagged (hex zero still detected; negative control)
-- LOW-002 (doc-comment count fix): `test_no_panic_tokio_test_attr_fn_exempt` and `test_no_panic_cfg_test_item_trait_exempt` doc-comments corrected; no behavioral change
-- LOW-003 (cross-reference label fix): records-only; no behavioral change
-- OBS-001: process gap — orchestrator follow-up required
-
-**Clause-(d) analysis:** MED-002 (`walkdir` refactor) is a scanner-infrastructure change — clause (d) fires; gate output counts unchanged (25 analyzed / 16 exempt / 0 violations per gate output table above). Gate counts recorded by gate name and count value without SHA pins (per updated Recording Provenance clause (d)).
-
-**Updated known limitations (10 entries, same as fix-burst-34):**
-
-| ID | Gate | Status | Description |
-|----|------|--------|-------------|
-| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
-| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
-| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
-| CT-KL-4 | `check-client-timeout` | **RETIRED in fix-burst-26** | Parenthesized/braced base subexpression — eliminated by syn AST visitor; see `test_timeout_scanner_parenthesized_base_subexpr_handled_by_syn` and `test_timeout_scanner_braced_base_subexpr_handled_by_syn` |
-| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
-| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
-| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
-| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
-| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
-| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
-
-No new KL entries. `walkdir` portability fix (MED-002) closes the Windows-portability gap — not a KL, fully resolved.
-
----
-
-## fix-burst-36 re-verification
-
-**Adversary pass 34 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 0 CRIT + 0 HIGH + 3 MED + 2 LOW + 1 OBS findings.
-
-All pass-34 findings closed. See CHANGELOG fix-burst-36 for details.
-
-**Test count: 246 xtask tests pass, 5 skipped.**
-
-**Clause-(d) analysis:** fix-burst-36 OBS-001 (`INT_SUFFIXES` hoist) is a scanner-infrastructure refactor — behavior-preserving (no detection logic changed, only constant declaration site changed). Gate output counts remain valid (25 analyzed / 16 exempt / 0 violations per gate). Clause (d) fires for the scanner refactor; gate counts verified as unchanged from fix-burst-35.
-
-Note: `INT_SUFFIXES` is now a single module-level const shared by the hex/bin/oct paths of `is_zero_literal`, superseding the "per-radix `INT_SUFFIXES`" phrasing in the fix-burst-35 LOW-001 note. The fix-burst-34 longest-first ordering invariant applies to this single shared const.
-
-**Per-detection-class attestation:**
-- MED-001/002/003 (story spec): records-only (Purity Classification text, Library Requirements table row, frontmatter VP list). No behavioral change in gates.
-- LOW-001 (STATE.md D-398): records-only (symbol name correction in factory-artifacts).
-- LOW-002 (CHANGELOG): records-only (constant rename note appended).
-- OBS-001 (`INT_SUFFIXES` hoist): load-bearing behavioral change — `test_timeout_checker_bin_zero_literal_flagged` (binary zero is flagged; asserts `!findings.is_empty()`; LOAD-BEARING) and `test_timeout_checker_oct_zero_literal_flagged` (octal zero is flagged; same assertion; LOAD-BEARING).
-
-**Gate output (stable counts, unchanged from prior bursts):**
-
-| Gate | Output |
-|------|--------|
-| `check-no-panic` | PASSED: 25 analyzed, 16 exempt, 0 violations |
-| `check-client-timeout` | PASSED: 25 analyzed, 16 exempt, 0 violations |
-| `deny-bare-api-key` | PASSED: 25 analyzed, 16 exempt, 0 violations |
-| `check-error-code-registry` | PASSED: 148 codes validated, 0 collisions |
-| `deny-anyhow-in-lib` | PASSED: 25 analyzed, 16 exempt, 0 violations |
-| `deny-description-cache-key` | PASSED: 25 analyzed, 16 exempt, 0 violations |
-| `check-file-size` | PASSED (2 warnings, 45 files measured, 2 allowlisted) |
-| `check-no-panic --fixture-mode` | fixture-mode: 14/17 fixture files had findings |
-
-**Updated KL table:** 10-row table (CT-KL-1/2/3/4RETIRED/5/macro, NP-KL-1/2RESOLVED/3, BAK-KL-1) — same as fix-burst-35.
-
-| ID | Gate | Status | Description |
-|----|------|--------|-------------|
-| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
-| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
-| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
-| CT-KL-4 | `check-client-timeout` | **RETIRED in fix-burst-26** | Parenthesized/braced base subexpression — eliminated by syn AST visitor; see `test_timeout_scanner_parenthesized_base_subexpr_handled_by_syn` and `test_timeout_scanner_braced_base_subexpr_handled_by_syn` |
-| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
-| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
-| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
-| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
-| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
-| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
-
----
-
-## fix-burst-37 re-verification
-
-**Adversary pass 35 result:** CLEAN(strict)=no, CLEAN(PR-merge)=yes — 0 CRIT + 0 HIGH + 1 MED + 1 LOW findings.
-
-All pass-35 findings closed. See CHANGELOG fix-burst-37 for details.
-
-**Test count: 248 xtask tests pass, 5 skipped.**
-
-**Clause-(d) analysis:** fix-burst-37 LOW-001 added two negative-control test functions to `check_client_timeout.rs`. This is a test-only addition — no gate scanner logic changed. Gate output counts remain valid and unchanged (25 analyzed / 16 exempt / 0 violations per gate). Clause (d) does NOT fire (no scanner behavior changed; test additions to `check_client_timeout.rs` tests module are test-scope only).
-
-**Per-detection-class attestation:**
-- MED-001 (fix-burst-36 records added): records-only (CHANGELOG + evidence-report sections); no behavioral change.
-- LOW-001 (bin/oct negative controls): `test_timeout_checker_bin_nonzero_literal_not_flagged` (binary `0b11110` NOT flagged; asserts `findings.is_empty()`; LOAD-BEARING) and `test_timeout_checker_oct_nonzero_literal_not_flagged` (octal `0o36` NOT flagged; asserts `findings.is_empty()`; LOAD-BEARING).
-
-**Gate output (stable counts, unchanged from prior bursts):**
-
-| Gate | Output |
-|------|--------|
-| check-no-panic | PASSED: 25 analyzed, 16 exempt, 0 violations |
-| check-client-timeout | PASSED: 25 analyzed, 16 exempt, 0 violations |
-| deny-bare-api-key | PASSED: 25 analyzed, 16 exempt, 0 violations |
-| check-error-code-registry | PASSED: 148 codes validated, 0 collisions |
-| deny-anyhow-in-lib | PASSED: 25 analyzed, 16 exempt, 0 violations |
-| deny-description-cache-key | PASSED: 25 analyzed, 16 exempt, 0 violations |
-| check-file-size | PASSED (2 warnings, 45 files measured, 2 allowlisted) |
-| check-no-panic --fixture-mode | fixture-mode: 14/17 fixture files had findings |
-
-**Updated KL table:** 10-row table — same as fix-burst-36. No new entries.
-
-| ID | Gate | Status | Description |
-|----|------|--------|-------------|
-| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
-| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
-| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
-| CT-KL-4 | `check-client-timeout` | **RETIRED in fix-burst-26** | Parenthesized/braced base subexpression — eliminated by syn AST visitor; see `test_timeout_scanner_parenthesized_base_subexpr_handled_by_syn` and `test_timeout_scanner_braced_base_subexpr_handled_by_syn` |
-| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
-| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
-| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
-| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
-| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
-| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
-
----
-
-## fix-burst-38 re-verification
-
-**Adversary pass 36 result:** CLEAN(strict)=no, CLEAN(PR-merge)=yes — 0 CRIT + 0 HIGH + 0 MED + 1 LOW; RECORDS-ONLY per TD-RECORDS-MICRO-BURST-001.
-
-All pass-36 findings closed. See CHANGELOG fix-burst-38 for details.
-
-**Test count: 248 xtask tests pass, 5 skipped.**
-
-**Clause-(d) analysis:** Records-only burst — no changes to `xtask/src/**/*.rs` scanner logic. Clause (d) does NOT fire. Gate output counts remain valid from fix-burst-37 re-verification.
-
-**Per-detection-class attestation:**
-- LOW-001 (F-P36-LOW-001): records-only text change in CHANGELOG fix-burst-36 MED-002 paragraph and story spec walkdir row. No behavioral change.
-
-**Gate output:** unchanged from fix-burst-37 (all counts valid: 25 analyzed / 16 exempt / 0 violations per gate; 14/17 fixture-mode; 148 codes / 0 collisions).
-
-**KL table:** 10 rows, unchanged from fix-burst-37.
+**KL table:** 10 rows, unchanged from fix-burst-47. No new KL entries.
 
 | ID | Gate | Status | Description |
 |----|------|--------|-------------|
@@ -714,23 +276,27 @@ All pass-36 findings closed. See CHANGELOG fix-burst-38 for details.
 
 ---
 
-## fix-burst-39 re-verification
+## fix-burst-47 re-verification
 
-**Adversary pass 37 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 0 CRIT + 0 HIGH + 1 MED + 1 LOW + 2 OBS.
+**Adversary pass 45 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 0 CRIT + 0 HIGH + 3 MED + 2 LOW.
 
-All pass-37 findings closed. See CHANGELOG fix-burst-39 for details.
+Fix-burst-47 closed all 5 findings from adversary pass-45 (3 MED + 2 LOW). Test counts unchanged from fix-burst-46 plus one new xtask test: **253 run: 253 passed, 5 skipped** (xtask per-crate: `cargo nextest run -p xtask`). Full workspace: **345 run: 345 passed, 7 skipped** (`cargo nextest run --workspace`). Net change from fix-burst-46: +1 xtask test (`test_allowlist_is_allowed_entry_side_normalization`).
 
-**Test count: 248 xtask tests pass, 5 skipped.**
+**Detection-class attestation:**
 
-**Clause-(d) analysis:** fix-burst-39 LOW-001 modified a doc comment in `main.rs` — doc comment only, no scanner logic change. Clause (d) does NOT fire (doc comment changes are not behavioral changes to file-discovery or detection logic). Gate output counts remain valid.
+| Finding | Load-bearing artifact | Verification |
+|---------|----------------------|--------------|
+| MED-001 (evidence-report MED-004 probe direction inverted) | Record correction: fix-burst-46 MED-004 row updated from `probe_must_fail "L13-probe-E"` to `probe_must_not_fail "L13-probe-E"`; no code change required — record-only | pass |
+| MED-002 (AllowList::is_allowed entry-side normalization unpinned) | New test `test_allowlist_is_allowed_entry_side_normalization`: reverting entry-side `let normalized_entry = e.path.replace('\\', "/")` in `AllowList::is_allowed` causes assertion failure; test is LOAD-BEARING | pass |
+| MED-003 (L13 false-green via IN FLIGHT newest D-NNN row / frozen-HEAD SHA currency) | New `L13-probe-F` in `records-lint.sh`: synthetic STATE.md with §Session Resume Checkpoint frozen HEAD SHA absent from all COMPLETE rows → `probe_must_fail "L13-probe-F"` asserts FAIL; `records-lint.sh` exits 0 on current STATE.md; `check_l13` function-header comment updated to document both "3/3 surfaces in sync" and "2/2 surfaces asserted (convergence SKIPPED)" PASS templates (LOW-001 bundled into this fix) | pass |
+| LOW-001 (check_l13 function-header comment incomplete) | Records fix bundled with MED-003: function-header banner updated to document both PASS templates | pass |
+| LOW-002 (AC-008 parenthetical correction) | AC-008 parenthetical corrected: `#[non_exhaustive]` restricts only external-crate construction; private field accessible within the defining module and its descendants; `from_raw_for_tests()` is `#[cfg(test)]`-gated validation-bypass helper — not because tuple form is unavailable; story spec version bumped to v1.22 | pass |
 
-**Per-detection-class attestation:**
-- MED-001 (F-P37-MED-001): records-only (fix-burst-38 CHANGELOG + evidence-report sections added). No behavioral change.
-- LOW-001 (F-P37-LOW-001): doc comment on `collect_rust_files` in `main.rs` updated. No behavioral change. No new tests (doc comment only).
+**Clause (d) analysis:** fix-burst-47 modifies `xtask/src/tests.rs` (new test `test_allowlist_is_allowed_entry_side_normalization`). The new test exercises an existing production code path (`AllowList::is_allowed` entry-side normalization) — scanner logic in `AllowList::is_allowed` was not changed. Clause (d) does NOT fire for a test-only addition that exercises no new detection behavior. Gate output counts remain valid and unchanged.
 
-**Gate output:** unchanged from fix-burst-38 (25 analyzed / 16 exempt / 0 violations per gate; 14/17 fixture-mode; 148 codes / 0 collisions).
+**Gate output:** unchanged (25 analyzed / 16 exempt / 0 violations per gate; 14/17 fixture-mode; 148 codes / 0 collisions).
 
-**KL table:** 10 rows, unchanged from fix-burst-38.
+**KL table:** 10 rows, unchanged from fix-burst-46. No new KL entries.
 
 | ID | Gate | Status | Description |
 |----|------|--------|-------------|
@@ -772,80 +338,6 @@ All pass-44 findings closed. See CHANGELOG fix-burst-46 for details.
 **Gate output:** unchanged (25 analyzed / 16 exempt / 0 violations per gate; 14/17 fixture-mode; 148 codes / 0 collisions).
 
 **KL table:** 10 rows, unchanged.
-
-| ID | Gate | Status | Description |
-|----|------|--------|-------------|
-| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
-| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
-| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
-| CT-KL-4 | `check-client-timeout` | **RETIRED** in fix-burst-26 | Parenthesized/braced base subexpression — eliminated by syn AST visitor |
-| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
-| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
-| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
-| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
-| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
-| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
-
----
-
-## fix-burst-47 re-verification
-
-**Adversary pass 45 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 0 CRIT + 0 HIGH + 3 MED + 2 LOW.
-
-Fix-burst-47 closed all 5 findings from adversary pass-45 (3 MED + 2 LOW). Test counts unchanged from fix-burst-46 plus one new xtask test: **253 run: 253 passed, 5 skipped** (xtask per-crate: `cargo nextest run -p xtask`). Full workspace: **345 run: 345 passed, 7 skipped** (`cargo nextest run --workspace`). Net change from fix-burst-46: +1 xtask test (`test_allowlist_is_allowed_entry_side_normalization`).
-
-**Detection-class attestation:**
-
-| Finding | Load-bearing artifact | Verification |
-|---------|----------------------|--------------|
-| MED-001 (evidence-report MED-004 probe direction inverted) | Record correction: fix-burst-46 MED-004 row updated from `probe_must_fail "L13-probe-E"` to `probe_must_not_fail "L13-probe-E"`; no code change required — record-only | pass |
-| MED-002 (AllowList::is_allowed entry-side normalization unpinned) | New test `test_allowlist_is_allowed_entry_side_normalization`: reverting entry-side `let normalized_entry = e.path.replace('\\', "/")` in `AllowList::is_allowed` causes assertion failure; test is LOAD-BEARING | pass |
-| MED-003 (L13 false-green via IN FLIGHT newest D-NNN row / frozen-HEAD SHA currency) | New `L13-probe-F` in `records-lint.sh`: synthetic STATE.md with §Session Resume Checkpoint frozen HEAD SHA absent from all COMPLETE rows → `probe_must_fail "L13-probe-F"` asserts FAIL; `records-lint.sh` exits 0 on current STATE.md; `check_l13` function-header comment updated to document both "3/3 surfaces in sync" and "2/2 surfaces asserted (convergence SKIPPED)" PASS templates (LOW-001 bundled into this fix) | pass |
-| LOW-001 (check_l13 function-header comment incomplete) | Records fix bundled with MED-003: function-header banner updated to document both PASS templates | pass |
-| LOW-002 (AC-008 parenthetical correction) | AC-008 parenthetical corrected: `#[non_exhaustive]` restricts only external-crate construction; private field accessible in-crate; `from_raw_for_tests()` is `#[cfg(test)]`-gated validation-bypass helper — not because tuple form is unavailable; story spec version bumped to v1.22 | pass |
-
-**Clause (d) analysis:** fix-burst-47 modifies `xtask/src/tests.rs` (new test `test_allowlist_is_allowed_entry_side_normalization`). The new test exercises an existing production code path (`AllowList::is_allowed` entry-side normalization) — scanner logic in `AllowList::is_allowed` was not changed. Clause (d) does NOT fire for a test-only addition that exercises no new detection behavior. Gate output counts remain valid and unchanged.
-
-**Gate output:** unchanged (25 analyzed / 16 exempt / 0 violations per gate; 14/17 fixture-mode; 148 codes / 0 collisions).
-
-**KL table:** 10 rows, unchanged from fix-burst-46. No new KL entries.
-
-| ID | Gate | Status | Description |
-|----|------|--------|-------------|
-| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
-| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
-| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
-| CT-KL-4 | `check-client-timeout` | **RETIRED** in fix-burst-26 | Parenthesized/braced base subexpression — eliminated by syn AST visitor |
-| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
-| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
-| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
-| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
-| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
-| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
-
----
-
-## fix-burst-48 re-verification
-
-**Adversary pass 46 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH + 4 MED + 1 OBS.
-
-Fix-burst-48 closed all 5 non-OBS findings from adversary pass-46 (1 HIGH + 4 MED). Test counts unchanged: **253 run: 253 passed, 5 skipped** (xtask per-crate: `cargo nextest run -p xtask`). Full workspace: **345 run: 345 passed, 7 skipped** (`cargo nextest run --workspace`). No Rust code changes — records-only fixes plus `records-lint.sh` L13 live-HEAD check + probe G.
-
-**Detection-class attestation:**
-
-| Finding | Load-bearing artifact | Status |
-|---------|----------------------|--------|
-| HIGH-001 (L13 vacuous live-HEAD check) | `check_l13` Step 3.5 updated: live branch HEAD check via `git rev-parse --verify refs/heads/<branch>`; `probe_must_fail "L13-probe-G"` (new probe, exercises real `check_l13` via swap-and-restore: synthetic frozen HEAD with all-zeros SHA that exists in a COMPLETE row but != live feature/S-1.02 HEAD → FAIL); `records-lint.sh` exits 0 | pass |
-| MED-001 (STATE.md stale) | Self-resolved: state-manager commit 2d71869 records D-415 COMPLETE with 489584d + D-416 IN FLIGHT; no code action | pass |
-| MED-002 (probes exercised mirror not shipped) | Bundled: probe F extended to invoke real `check_l13` via swap-and-restore; listed with HIGH-001 | pass |
-| MED-003 (banner "Five probes") | Bundled: `run_self_probes` L13 banner updated to "Seven probes (A–G)"; listed with HIGH-001 | pass |
-| MED-004 (false Rust semantics in 3 artifacts) | Story spec AC-008 parenthetical corrected (v1.23); CHANGELOG fix-burst-47 LOW-002 paragraph corrected; evidence-report fix-burst-47 re-verification LOW-002 row corrected. Accurate claim: tests use `from_raw_for_tests()` because it is the explicit `#[cfg(test)]`-gated validation-bypass helper, not because the tuple-struct form is unavailable from within the crate | pass |
-
-**Clause (d) analysis:** fix-burst-48 modifies `.factory/hooks/records-lint.sh` (live-HEAD check added to `check_l13` and `_L13_CHECK`; probe G added; probe F extended; banner updated). No `xtask/src/**/*.rs` scanner logic changed. Clause (d) does NOT fire. Gate output counts remain valid and unchanged.
-
-**Gate output:** unchanged (25 analyzed / 16 exempt / 0 violations per gate; 14/17 fixture-mode; 148 codes / 0 collisions).
-
-**KL table:** 10 rows, unchanged from fix-burst-47. No new KL entries.
 
 | ID | Gate | Status | Description |
 |----|------|--------|-------------|
@@ -1080,6 +572,531 @@ All pass-38 findings closed. See CHANGELOG fix-burst-40 for details.
 | NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
 | NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
 | BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+---
+
+## fix-burst-39 re-verification
+
+**Adversary pass 37 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 0 CRIT + 0 HIGH + 1 MED + 1 LOW + 2 OBS.
+
+All pass-37 findings closed. See CHANGELOG fix-burst-39 for details.
+
+**Test count: 248 xtask tests pass, 5 skipped.**
+
+**Clause-(d) analysis:** fix-burst-39 LOW-001 modified a doc comment in `main.rs` — doc comment only, no scanner logic change. Clause (d) does NOT fire (doc comment changes are not behavioral changes to file-discovery or detection logic). Gate output counts remain valid.
+
+**Per-detection-class attestation:**
+- MED-001 (F-P37-MED-001): records-only (fix-burst-38 CHANGELOG + evidence-report sections added). No behavioral change.
+- LOW-001 (F-P37-LOW-001): doc comment on `collect_rust_files` in `main.rs` updated. No behavioral change. No new tests (doc comment only).
+
+**Gate output:** unchanged from fix-burst-38 (25 analyzed / 16 exempt / 0 violations per gate; 14/17 fixture-mode; 148 codes / 0 collisions).
+
+**KL table:** 10 rows, unchanged from fix-burst-38.
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED** in fix-burst-26 | Parenthesized/braced base subexpression — eliminated by syn AST visitor |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+---
+
+## fix-burst-38 re-verification
+
+**Adversary pass 36 result:** CLEAN(strict)=no, CLEAN(PR-merge)=yes — 0 CRIT + 0 HIGH + 0 MED + 1 LOW; RECORDS-ONLY per TD-RECORDS-MICRO-BURST-001.
+
+All pass-36 findings closed. See CHANGELOG fix-burst-38 for details.
+
+**Test count: 248 xtask tests pass, 5 skipped.**
+
+**Clause-(d) analysis:** Records-only burst — no changes to `xtask/src/**/*.rs` scanner logic. Clause (d) does NOT fire. Gate output counts remain valid from fix-burst-37 re-verification.
+
+**Per-detection-class attestation:**
+- LOW-001 (F-P36-LOW-001): records-only text change in CHANGELOG fix-burst-36 MED-002 paragraph and story spec walkdir row. No behavioral change.
+
+**Gate output:** unchanged from fix-burst-37 (all counts valid: 25 analyzed / 16 exempt / 0 violations per gate; 14/17 fixture-mode; 148 codes / 0 collisions).
+
+**KL table:** 10 rows, unchanged from fix-burst-37.
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED** in fix-burst-26 | Parenthesized/braced base subexpression — eliminated by syn AST visitor |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+---
+
+## fix-burst-37 re-verification
+
+**Adversary pass 35 result:** CLEAN(strict)=no, CLEAN(PR-merge)=yes — 0 CRIT + 0 HIGH + 1 MED + 1 LOW findings.
+
+All pass-35 findings closed. See CHANGELOG fix-burst-37 for details.
+
+**Test count: 248 xtask tests pass, 5 skipped.**
+
+**Clause-(d) analysis:** fix-burst-37 LOW-001 added two negative-control test functions to `check_client_timeout.rs`. This is a test-only addition — no gate scanner logic changed. Gate output counts remain valid and unchanged (25 analyzed / 16 exempt / 0 violations per gate). Clause (d) does NOT fire (no scanner behavior changed; test additions to `check_client_timeout.rs` tests module are test-scope only).
+
+**Per-detection-class attestation:**
+- MED-001 (fix-burst-36 records added): records-only (CHANGELOG + evidence-report sections); no behavioral change.
+- LOW-001 (bin/oct negative controls): `test_timeout_checker_bin_nonzero_literal_not_flagged` (binary `0b11110` NOT flagged; asserts `findings.is_empty()`; LOAD-BEARING) and `test_timeout_checker_oct_nonzero_literal_not_flagged` (octal `0o36` NOT flagged; asserts `findings.is_empty()`; LOAD-BEARING).
+
+**Gate output (stable counts, unchanged from prior bursts):**
+
+| Gate | Output |
+|------|--------|
+| check-no-panic | PASSED: 25 analyzed, 16 exempt, 0 violations |
+| check-client-timeout | PASSED: 25 analyzed, 16 exempt, 0 violations |
+| deny-bare-api-key | PASSED: 25 analyzed, 16 exempt, 0 violations |
+| check-error-code-registry | PASSED: 148 codes validated, 0 collisions |
+| deny-anyhow-in-lib | PASSED: 25 analyzed, 16 exempt, 0 violations |
+| deny-description-cache-key | PASSED: 25 analyzed, 16 exempt, 0 violations |
+| check-file-size | PASSED (2 warnings, 45 files measured, 2 allowlisted) |
+| check-no-panic --fixture-mode | fixture-mode: 14/17 fixture files had findings |
+
+**Updated KL table:** 10-row table — same as fix-burst-36. No new entries.
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED in fix-burst-26** | Parenthesized/braced base subexpression — eliminated by syn AST visitor; see `test_timeout_scanner_parenthesized_base_subexpr_handled_by_syn` and `test_timeout_scanner_braced_base_subexpr_handled_by_syn` |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+---
+
+## fix-burst-36 re-verification
+
+**Adversary pass 34 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 0 CRIT + 0 HIGH + 3 MED + 2 LOW + 1 OBS findings.
+
+All pass-34 findings closed. See CHANGELOG fix-burst-36 for details.
+
+**Test count: 246 xtask tests pass, 5 skipped.**
+
+**Clause-(d) analysis:** fix-burst-36 OBS-001 (`INT_SUFFIXES` hoist) is a scanner-infrastructure refactor — behavior-preserving (no detection logic changed, only constant declaration site changed). Gate output counts remain valid (25 analyzed / 16 exempt / 0 violations per gate). Clause (d) fires for the scanner refactor; gate counts verified as unchanged from fix-burst-35.
+
+Note: `INT_SUFFIXES` is now a single module-level const shared by the hex/bin/oct paths of `is_zero_literal`, superseding the "per-radix `INT_SUFFIXES`" phrasing in the fix-burst-35 LOW-001 note. The fix-burst-34 longest-first ordering invariant applies to this single shared const.
+
+**Per-detection-class attestation:**
+- MED-001/002/003 (story spec): records-only (Purity Classification text, Library Requirements table row, frontmatter VP list). No behavioral change in gates.
+- LOW-001 (STATE.md D-398): records-only (symbol name correction in factory-artifacts).
+- LOW-002 (CHANGELOG): records-only (constant rename note appended).
+- OBS-001 (`INT_SUFFIXES` hoist): load-bearing behavioral change — `test_timeout_checker_bin_zero_literal_flagged` (binary zero is flagged; asserts `!findings.is_empty()`; LOAD-BEARING) and `test_timeout_checker_oct_zero_literal_flagged` (octal zero is flagged; same assertion; LOAD-BEARING).
+
+**Gate output (stable counts, unchanged from prior bursts):**
+
+| Gate | Output |
+|------|--------|
+| `check-no-panic` | PASSED: 25 analyzed, 16 exempt, 0 violations |
+| `check-client-timeout` | PASSED: 25 analyzed, 16 exempt, 0 violations |
+| `deny-bare-api-key` | PASSED: 25 analyzed, 16 exempt, 0 violations |
+| `check-error-code-registry` | PASSED: 148 codes validated, 0 collisions |
+| `deny-anyhow-in-lib` | PASSED: 25 analyzed, 16 exempt, 0 violations |
+| `deny-description-cache-key` | PASSED: 25 analyzed, 16 exempt, 0 violations |
+| `check-file-size` | PASSED (2 warnings, 45 files measured, 2 allowlisted) |
+| `check-no-panic --fixture-mode` | fixture-mode: 14/17 fixture files had findings |
+
+**Updated KL table:** 10-row table (CT-KL-1/2/3/4RETIRED/5/macro, NP-KL-1/2RESOLVED/3, BAK-KL-1) — same as fix-burst-35.
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED in fix-burst-26** | Parenthesized/braced base subexpression — eliminated by syn AST visitor; see `test_timeout_scanner_parenthesized_base_subexpr_handled_by_syn` and `test_timeout_scanner_braced_base_subexpr_handled_by_syn` |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+---
+
+## fix-burst-35 re-verification
+
+**Adversary pass 33 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 0 CRIT + 0 HIGH + 3 MED + 3 LOW + 1 OBS findings.
+
+All pass-33 findings closed. See CHANGELOG fix-burst-35 for details.
+
+**Test count: 244 xtask tests pass, 5 skipped.**
+
+**Gate output (stable counts, unchanged from prior bursts):**
+
+| Gate | Output |
+|------|--------|
+| `check-no-panic` | PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations |
+| `check-client-timeout` | PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations |
+| `deny-bare-api-key` | PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations |
+| `check-error-code-registry` | PASSED: 148 codes validated, 0 collisions |
+| `deny-anyhow-in-lib` | PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations |
+| `deny-description-cache-key` | PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations |
+| `check-file-size` | PASSED (2 warnings, 45 files measured, 2 allowlisted) |
+| `check-no-panic --fixture-mode` | fixture-mode: 14/17 fixture files had findings |
+
+**Per-detection-class attestation:**
+
+- MED-001 (`{PC-001}` re-citation): behavioral anchor correction only — text change, no load-bearing test needed
+- MED-002 (`walkdir` portability): behavioral change in file-discovery path (`collect_rust_files()` helper replaces `Command::new("find")`); gate output counts unchanged (25 analyzed / 16 exempt / 0 violations per scanning gate)
+- MED-003 (clause (d) re-attestation): gate output recorded (see gate output table above); SHA-pin removed by TD-VSDD-091 sweep
+- LOW-001 (hex radix fix): `test_timeout_checker_hex_literal_with_f64_suffix_not_zero` — NOT flagged (non-zero hex with `f64` suffix; LOAD-BEARING: fails without radix-first fix); `test_timeout_checker_hex_zero_literal_flagged` — flagged (hex zero still detected; negative control)
+- LOW-002 (doc-comment count fix): `test_no_panic_tokio_test_attr_fn_exempt` and `test_no_panic_cfg_test_item_trait_exempt` doc-comments corrected; no behavioral change
+- LOW-003 (cross-reference label fix): records-only; no behavioral change
+- OBS-001: process gap — orchestrator follow-up required
+
+**Clause-(d) analysis:** MED-002 (`walkdir` refactor) is a scanner-infrastructure change — clause (d) fires; gate output counts unchanged (25 analyzed / 16 exempt / 0 violations per gate output table above). Gate counts recorded by gate name and count value without SHA pins (per updated Recording Provenance clause (d)).
+
+**Updated known limitations (10 entries, same as fix-burst-34):**
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED in fix-burst-26** | Parenthesized/braced base subexpression — eliminated by syn AST visitor; see `test_timeout_scanner_parenthesized_base_subexpr_handled_by_syn` and `test_timeout_scanner_braced_base_subexpr_handled_by_syn` |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+No new KL entries. `walkdir` portability fix (MED-002) closes the Windows-portability gap — not a KL, fully resolved.
+
+---
+
+## fix-burst-34 re-verification
+
+**Adversary pass 32 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 0 CRIT + 1 HIGH + 2 MED + 1 LOW + 1 OBS findings.
+
+**Clause (d) analysis:** Fix-burst-34 modifies `xtask/src/check_no_panic.rs` and `xtask/src/check_client_timeout.rs` (both gained `visit_item_trait` override). Clause (d) fires — per-detection-class test attestation required.
+
+**Per-detection-class test attestation:**
+
+| Detection class | Representative tests | Pass |
+|----------------|----------------------|------|
+| HIGH-001 KL registry restore | `NP-KL-1` and `BAK-KL-1` corrected in CHANGELOG and evidence-report — records fix, no new tests |
+| MED-001 `#[cfg(test)]` ItemTrait guard — `check_no_panic` | `test_no_panic_cfg_test_item_trait_exempt` — EXEMPT (load-bearing: fails without `visit_item_trait` guard in `PanicVisitor`) | pass |
+| MED-001 `#[cfg(test)]` ItemTrait guard — `check_client_timeout` | `test_timeout_checker_cfg_test_item_trait_exempt` — EXEMPT (load-bearing: fails without `visit_item_trait` guard in `TimeoutChecker`) | pass |
+| MED-002 story spec correction | Three sites amended in story spec, v1.18 (on factory-artifacts) — spec-only fix, no new gate tests |
+| LOW-001 `TYPE_SUFFIXES` reorder | Reordered longest-first in `is_zero_literal` — ordering fix, no new tests |
+| OBS-001 process gap | Partially addressed by HIGH-001 restore; orchestrator cycle-closing checklist follow-up required |
+
+Total: 242 xtask tests pass, 5 skipped.
+
+**Gate output re-attestation (clause (d) — behavioral scanner changes):** `visit_item_trait` added to both `PanicVisitor` and `TimeoutChecker`. Gate output re-recorded at fix-burst-33 baseline — counts unchanged (25 analyzed, 16 exempt, 0 violations for all scanning gates). No `crates/`-rooted production files changed in fix-burst-34; all 8 gate counts remain identical to the baseline recorded in the fix-burst-32 re-verification.
+
+| Gate | Stdout output |
+|------|--------------|
+| `check-no-panic` | `check-no-panic PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
+| `check-client-timeout` | `check-client-timeout PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
+| `deny-bare-api-key` | `deny-bare-api-key PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
+| `check-error-code-registry` | `error-code-registry PASSED: 148 codes validated, 0 collisions.` |
+| `deny-anyhow-in-lib` | `deny-anyhow-in-lib PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
+| `deny-description-cache-key` | `deny-description-cache-key PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
+| `check-file-size` | `check-file-size PASSED (2 warnings, 45 files measured, 2 allowlisted).` |
+| `check-no-panic --fixture-mode xtask/tests/fixtures/violations` | `fixture-mode: 14/17 fixture files had findings` |
+
+**Updated known limitations:**
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED in fix-burst-26** | Parenthesized/braced base subexpression — eliminated by syn AST visitor; see `test_timeout_scanner_parenthesized_base_subexpr_handled_by_syn` and `test_timeout_scanner_braced_base_subexpr_handled_by_syn` |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+**Docs-only note:** This fix-burst-34 CHANGELOG and evidence-report docs commit is docs-only for the evidence-report portion — the technical-writer KL restore is records-tier content in documentation files only. The behavioral scanner changes are in the implementer and test-writer commits for fix-burst-34.
+
+---
+
+## fix-burst-33 re-verification
+
+**Adversary pass 31 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 0 HIGH + 2 MED + 1 LOW + 1 OBS findings.
+
+**Clause (d) analysis:** Fix-burst-33 modifies `xtask/src/check_no_panic.rs` (three function visitors gained last-path-segment `test` guard; `NP-KL-3` minted in module doc) and adds tests to `xtask/src/tests.rs`. Clause (d) fires for `check_no_panic.rs` scanner logic changes — per-detection-class test attestation required.
+
+**Per-detection-class test attestation:**
+
+| Detection class | Representative tests | Pass |
+|----------------|----------------------|------|
+| MED-001 `#[test]`-family guard — `visit_item_fn` / `visit_impl_item_fn` / `visit_trait_item_fn` | `test_no_panic_tokio_test_attr_fn_exempt` — EXEMPT (load-bearing: fails without guard) | pass |
+| MED-002 NP-KL-3 path-call form pin | `test_no_panic_np_kl3_path_call_form_known_gap` — 0 findings (known gap, `ExprCall` path-call form not detected without type inference) | pass |
+
+Total: 240 xtask tests pass, 5 skipped.
+
+**Gate output (2026-09-23):**
+
+| Gate | Stdout output |
+|------|--------------|
+| `check-no-panic` | `check-no-panic PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
+| `check-client-timeout` | `check-client-timeout PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
+| `deny-bare-api-key` | `deny-bare-api-key PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
+| `check-error-code-registry` | `error-code-registry PASSED: 148 codes validated, 0 collisions.` |
+| `deny-anyhow-in-lib` | `deny-anyhow-in-lib PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
+| `deny-description-cache-key` | `deny-description-cache-key PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
+| `check-file-size` | `check-file-size PASSED (2 warnings, 45 files measured, 2 allowlisted).` |
+| `check-no-panic --fixture-mode xtask/tests/fixtures/violations` | `fixture-mode: 14/17 fixture files had findings` |
+
+**Clause-(d) coverage summary:**
+- MED-001: load-bearing test `test_no_panic_tokio_test_attr_fn_exempt` (fails without the last-path-segment guard in all three function visitors)
+- MED-002: pinning test `test_no_panic_np_kl3_path_call_form_known_gap` pins zero-finding behavior for known-gap path-call form; any "fix" introducing false positives will break this test
+- LOW-001: gate output re-attestation — all 8 gates re-run; clause (d) satisfied
+- OBS-001: process gap — the dispatch prompt's mislabelled KL descriptions were NOT the cause of the artifact content (those descriptions were independently set by the technical-writer for fix-burst-33); the KL table descriptions in fix-burst-33 require correction per F-P32-HIGH-001
+
+**Updated known limitations:**
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED in fix-burst-26** | Parenthesized/braced base subexpression — eliminated by syn AST visitor; see `test_timeout_scanner_parenthesized_base_subexpr_handled_by_syn` and `test_timeout_scanner_braced_base_subexpr_handled_by_syn` |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic (cfg(test), `# Panics` doc, arm-context) not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Turbofish comma miscounting — angle-bracket depth tracking + turbofish-vs-comparison disambiguation; `test_no_panic_exemption2_angle_depth_multi_arg_turbofish_false_negative_guard` is the mechanism pin |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+**Docs-only note:** This fix-burst-33 CHANGELOG and evidence-report docs commit is docs-only — no `xtask/src/**/*.rs` scanner logic changes beyond those already in the fix-burst-33 code commits. Clause (d) does not fire for the docs commit itself.
+
+---
+
+## fix-burst-32 re-verification
+
+**Adversary pass 30 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 0 HIGH + 2 MED + 1 LOW findings.
+
+**Clause (d) analysis:** `check_no_panic` was modified (two new load-bearing tests added; doc comment on `test_no_panic_exemption2_bc_id_with_turbofish_condition` corrected). Clause (d) fires — per-detection-class test attestation required.
+
+**Per-detection-class test attestation:**
+
+| Detection class | Representative tests | Pass |
+|----------------|----------------------|------|
+| `angle_depth` mechanism positive — Exemption-2 fires with multi-arg turbofish (MED-002) | `test_no_panic_exemption2_angle_depth_multi_arg_turbofish_exempt` — EXEMPT, zero findings | pass |
+| `angle_depth` mechanism load-bearing pin — without `angle_depth` counter, returns EXEMPT instead of FLAGGED (MED-002) | `test_no_panic_exemption2_angle_depth_multi_arg_turbofish_false_negative_guard` — FLAGGED, 1 finding; test FAILS if `angle_depth` tracking is removed | pass |
+| BC-2.14.003 amendment (MED-001) | BC spec change only (v1.6), no new gate behavior, no new test required | pass |
+
+Total: 238 xtask tests pass, 5 skipped.
+
+**Clause-(d) coverage summary:**
+- MED-001: BC-2.14.003 amended by product-owner (v1.6) to enumerate all three test-code contexts; no behavioral change to gate
+- MED-002: two load-bearing tests added; `NP-KL-2` **CONFIRMED RESOLVED** — `test_no_panic_exemption2_angle_depth_multi_arg_turbofish_false_negative_guard` is the mechanism pin for the `angle_depth` counter
+- LOW-001: CT-KL-4 RETIRED row added to evidence-report fix-burst-31 KL table (records-only fix)
+
+**Updated known limitations (namespaced IDs):**
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED in fix-burst-26** | Parenthesized/braced base subexpression — eliminated by syn AST visitor; see `test_timeout_scanner_parenthesized_base_subexpr_handled_by_syn` and `test_timeout_scanner_braced_base_subexpr_handled_by_syn` |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32) | Turbofish comma miscounting — angle-bracket depth tracking + turbofish-vs-comparison disambiguation; `test_no_panic_exemption2_angle_depth_multi_arg_turbofish_false_negative_guard` is the mechanism pin |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` false negative |
+| NP-KL-3 | `check-no-panic` | **DOCUMENTED in fix-burst-33** | Path-call form `Result::unwrap(r)` — see fix-burst-33 |
+
+**Docs-only note:** The docs commit for this fix-burst-32 CHANGELOG and evidence-report update is docs-only — no `xtask/src/**/*.rs` behavioral changes. Clause (d) does not fire for the docs commit.
+
+---
+
+## fix-burst-31 re-verification
+
+**Adversary pass 29 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH + 3 MED + 1 LOW findings.
+
+**Clause (d) analysis:** `check_no_panic` was modified (`syn_macro_has_bc_id` turbofish-vs-comparison disambiguation — `<` is now treated as a turbofish opener only when preceded by `::`; `Spacing` imported alongside `TokenTree`). Three new pinning tests added in test-writer commit. Clause (d) fires — per-detection-class test attestation required.
+
+**Per-detection-class test attestation:**
+
+| Detection class | Representative tests | Pass |
+|----------------|----------------------|------|
+| Pattern A — direct `Client::new` / `Client::default` construction | `test_timeout_scanner_still_flags_reqwest_client_new`, `test_timeout_checker_detects_client_default_qualified` | pass |
+| Pattern A — UFCS `<reqwest::Client as Default>::default()` (qself) | `test_timeout_checker_detects_client_ufcs_default_qualified` (positive), `test_timeout_checker_ufcs_non_reqwest_client_as_default_clean` (negative) | pass |
+| Pattern A — UFCS `<reqwest::Client>::new()` (qself) | `test_timeout_checker_detects_client_ufcs_new_qualified` | pass |
+| Pattern B — builder chain via `analyze_build_chain` | `test_timeout_scanner_flags_builder_build_without_timeout_single_line`, `test_timeout_checker_detects_builder_default_qualified` | pass |
+| Macro scanning — `scan_macro_body_as_ast` Strategy 1 | `test_timeout_checker_detects_reqwest_client_in_thread_local` | pass |
+| Macro scanning — `scan_macro_body_as_ast` Strategy 2 | `test_timeout_checker_strategy2_detects_statement_macro_violation` | pass |
+| Macro scanning — `scan_macro_body_as_ast` Strategy 3 | `test_timeout_checker_detects_builder_in_lazy_static` | pass |
+| `#[cfg(test)]` stmt macro exempt — `check_client_timeout` | `test_timeout_checker_cfg_test_stmt_macro_not_flagged` | pass |
+| `#[cfg(test)]` stmt macro exempt — `check_no_panic` | `test_no_panic_cfg_test_stmt_macro_not_flagged` | pass |
+| Exemption-2 BC-ID detection (turbofish condition) | `test_no_panic_exemption2_bc_id_with_turbofish_condition` — EXEMPT, zero findings | pass |
+| Exemption-2 BC-ID detection (comparison condition, HIGH-001 regression) | `test_no_panic_exemption2_bc_id_with_comparison_condition` — EXEMPT, zero findings | pass |
+| Exemption-2 BC-ID negative control | `test_no_panic_comparison_condition_no_bc_id_flagged` — FLAGGED, 1 finding | pass |
+| Test context suppression | `test_timeout_checker_ignores_tokio_test_fns`, `test_timeout_checker_ignores_cfg_test_trait_default_method` | pass |
+
+Total: 236 xtask tests pass, 5 skipped.
+
+**Clause-(d) coverage summary:**
+- HIGH-001: load-bearing test `test_no_panic_exemption2_bc_id_with_comparison_condition`
+- MED-001: three tests close the paper-fix; `NP-KL-2` confirmed RESOLVED; `test_no_panic_exemption2_angle_depth_multi_arg_turbofish_false_negative_guard` (added fix-burst-32) is the mechanism pin for the `angle_depth` counter
+- MED-002: BC amendment (v1.16), no code test needed (spec corrected to match code)
+- MED-003: doc rename across 4 files; grepped clean (zero `KNOWN-LIMITATION` in source)
+- LOW-001: defense-in-depth annotation; no test (stable Rust cannot express `#[cfg(test)]` on expr-position macro)
+
+**Updated known limitations (namespaced IDs):**
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED in fix-burst-26** | Parenthesized/braced base subexpression — eliminated by syn AST visitor; see `test_timeout_scanner_parenthesized_base_subexpr_handled_by_syn` and `test_timeout_scanner_braced_base_subexpr_handled_by_syn` |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind flat-token macro scan (conservative FP direction) |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Turbofish comma miscounting — angle-bracket depth tracking + turbofish-vs-comparison disambiguation; `test_no_panic_exemption2_bc_id_with_turbofish_condition` and `test_no_panic_exemption2_bc_id_with_comparison_condition` validate the resolution |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` false negative |
+
+**Docs-only note:** The docs commit for this fix-burst-31 CHANGELOG and evidence-report update is docs-only — no `xtask/src/**/*.rs` behavioral changes. Clause (d) does not fire for the docs commit.
+
+---
+
+## fix-burst-30 re-verification
+
+**Adversary pass 28 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 2 HIGH + 4 MED + 4 LOW findings.
+
+**Clause (d) analysis:** `check_client_timeout` and `check_no_panic` were modified (`has_cfg_test_attr` / `syn_has_cfg_test` guards added to `visit_expr_macro` and `visit_stmt_macro`; dead `"builder"` arm removed from Pattern-A UFCS qself branch in `visit_expr_call`; angle-bracket depth tracking added to `syn_macro_has_bc_id`). Clause (d) fires — per-detection-class test attestation required.
+
+**Per-detection-class test attestation:**
+
+| Detection class | Representative tests | Pass |
+|----------------|----------------------|------|
+| Pattern A — direct `Client::new` / `Client::default` construction | `test_timeout_scanner_still_flags_reqwest_client_new`, `test_timeout_checker_detects_client_default_qualified` | pass |
+| Pattern A — UFCS `<reqwest::Client as Default>::default()` (qself) | `test_timeout_checker_detects_client_ufcs_default_qualified` (positive), `test_timeout_checker_ufcs_non_reqwest_client_as_default_clean` (negative) | pass |
+| Pattern A — UFCS `<reqwest::Client>::new()` (qself) | `test_timeout_checker_detects_client_ufcs_new_qualified` | pass |
+| Pattern B — builder chain via `analyze_build_chain` | `test_timeout_scanner_flags_builder_build_without_timeout_single_line`, `test_timeout_checker_detects_builder_default_qualified` | pass |
+| Macro scanning — `scan_macro_body_as_ast` Strategy 1 | `test_timeout_checker_detects_reqwest_client_in_thread_local` | pass |
+| Macro scanning — `scan_macro_body_as_ast` Strategy 2 positive detection | `test_timeout_checker_strategy2_detects_statement_macro_violation` | pass |
+| Macro scanning — `scan_macro_body_as_ast` Strategy 3 | `test_timeout_checker_detects_builder_in_lazy_static` | pass |
+| `#[cfg(test)]` stmt macro exempt — `check_client_timeout` | `test_timeout_checker_cfg_test_stmt_macro_not_flagged` | pass |
+| `#[cfg(test)]` stmt macro exempt — `check_no_panic` | `test_no_panic_cfg_test_stmt_macro_not_flagged` | pass |
+| Known-limitation pinning — CT-KL-macro (opaque macro body) | `test_timeout_checker_unparseable_macro_body_known_limitation` | pass |
+| Test context suppression | `test_timeout_checker_ignores_tokio_test_fns`, `test_timeout_checker_ignores_cfg_test_trait_default_method` | pass |
+
+Total: 233 xtask tests pass, 5 skipped.
+
+**Updated known limitations (namespaced IDs):**
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind flat-token macro scan (conservative FP direction) |
+| NP-KL-2 | `check-no-panic` | **RESOLVED in fix-burst-30** | Turbofish comma miscounting — angle-bracket depth tracking implemented in `syn_macro_has_bc_id` |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` false negative |
+
+**Clause-(d) coverage summary:** All HIGH and MED findings closed with load-bearing tests. LOW findings: LOW-001 closed with doc expansion (three doc sites updated); LOW-002 closed with `test_timeout_checker_unparseable_macro_body_known_limitation`; LOW-003 closed with doc correction (fix-burst-29 `F-P27-MED-002` attribution "Six" → "Four"); LOW-004 closed by product-owner BC amendment (BC-2.14.004 v1.15).
+
+**Docs-only note:** The docs commit for this fix-burst-30 CHANGELOG and evidence-report update is docs-only — no `xtask/src/**/*.rs` behavioral changes. Clause (d) does not fire for the docs commit.
+
+---
+
+## fix-burst-29 re-verification
+
+**Clause (d) analysis:** `check_client_timeout.rs` was modified (UFCS qself extended; Strategy 3 removed; module doc and KL sections updated; two test renames). `tests.rs` was modified (new UFCS tests added; test renames). Clause (d) fires.
+
+**Per-detection-class test attestation:**
+
+| Detection class | Representative tests | Pass |
+|----------------|----------------------|------|
+| Pattern A — `Client::new` | `test_timeout_scanner_still_flags_reqwest_client_new` | pass |
+| Pattern A — `Client::default` (plain path) | `test_timeout_checker_detects_client_default_qualified` | pass |
+| Pattern A — UFCS `<reqwest::Client as Default>::default()` (qself) | `test_timeout_checker_detects_client_ufcs_default_qualified` | pass |
+| Pattern A — UFCS `<reqwest::Client>::new()` | `test_timeout_checker_detects_client_ufcs_new_qualified` | pass |
+| Pattern B — builder chain `analyze_build_chain` | `test_timeout_scanner_flags_builder_build_without_timeout_single_line` | pass |
+| Pattern B — UFCS `<reqwest::ClientBuilder as Default>::default()` | `test_timeout_checker_detects_clientbuilder_ufcs_default_no_timeout` | pass |
+| Pattern B — UFCS `<reqwest::ClientBuilder>::new()` | `test_timeout_checker_detects_clientbuilder_ufcs_new_no_timeout` | pass |
+| Pattern B — UFCS `<reqwest::Client>::builder()` | `test_timeout_checker_detects_client_ufcs_builder_no_timeout` | pass |
+| Macro scanning — `scan_macro_body_as_ast` (3 strategies) | `test_timeout_checker_detects_reqwest_client_in_thread_local`, `test_timeout_checker_detects_builder_in_lazy_static` | pass |
+| Test context suppression | `test_timeout_checker_ignores_tokio_test_fns`, `test_timeout_checker_ignores_cfg_test_trait_default_method` | pass |
+| Known-limitation pinning (KL-1, KL-2, KL-5) | `test_timeout_checker_detects_client_default_bare`, `test_timeout_scanner_split_statement_false_negative_known_limitation`, `test_timeout_checker_module_alias_false_negative_known_limitation` | pass |
+
+Total: 229 xtask tests pass (approximately 320 workspace-wide per pre-push hook). 5 skipped.
+
+**Known limitations after fix-burst-29:** KL-1 (bare name via use import — conservative false positive), KL-2 (split-statement builder chains), KL-3 (constant-valued ZERO), KL-macro (macro bodies failing all three parse strategies), KL-5 (module-alias re-export false negative).
+
+**Docs-only note:** The docs commit following the fix-burst-29 code commits (adding this CHANGELOG + evidence-report section) is docs-only — no `xtask/src/**/*.rs` behavioral changes. Clause (d) does not fire for the docs commit.
+
+---
+
+## fix-burst-28 re-verification
+
+**Clause (d) analysis:** `check_client_timeout.rs` was modified (new `scan_macro_body_as_ast` function replacing flat-token `scan_macro_tokens_for_timeout_violations`; `analyze_build_chain` extended for UFCS `ClientBuilder` qself; `visit_trait_item_fn` added; module docs updated; KNOWN-LIMITATION 1 and 4 updated). Clause (d) fires — per-detection-class test attestation required.
+
+**Per-detection-class test attestation:**
+
+| Detection class | Representative tests | Pass |
+|----------------|----------------------|------|
+| Pattern A — direct `Client::new` / `Client::default` construction | `test_timeout_scanner_still_flags_reqwest_client_new`, `test_timeout_checker_detects_client_default_qualified` | pass |
+| Pattern A — UFCS `<reqwest::Client as Default>::default()` (qself) | `test_timeout_checker_detects_client_ufcs_default_qualified` (positive), `test_timeout_checker_ufcs_non_reqwest_client_as_default_clean` (negative) | pass |
+| Pattern B — builder chain via `analyze_build_chain` | `test_timeout_scanner_flags_builder_build_without_timeout_single_line`, `test_timeout_checker_detects_builder_default_qualified` | pass |
+| Pattern B — UFCS `<reqwest::ClientBuilder as Default>::default()` | `test_timeout_checker_detects_clientbuilder_ufcs_default_no_timeout` | pass |
+| Macro scanning — recursive AST via `scan_macro_body_as_ast` | `test_timeout_checker_detects_reqwest_client_in_thread_local`, `test_timeout_checker_detects_builder_in_lazy_static`, `test_timeout_checker_macro_nested_config_timeout_suppressed_violation` | pass |
+| Macro negative — `Client::builder().timeout().build()` in lazy_static | `test_timeout_checker_macro_client_builder_with_timeout_in_lazy_static` | pass |
+| Test context suppression (including `#[tokio::test]`, trait `#[cfg(test)]`) | `test_timeout_checker_ignores_tokio_test_fns`, `test_timeout_checker_ignores_cfg_test_trait_default_method` | pass |
+| Monotonic-OR / zero-timeout semantics | `test_timeout_checker_last_zero_timeout_overrides_valid` | pass |
+
+All 222 xtask tests pass (314 workspace-wide per pre-push hook). 5 skipped (pre-existing `#[ignore]` tests requiring live API keys).
+
+**Known limitations after fix-burst-28:** KL-1 (bare name via use import), KL-2 (split-statement builder chains), KL-3 (constant-valued ZERO timeout), KL-macro (macro bodies failing all four parse strategies skipped).
+
+**Docs-only note:** The docs commit that follows the fix-burst-28 code commit is docs-only — no `xtask/src/**/*.rs` files changed, no fixture directory changes, no `CREDENTIAL_FIXTURE_COUNT` changed. Clause (d) does not fire for the docs commit.
+
+**Note:** the Pattern-A UFCS (`<reqwest::Client as Default>::default()`) test was added in fix-burst-29 (`test_timeout_checker_detects_client_ufcs_default_qualified`); this attestation row has been back-corrected to reference the load-bearing test.
+
+---
+
+## fix-burst-27 re-verification
+
+**Clause (d) analysis:** `check_client_timeout.rs` was modified (new `visit_expr_macro`/`visit_stmt_macro`/`visit_item_macro` methods, `scan_macro_tokens_for_timeout_violations` function, `classify_client_new` and `classify_builder_constructor` extended, `analyze_build_chain` OBS-001 fix). Evidence-report validity requires per-detection-class test attestation for scanner logic changes.
+
+**Per-detection-class test attestation:**
+
+| Detection class | Representative tests | Pass |
+|----------------|----------------------|------|
+| Pattern A — direct `Client::new` / `Client::builder` | `test_timeout_scanner_still_flags_reqwest_client_new`, `test_timeout_scanner_flags_clientbuilder_new_without_timeout` | 8/8 |
+| Pattern A — `Client::default` / UFCS | `test_timeout_checker_detects_client_default_qualified`, `test_timeout_checker_detects_client_default_bare` | 4/4 |
+| Pattern B — builder chain via `analyze_build_chain` | `test_timeout_scanner_flags_builder_build_without_timeout_single_line`, `test_timeout_scanner_does_not_flag_builder_with_timeout` | 10/10 |
+| Macro scanning — `scan_macro_tokens_for_timeout_violations` | `test_timeout_checker_detects_reqwest_client_in_thread_local`, `test_timeout_checker_detects_builder_in_lazy_static`, `test_timeout_checker_detects_builder_with_timeout_in_lazy_static` | 3/3 |
+| Test context suppression (including `#[tokio::test]`) | `test_timeout_checker_ignores_tokio_test_fns` | 5/5 |
+| Monotonic-OR / zero-timeout semantics | `test_timeout_checker_last_zero_timeout_overrides_valid` | 2/2 |
+
+Total: 309 pass, 7 skipped (pre-existing `#[ignore]` tests requiring live API keys).
+
+**Known limitations after fix-burst-27:** KL-1 (bare name via use import), KL-2 (split-statement builder chains), KL-3 (constant-valued ZERO timeout), KL-macro (best-effort flat-token macro scanning for complex nested bodies).
+
+**Docs-only note:** The CHANGELOG and evidence-report update commit that follows the fix-burst-27 code commit is docs-only — no `xtask/src/**/*.rs` files changed, no fixture directory changes, no `CREDENTIAL_FIXTURE_COUNT` changed. Clause (d) does not fire for the docs commit.
 
 ---
 

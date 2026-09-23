@@ -153,15 +153,21 @@ fn test_non_exhaustive_inventory_matches_source() {
         );
     }
 
-    // Count _fails.rs fixtures in tests/ui/:
-    //   - EXPECTED_NON_EXHAUSTIVE_COUNT per-type match-exhaustiveness fixtures
+    // Count compile-fail fixtures in tests/ui/:
+    //   - EXPECTED_NON_EXHAUSTIVE_COUNT per-type match-boundary fixtures
+    //     (suffix: `_fails.rs` for named-struct/enum types, `_blocked.rs` for
+    //     credential newtypes whose external boundary is enforced by field privacy
+    //     rather than `#[non_exhaustive]` pattern requirements — F-P47-MED-002 fix)
     //   - CONSTRUCTION_FAIL_FIXTURE_COUNT struct-literal construction fixtures (BC-2.14.001 {PC-008} clause 1)
     let expected_fails = EXPECTED_NON_EXHAUSTIVE_COUNT + CONSTRUCTION_FAIL_FIXTURE_COUNT;
     // Path is relative to the package root (crates/pregolya-core/).
     let ui_dir = std::fs::read_dir("tests/ui/").expect("tests/ui/ must be readable");
     let fails_count = ui_dir
         .filter_map(|e| e.ok())
-        .filter(|e| e.file_name().to_string_lossy().ends_with("_fails.rs"))
+        .filter(|e| {
+            let name = e.file_name().to_string_lossy().into_owned();
+            name.ends_with("_fails.rs") || name.ends_with("_blocked.rs")
+        })
         .count();
     assert_eq!(
         fails_count, expected_fails,
@@ -283,8 +289,17 @@ fn test_all_pub_types_have_non_exhaustive() {
 /// (+ struct-literal construction for PregolyaError).
 /// (`ProblemExtensions` removed in pass-9b per BC-2.14.002 {PC-001} option ii.)
 ///
-/// - Structs: `..` wildcard required from external crate (E0638)
-/// - Enums: wildcard `_` arm required from external crate (E0004)
+/// - Named structs (PregolyaError, ProblemDetail): `..` wildcard required from
+///   external crate (E0638 — `#[non_exhaustive]` struct requires `..`).
+/// - Enums (Component, Category, RetryHint): wildcard `_` arm required from
+///   external crate (E0004 — non-exhaustive pattern).
+/// - Credential newtypes (OpenAiApiKey, AnthropicApiKey): tuple structs with a
+///   private field. ALL pattern destructuring from external code is blocked by
+///   E0532 ("cannot match against a tuple struct which contains private fields")
+///   — this includes the `(..)` wildcard; private field visibility is stronger
+///   than `#[non_exhaustive]` alone. The `_blocked.rs` fixtures exercise this
+///   boundary. The `_passes.rs` fixtures demonstrate the correct external-crate
+///   interaction: calling `expose_secret()` (the only public access path).
 ///
 /// Trybuild compiles each fixture as an independent binary importing
 /// `pregolya_core` as an external dependency, reproducing the external-crate
@@ -299,8 +314,8 @@ fn ui() {
         "tests/ui/component_match_without_wildcard_fails.rs",
         "tests/ui/category_match_without_wildcard_fails.rs",
         "tests/ui/retry_hint_match_without_wildcard_fails.rs",
-        "tests/ui/open_ai_api_key_match_without_dots_fails.rs",
-        "tests/ui/anthropic_api_key_match_without_dots_fails.rs",
+        "tests/ui/open_ai_api_key_external_field_access_blocked.rs",
+        "tests/ui/anthropic_api_key_external_field_access_blocked.rs",
     ];
     const PASS_FIXTURES: [&str; EXPECTED_NON_EXHAUSTIVE_COUNT] = [
         "tests/ui/pregolya_error_match_with_dots_passes.rs",

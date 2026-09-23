@@ -16,6 +16,48 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-49 (pass-47 findings)
+
+### records-lint.sh structural refactor, credential fixture rename, records accuracy
+
+**Pass-47 finding tally: 0 CRIT + 1 HIGH + 4 MED + 5 LOW.**
+
+**HIGH-001 (F-P47-HIGH-001) — `L13-probe-G` coupled to live `feature/S-1.02` branch; records-lint.sh will hard-`exit 2` and block every `.factory/` commit once that branch is deleted:**
+What was wrong: Probe G's synthetic STATE.md hardcoded `feature/S-1.02` in its §DEVELOP STATE. After PR merge and branch deletion, `git rev-parse --verify refs/heads/feature/S-1.02` returns empty; `_L13_CHECK` exits 0 (skip path); `probe_must_fail` fires `exit 2`, permanently blocking all factory-artifacts commits.
+What was fixed: Probe G now creates a PID-unique disposable ref (`refs/heads/feature/records-lint-selfprobe-g-$$`) and references it in the synthetic STATE.md. The synthetic STATE.md contains an all-zeros frozen HEAD that does not match the live disposable ref's real SHA → `check_l13` correctly FAILs → `probe_must_fail` passes. The disposable ref is deleted in both success and error paths. No reference to `feature/S-1.02` anywhere in the probe.
+
+**MED-001 (F-P47-MED-001) — Step 3.5 PASS line had no positive-coverage signal for live-HEAD check:**
+What was wrong: The PASS line only reported "3/3 surfaces in sync"; whether the live-HEAD assertion actually executed or was silently skipped was indistinguishable from the output.
+What was fixed: `check_l13` now tracks `LIVE_HEAD_COVERAGE` through all code paths: `[live-HEAD: checked(feature/S-1.02=matched)]` (branch resolved, SHA matched), `[live-HEAD: skipped(branch-not-found)]` (branch not resolvable), or `[live-HEAD: skipped(no-frozen-sha-in-checkpoint)]`. Both `emit PASS` sites append this suffix. Script-header and function-header comments updated to document both new FAIL conditions.
+
+**MED-002 (F-P47-MED-002) — credential trybuild fail fixtures tested E0532 (field privacy) but were named and described as `#[non_exhaustive]` match-without-dots gates; pass fixtures were non-discriminating (opaque function call):**
+What was wrong: `open_ai_api_key_match_without_dots_fails.rs` and `anthropic_api_key_match_without_dots_fails.rs` named "match_without_dots" implying failure was about `..` wildcard. The actual error is E0532 (private field blocks ALL pattern destructuring including `(..)`). Pass fixtures called an opaque function — not discriminating on field privacy or `#[non_exhaustive]`.
+What was fixed: Renamed fail fixtures to `open_ai_api_key_external_field_access_blocked.rs` / `anthropic_api_key_external_field_access_blocked.rs` (E0532 naming). Pass fixtures now call `expose_secret()` — the correct external API, discriminating because the fixture fails to compile if `expose_secret()` is removed or made private. Gate doc comment corrected: for private-field tuple struct credentials, external boundary is enforced by field privacy (E0532); `#[non_exhaustive]` is pinned by inventory/glob gates. Story spec §File Structure Requirements updated (v1.25): old `_match_without_dots_fails` rows replaced, pass fixture descriptions corrected.
+
+**MED-003 (F-P47-MED-003) — evidence-report fix-burst-48 MED-001 row cited SHA tokens `2d71869` / `489584d`, re-opening the fix-burst-35 de-SHA sweep:**
+Self-corrected: SHA tokens removed; replaced with behavioral anchors. See evidence-report fix-burst-48 re-verification MED-001 row.
+
+**MED-004 (F-P47-MED-004) — records-lint.sh `check_l13` hardcoded input path; swap-and-restore window put backup in trap-deleted PROBE_TMP, risking STATE.md destruction on interrupt:**
+What was wrong: `check_l13` used `local STATE_MD="${FACTORY_DIR}/STATE.md"` (hardcoded). Probe F and Probe G-real used swap-and-restore to exercise the shipped function: backup → overwrite → check → restore. Backup stored in `PROBE_TMP` which is deleted by `trap 'rm -rf "$PROBE_TMP"' EXIT` — any interrupt destroyed STATE.md.
+What was fixed: `check_l13` now accepts `check_l13 [state_md_path]` — optional first argument, defaulting to `${FACTORY_DIR}/STATE.md`. All 7 probes (A–G) now call `check_l13 "$PROBE_L13X"` directly with their synthetic file. The `_L13_CHECK` mirror function (~76 lines) retired entirely. All three swap-and-restore windows eliminated. No probe ever touches the canonical STATE.md.
+
+**LOW-001 (F-P47-LOW-001) — CHANGELOG fix-burst-48 HIGH-001 paragraph cited `§DEVELOP STATE` sub-scope incorrectly:**
+Corrected to "whole awk-delimited section" — the code extracts from the entire §Session Resume Checkpoint section.
+
+**LOW-002 (F-P47-LOW-002) — evidence-report fix-burst-48 HIGH-001 row conflated `probe_must_fail "L13-probe-G"` with `L13-probe-G-real` inline guard:**
+Split into two distinct assertions in the Load-bearing-artifact cell.
+
+**LOW-003 (F-P47-LOW-003) — residual over-claim "accessible within the defining crate" at 3 sites:**
+Corrected to "accessible within the defining module and its descendants" in CHANGELOG fix-burst-48 MED-004 paragraph, evidence-report fix-burst-47 re-verification LOW-002 row, and story spec AC-008 parenthetical (v1.24).
+
+**LOW-004 (F-P47-LOW-004) — story spec §File Structure Requirements missing 3 rows:**
+Added `open_ai_api_key_match_with_dots_passes.rs` (CREATE), `anthropic_api_key_match_with_dots_passes.rs` (CREATE), and `non_exhaustive_external_gate.rs` (MODIFY) in story spec v1.24. Subsequently updated all fail fixture rows to new `_external_field_access_blocked` names and corrected pass fixture descriptions in v1.25.
+
+**LOW-005 (F-P47-LOW-005) — evidence-report section ordering non-monotonic (48/47/46 ascending inserted into descending 45→40 block):**
+All 22 `## fix-burst-N re-verification` sections reordered to strict descending order (48→27), matching CHANGELOG.md convention.
+
+**Test count (fix-burst-49):** 253 run: 253 passed, 5 skipped (xtask per-crate: `cargo nextest run -p xtask`). Full workspace: 345 run: 345 passed, 7 skipped (`cargo nextest run --workspace`). Test counts unchanged (no Rust logic changes; trybuild fixture rename keeps same compile_fail/pass counts: 8 compile_fail + 7 pass = 15 total).
+
 ## fix-burst-48 (pass-46 findings)
 
 ### records-lint.sh L13 live-HEAD check, probe G, probe F extension, banner correction, false Rust semantics correction
@@ -24,7 +66,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 **HIGH-001 (F-P46-HIGH-001) — L13 Step 3.5 vacuous; false-green when checkpoint and COMPLETE row share stale SHA:**
 What was wrong: `check_l13` Step 3.5 verified the checkpoint's frozen HEAD SHA appeared in any `| COMPLETE |` row, but when both the checkpoint and a COMPLETE row referenced the same stale SHA, the check passed (e.g., be1af38 in D-413 COMPLETE + checkpoint also citing be1af38). The check never compared against the live feature branch HEAD.
-What was fixed: added live branch HEAD resolution (`git rev-parse --verify refs/heads/<branch>` where `<branch>` is extracted from §Session Resume Checkpoint §DEVELOP STATE); now fails when checkpoint frozen HEAD != live branch HEAD. Changed `head -1` to `tail -1` for extraction to take the most recent `frozen HEAD <sha>` match. Same fix applied to `_L13_CHECK` mirror. New self-probe `L13-probe-G` (must_fail): synthetic STATE.md with all-zeros frozen HEAD that exists in a COMPLETE row but != live branch HEAD. Probe F extended to also invoke real `check_l13` via swap-and-restore (addresses MED-002). Banner in `run_self_probes` updated to "Seven probes (A–G)".
+What was fixed: added live branch HEAD resolution (`git rev-parse --verify refs/heads/<branch>` where `<branch>` is extracted from the §Session Resume Checkpoint section (whole awk-delimited section)); now fails when checkpoint frozen HEAD != live branch HEAD. Changed `head -1` to `tail -1` for extraction to take the most recent `frozen HEAD <sha>` match. Same fix applied to `_L13_CHECK` mirror. New self-probe `L13-probe-G` (must_fail): synthetic STATE.md with all-zeros frozen HEAD that exists in a COMPLETE row but != live branch HEAD. Probe F extended to also invoke real `check_l13` via swap-and-restore (addresses MED-002). Banner in `run_self_probes` updated to "Seven probes (A–G)".
 
 **MED-001 (F-P46-MED-001) — STATE.md cited be1af38 throughout; no D-415/D-416:**
 Self-resolved: state-manager committed D-414 COMPLETE + D-415 COMPLETE (fix-burst-47, pushed at 489584d816281cfc371a66c7174ab0641ea8621b) + D-416 IN FLIGHT (adversary pass-46 dispatched) in a single factory-artifacts commit (2d71869). No code action required.
@@ -36,7 +78,7 @@ Bundled with HIGH-001 fix above (probe F extension with swap-and-restore).
 Bundled with HIGH-001 fix above (banner updated to "Seven probes (A–G)" with full enumeration).
 
 **MED-004 (F-P46-MED-004) — 3 artifact sites propagated false Rust semantics ("`#[non_exhaustive]` + private field" claim):**
-What was wrong: fix-burst-47 LOW-002 closure stated that direct tuple-struct construction of `OpenAiApiKey`/`AnthropicApiKey` was unavailable due to `#[non_exhaustive]` + private field. This is false: `#[non_exhaustive]` only restricts construction outside the defining crate; the private field is accessible within the crate's module tree (tests are in `#[cfg(test)] mod tests` with `use super::*`).
+What was wrong: fix-burst-47 LOW-002 closure stated that direct tuple-struct construction of `OpenAiApiKey`/`AnthropicApiKey` was unavailable due to `#[non_exhaustive]` + private field. This is false: `#[non_exhaustive]` only restricts construction outside the defining crate; the private field is accessible within the defining module and its descendants (tests are in `#[cfg(test)] mod tests` with `use super::*`).
 What was fixed: story spec AC-008 parenthetical corrected (v1.23); CHANGELOG fix-burst-47 LOW-002 paragraph corrected; evidence-report fix-burst-47 re-verification LOW-002 row corrected. Accurate claim: tests use `from_raw_for_tests()` because it is the explicit `#[cfg(test)]`-gated validation-bypass helper, not because the tuple form is unavailable.
 
 **Test count (fix-burst-48):** 253 run: 253 passed, 5 skipped (xtask per-crate: `cargo nextest run -p xtask`). Full workspace: 345 run: 345 passed, 7 skipped (`cargo nextest run --workspace`). Test counts unchanged (no Rust code changes in fix-burst-48).
