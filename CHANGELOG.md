@@ -16,6 +16,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+### Fixed (fix-burst-22, 2026-09-22)
+- F-P20-HIGH-001: `find_chain_end` bounded forward scan to base-call ident path; function-reference base call no longer skips following statements
+- F-P20-HIGH-002: `has_build_without_timeout` `*GroupEnd` at depth-0 now terminates scan (`break`) instead of clamping (`saturating_sub`); inner builder no longer claims outer chain's `.build()`
+- F-P20-MED-001: doc comments reconciled; added 3 regression tests
+
+### Fixed (fix-burst-21, 2026-09-22)
+- F-P19-HIGH-001: `has_build_without_timeout` added depth guard (brace/bracket/paren depth-0 check) on `.timeout()` crediting; nested inner builder's `.timeout()` no longer credited to outer chain; added 3 regression tests
+
+### Fixed (fix-burst-20, 2026-09-22)
+- F-P18-HIGH-001: has_build_without_timeout now terminates at first depth-0 .build() — eliminates cross-chain verdict leakage where a compliant chain's timeout credited a violating chain
+- F-P18-MED-002: ParenGroupEnd variant added to FlatToken; paren_depth counter prevents vec!(x;n) semicolons from terminating the chain scan
+
+### Fixed (fix-burst-19, 2026-09-22)
+- F-P17-MED-001/MED-002: evidence-report.md AC-017 counts updated to 14/17, 14th violation class added, validity criterion extended with fixture-directory clause (c)
+- F-P17-MED-003: BracketGroup/BracketGroupEnd depth tracking in has_build_without_timeout — vec![..;n] repeat `;` no longer terminates chain scan
+- F-P17-MED-004: Leading `::` skip before post-`for` ident collection in check_impl_deref and check_impl_display_in_tokens
+- F-P17-LOW-005: Exempt-direction tests for assert_eq!/assert_ne!/assert_matches! 3-arg form with BC-ID in message
+- F-P17-LOW-006: CREDENTIAL_FIXTURE_COUNT doc comment ratio updated to 14/17
+- F-P17-OBS-007: KNOWN-LIMITATION added to syn_macro_has_bc_id for turbofish comma counting
+
+### Fixed (fix-burst-18, 2026-09-22)
+- F-P16-MED-001: `syn_macro_has_bc_id` made arity-aware — `assert_eq!`/`assert_ne!`/`assert_matches!` now require BC-ID in message (3rd argument), not comparand; new violation fixture and test added
+- F-P16-MED-002: `has_build_without_timeout` brace-depth tracking via `BraceGroupEnd` variant prevents brace-group arguments from terminating the scan before `.build()` is reached
+- F-P16-MED-005: `test_BC_2_14_003_programmer_error_guards_compliant` assertion message corrected — `panic!()` removed as an acceptable guard form (it is unconditionally flagged with no Exemption-2 path)
+- F-P16-LOW-006: `check_impl_deref` and `check_impl_display_in_tokens` post-`for` ident-collection loops stop at `where` clause boundary; two regression tests added
+
 ### Fixed (fix-burst-17, 2026-09-22)
 
 - **F-P15-M01** — Separated `panic!` from the Exemption-2 group in `pub fn run()` doc (`check_no_panic.rs`): `panic!`/`todo!`/`unimplemented!` are now documented as unconditionally flagged; the Exemption-2 qualifier "(without `# Panics` doc + BC-ID exemption)" now applies only to the assert-family; `assert_matches!` added to the assert-family list in the `run()` doc.
@@ -56,21 +82,3 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **F-P12-L01** — Fixed `xtask/tests/fixtures/violations/violation_todo_stub.rs`: corrected header comment to say "detects `todo!()`" only (removed false claim of `unimplemented!()` coverage); renamed `unimplemented_function` to `todo_stub_function` to remove the false implication.
 - **F-P12-L03** — Fixed self-contradicting Pattern-2 inline comment in `xtask/src/check_client_timeout.rs`: removed the false claim that Pattern 2 "only detects inline-qualified calls"; replaced with accurate description that bare unqualified `Client::new()` calls are flagged conservatively per KNOWN-LIMITATION 1.
 - **F-P12-L05** — Replaced `assert!` panic in `check_file_size()` (`xtask/src/main.rs`) with `check_post_exemption_vacuity` structured error path; vacuity condition now produces stderr message + exit code 1 (not exit code 101 from panic).
-
-### Fixed (fix-burst-18, 2026-09-22)
-- F-P16-MED-001: `syn_macro_has_bc_id` made arity-aware — `assert_eq!`/`assert_ne!`/`assert_matches!` now require BC-ID in message (3rd argument), not comparand; new violation fixture and test added
-- F-P16-MED-002: `has_build_without_timeout` brace-depth tracking via `BraceGroupEnd` variant prevents brace-group arguments from terminating the scan before `.build()` is reached
-- F-P16-MED-005: `test_BC_2_14_003_programmer_error_guards_compliant` assertion message corrected — `panic!()` removed as an acceptable guard form (it is unconditionally flagged with no Exemption-2 path)
-- F-P16-LOW-006: `check_impl_deref` and `check_impl_display_in_tokens` post-`for` ident-collection loops stop at `where` clause boundary; two regression tests added
-
-### Fixed (fix-burst-19, 2026-09-22)
-- F-P17-MED-001/MED-002: evidence-report.md AC-017 counts updated to 14/17, 14th violation class added, validity criterion extended with fixture-directory clause (c)
-- F-P17-MED-003: BracketGroup/BracketGroupEnd depth tracking in has_build_without_timeout — vec![..;n] repeat `;` no longer terminates chain scan
-- F-P17-MED-004: Leading `::` skip before post-`for` ident collection in check_impl_deref and check_impl_display_in_tokens
-- F-P17-LOW-005: Exempt-direction tests for assert_eq!/assert_ne!/assert_matches! 3-arg form with BC-ID in message
-- F-P17-LOW-006: CREDENTIAL_FIXTURE_COUNT doc comment ratio updated to 14/17
-- F-P17-OBS-007: KNOWN-LIMITATION added to syn_macro_has_bc_id for turbofish comma counting
-
-### Fixed (fix-burst-20, 2026-09-22)
-- F-P18-HIGH-001: has_build_without_timeout now terminates at first depth-0 .build() — eliminates cross-chain verdict leakage where a compliant chain's timeout credited a violating chain
-- F-P18-MED-002: ParenGroupEnd variant added to FlatToken; paren_depth counter prevents vec!(x;n) semicolons from terminating the chain scan
