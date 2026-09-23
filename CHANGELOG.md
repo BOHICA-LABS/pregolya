@@ -16,6 +16,46 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-53 (pass-51 findings)
+
+**Pass-51 finding tally: 1 HIGH + 3 MED + 1 LOW + 1 OBS**
+
+### HIGH-001: burst-parity check-burst-records-parity hook parity comparisons were functionally inert
+
+**What was wrong:** Both the ID-parity and tally-parity comparisons never executed. The CHANGELOG extraction regex `^### F-P[0-9]+-[A-Z]+-[0-9]+` does not match the actual heading format (`### HIGH-001:`, `### MED-005:`) — zero lines ever matched. The ER tally regex `\*\*Adversary pass [0-9]+ result:[^*]+\*\*` requires at least one non-`*` character between `result:` and the closing `**`, but the actual line has `result:**` with no character between them — also zero matches. Despite both comparisons being disabled, the hook printed `[BURST-PARITY PASS] … finding IDs compared; tally verified.` with ID_COUNT=0 and no tally evaluated — a false-green attestation (TD-VSDD-059 paper-fix pattern). Consequence: the three-way inventory contradiction detector introduced in fix-burst-52 to close the F-P49-HIGH-001/F-P50-HIGH-001 recurrence was completely inert from the moment it was written.
+
+**What was fixed:** Logic extracted to `scripts/check-burst-records-parity.sh` (invoked by lefthook.yml). CHANGELOG extraction regex changed to `^### (CRIT|HIGH|MED|LOW|OBS|PROCESS-GAP)-[0-9]+` (matches bare heading format). ER tally regex changed to `\*\*Adversary pass [0-9]+ result:\*\*.*`. Empty extraction on either side is now fail-closed: exits 1 with `[BURST-PARITY FAIL] extraction returned empty set — cannot certify parity`. Self-probe added (`--self-probe` flag): creates synthetic CHANGELOG (fix-burst-99 with HIGH-001 + MED-001) and synthetic evidence-report (fix-burst-99 with HIGH-001 + LOW-001 — deliberately divergent), asserts the check exits non-zero. Smoke test: `bash scripts/check-burst-records-parity.sh` → `[BURST-PARITY PASS] fix-burst-52: 13 finding IDs matched; tally verified.`; `bash scripts/check-burst-records-parity.sh --self-probe` → `[SELF-PROBE PASS] burst-parity deliberately-divergent pair correctly detected mismatch`.
+
+### MED-001: parity regex could not match PROCESS-GAP finding IDs
+
+**What was wrong:** The ID regex `F-P[0-9]+-[A-Z]+-[0-9]+` used in both CHANGELOG and evidence-report extraction paths cannot match `F-P48-PROCESS-GAP-001` — after consuming `PROCESS` with `[A-Z]+`, the literal `-` matches, then `[0-9]+` confronts `G` and fails. Process-gap findings — exactly the class encoding systemic defects — were invisible to the parity comparison.
+
+**What was fixed:** All severity token patterns changed to enumerated alternation `(CRIT|HIGH|MED|LOW|OBS|PROCESS-GAP)` throughout both extraction paths.
+
+### MED-002: evidence-report AC-004 and AC-006 vacuous gate-PASS attributions (incomplete sibling sweep)
+
+**What was wrong:** Fix-burst-52 closed F-P50-MED-002 by reattributing AC-003 to `test_BC_2_14_003_debug_assert_not_flagged`. The sweep was applied to AC-003 only; two siblings in the same §AC Coverage Map retained the identical defect. AC-004 (30s timeout) was attributed to the `check-client-timeout` gate PASS (which only verifies *some* non-zero timeout, not 30s specifically). AC-006 (build_client returns Ok) was attributed to the AC-005 recording + compilation proof (a static lint never invokes `build_client()`).
+
+**What was fixed:** AC-004 reattributed to `test_BC_2_14_004_default_timeout_applied` (asserts `HTTP_CLIENT_TIMEOUT_SECS` = 30 appears in reqwest Client Debug output; discriminating — would catch 1s regression). AC-006 reattributed to `test_BC_2_14_004_build_client_returns_ok` + `test_BC_2_14_004_timeout_error_shape` (both invoke `build_client()` directly; non-`#[ignore]`).
+
+### MED-003: xtask error-code registry gate silently skipped Custom-namespace codes; accepted unconstructible codes
+
+**What was wrong:** `is_valid_error_code` validated COMPONENT as `[A-Z0-9]+` (uppercase + digits only). Custom-namespace codes with lowercase, hyphens, or underscores (`E-newcrate-001`, `E-my-crate-001`, `E-my_crate-001`) returned `None` from `extract_error_code` and were silently skipped by the collision check — exactly the namespace where EC-007 collision risk is highest. Also: no suffix-length constraint, so `E-CORE-12` and `E-CORE-1000` passed the gate but `PregolyaError::new` panics on both (requires exactly 3 digits).
+
+**What was fixed:** Added `is_valid_component_segment_xtask` private fn mirroring production `is_valid_component_segment` from `pregolya-core/src/error.rs` (non-empty, ASCII alphanumeric + `-` + `_`, no leading/trailing separators, no consecutive separators). `is_valid_error_code` now delegates to it and requires `number.len() == 3`. Uses `rfind('-')` to parse multi-segment Custom names. Added coupling test `test_is_valid_error_code_coupling` (9-row fixture; 254 xtask tests pass).
+
+### LOW-001: ID_COUNT doubled on empty extraction
+
+**What was fixed:** `grep -c` exits 1 on zero matches, so `|| echo "0"` appended a second `0`, rendering `0 0` in the PASS line. Replaced with `printf '%s\n' "$cl_ids" | wc -l | tr -d ' '`.
+
+### OBS-001: adversary dispatch-brief BC paraphrase diverges from code
+
+**What was wrong:** The adversary dispatch brief (pr-manager authored) incorrectly described three behaviors: (a) cited non-existent `display_message()` and `ApiKeyExposed` symbols; (b) inverted the polarity of BC-2.14.003 `debug_assert!` handling (code correctly EXEMPTS it; brief said it must be caught); (c) used enum-variant notation for `PregolyaError::HttpClient(E-CORE-012)` that doesn't match the ADR-010 struct design.
+
+**Disposition:** DISCARDED — the code IS correct on all three points; this was a paraphrase error in the adversary dispatch brief, not a product defect. Future dispatch briefs will cite: `debug_assert!` is EXEMPT from `check-no-panic` (compiles out in release; BC-2.14.003 {INV-003}; pinned by `test_BC_2_14_003_debug_assert_not_flagged`).
+
+**Test count:** 345 tests pass (cargo nextest), 7 skipped — no behavior changed in pregolya-core. xtask: 254 tests pass (up from 251 due to `test_is_valid_error_code_coupling` + 2 updated existing tests).
+
 ## fix-burst-52 (pass-50 findings)
 
 **Pass-50 finding tally: 3 HIGH + 5 MED + 3 LOW + 2 OBS**

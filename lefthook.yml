@@ -18,67 +18,17 @@ pre-push:
       run: just check
     # Fix 5 (F-P48-PROCESS-GAP-001): burst-parity check — verify the newest
     # fix-burst-N section in CHANGELOG.md has a matching re-verification section
-    # in evidence-report.md. Implemented here (not in records-lint.sh) because
-    # CHANGELOG.md and evidence-report.md live on the feature branch, not in .factory/.
+    # in evidence-report.md with consistent finding-ID sets and tally counts.
+    # Logic extracted to scripts/check-burst-records-parity.sh for testability
+    # (fixes F-P51-HIGH-001 inert regexes, F-P51-MED-001 PROCESS-GAP support,
+    # F-P51-LOW-001 ID_COUNT doubling, and adds fail-closed empty extraction).
     check-burst-records-parity:
-      run: |
-        # FIX F (F-P52-LOW-001): use numeric sort to find the highest-numbered fix-burst,
-        # not the first section heading in document order (which is wrong when sections
-        # appear out-of-order).
-        NEWEST_BURST=$(grep -oE '^## fix-burst-[0-9]+' CHANGELOG.md 2>/dev/null | grep -oE '[0-9]+' | sort -rn | head -1 || true)
-        if [ -z "$NEWEST_BURST" ]; then
-          echo "[BURST-PARITY] No fix-burst sections found in CHANGELOG.md — skipping check."
-          exit 0
-        fi
-        # Derive story ID from current branch name (feature/S-X.XX → S-X.XX).
-        # Avoids hardcoding a story-specific path that breaks on every future branch.
-        BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
-        STORY_ID=$(echo "$BRANCH" | grep -oE 'S-[0-9]+\.[0-9]+' | head -1)
-        # FIX E (F-P52-MED-005): non-feature branches skip unconditionally.
-        # The old fallback (find docs/demo-evidence | head -1) picked an arbitrary
-        # evidence-report — filesystem-order-dependent — and then hard-failed when the
-        # selected report did not contain the latest fix-burst section. This blocked
-        # every develop/main/maintenance push. Parity is enforced on feature branches only.
-        if [ -z "$STORY_ID" ]; then
-          echo "[BURST-PARITY SKIP] Non-feature branch (${BRANCH:-<unknown>}) — parity enforced on feature branches only"
-          exit 0
-        fi
-        EVIDENCE_REPORT="docs/demo-evidence/${STORY_ID}/evidence-report.md"
-        if [ ! -f "$EVIDENCE_REPORT" ]; then
-          echo "[BURST-PARITY FAIL] evidence-report.md not found at ${EVIDENCE_REPORT} — failing closed"
-          exit 1
-        fi
-        if ! grep -q "^## fix-burst-${NEWEST_BURST} re-verification" "$EVIDENCE_REPORT"; then
-          echo "[BURST-PARITY FAIL] CHANGELOG.md has '## fix-burst-${NEWEST_BURST}' but evidence-report.md is missing '## fix-burst-${NEWEST_BURST} re-verification'."
-          exit 1
-        fi
-        # FIX G (F-P52-OBS-002): also verify finding-ID lists and declared tallies match
-        # between CHANGELOG and evidence-report. Section-heading presence alone was
-        # insufficient — divergent IDs/tallies passed silently (as in F-P50-HIGH-001).
-        CL_IDS=$(awk "/^## fix-burst-${NEWEST_BURST}[^-]/{found=1;next} found && /^## fix-burst-[0-9]/{found=0} found" CHANGELOG.md \
-          | grep -oE '^### F-P[0-9]+-[A-Z]+-[0-9]+' | grep -oE 'F-P[0-9]+-[A-Z]+-[0-9]+' | sort || true)
-        ER_IDS=$(awk "/^## fix-burst-${NEWEST_BURST} re-verification/{found=1;next} found && /^## fix-burst-[0-9]/{found=0} found" "$EVIDENCE_REPORT" \
-          | grep -oE '\| F-P[0-9]+-[A-Z]+-[0-9]+' | grep -oE 'F-P[0-9]+-[A-Z]+-[0-9]+' | sort || true)
-        if [ -n "$CL_IDS" ] && [ -n "$ER_IDS" ] && [ "$CL_IDS" != "$ER_IDS" ]; then
-          echo "[BURST-PARITY FAIL] fix-burst-${NEWEST_BURST}: finding ID mismatch between CHANGELOG and evidence-report"
-          echo "  CHANGELOG IDs: $(echo "$CL_IDS" | tr '\n' ' ')"
-          echo "  Evidence-report IDs: $(echo "$ER_IDS" | tr '\n' ' ')"
-          exit 1
-        fi
-        CL_TALLY=$(awk "/^## fix-burst-${NEWEST_BURST}[^-]/{found=1;next} found && /^## fix-burst-[0-9]/{found=0} found" CHANGELOG.md \
-          | grep -oE '\*\*Pass-[0-9]+ finding tally:[^*]+\*\*' | head -1 || true)
-        ER_TALLY=$(awk "/^## fix-burst-${NEWEST_BURST} re-verification/{found=1;next} found && /^## fix-burst-[0-9]/{found=0} found" "$EVIDENCE_REPORT" \
-          | grep -oE '\*\*Adversary pass [0-9]+ result:[^*]+\*\*' | head -1 || true)
-        CL_COUNTS=$(echo "$CL_TALLY" | grep -oE '[0-9]+ (HIGH|MED|LOW|OBS|PROCESS-GAP)' | sort || true)
-        ER_COUNTS=$(echo "$ER_TALLY" | grep -oE '[0-9]+ (HIGH|MED|LOW|OBS|PROCESS-GAP)' | sort || true)
-        if [ -n "$CL_COUNTS" ] && [ -n "$ER_COUNTS" ] && [ "$CL_COUNTS" != "$ER_COUNTS" ]; then
-          echo "[BURST-PARITY FAIL] fix-burst-${NEWEST_BURST}: tally mismatch between CHANGELOG and evidence-report"
-          echo "  CHANGELOG tally: $CL_TALLY"
-          echo "  Evidence-report tally: $ER_TALLY"
-          exit 1
-        fi
-        ID_COUNT=$(echo "$CL_IDS" | grep -c 'F-P' 2>/dev/null || echo "0")
-        echo "[BURST-PARITY PASS] fix-burst-${NEWEST_BURST}: section heading matched; ${ID_COUNT} finding IDs compared; tally verified."
+      run: bash scripts/check-burst-records-parity.sh
+    # Self-probe: runs the script's --self-probe mode to verify the regex logic
+    # catches a deliberately-divergent synthetic pair.  Always passes on a
+    # correctly-functioning script; fails if a regex regression is introduced.
+    burst-parity-self-probe:
+      run: bash scripts/check-burst-records-parity.sh --self-probe
 
 pre-tag:
   commands:

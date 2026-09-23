@@ -131,8 +131,32 @@ pub(crate) fn extract_error_code(line: &str) -> Option<String> {
     }
 }
 
+/// Mirrors `is_valid_component_segment` from `pregolya-core/src/error.rs`.
+///
+/// Returns `true` if `s` is a valid component-segment identifier:
+/// non-empty, ASCII alphanumeric + `-` + `_` only, no leading/trailing `-`/`_`,
+/// no consecutive `-`/`_` sequences (including mixed `-_` / `_-`).
+///
+/// Accepts both standard-namespace segments (e.g. `CORE`, `MCP`) and
+/// Custom-namespace segments (e.g. `newcrate`, `my-crate`, `my_crate`).
+fn is_valid_component_segment_xtask(s: &str) -> bool {
+    !s.is_empty()
+        && s.chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+        && !s.starts_with(['-', '_'])
+        && !s.ends_with(['-', '_'])
+        && !s.contains("--")
+        && !s.contains("__")
+        && !s.contains("-_")
+        && !s.contains("_-")
+}
+
 pub(crate) fn is_valid_error_code(s: &str) -> bool {
-    // E-<COMPONENT>-<NNN>: starts with E-, then uppercase/digits component, dash, digits
+    // E-<COMPONENT>-<NNN>: starts with E-, then a valid component segment (mirrors
+    // is_valid_component_segment in pregolya-core), dash, exactly 3 decimal digits.
+    //
+    // Uses rfind('-') so multi-segment Custom names (e.g. E-my-crate-001) parse
+    // correctly: component = "my-crate", suffix = "001".
     if !s.starts_with("E-") {
         return false;
     }
@@ -142,11 +166,8 @@ pub(crate) fn is_valid_error_code(s: &str) -> bool {
     };
     let component = &rest[..dash_pos];
     let number = &rest[dash_pos + 1..];
-    !component.is_empty()
-        && component
-            .chars()
-            .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit())
-        && !number.is_empty()
+    is_valid_component_segment_xtask(component)
+        && number.len() == 3
         && number.chars().all(|c| c.is_ascii_digit())
 }
 
@@ -171,10 +192,10 @@ mod tests {
         assert_eq!(extract_error_code("## Section"), None);
         assert_eq!(extract_error_code("| Header | Category |"), None);
         assert_eq!(extract_error_code(""), None);
-        // lowercase component — not valid
+        // lowercase component is valid (Custom namespace) — must be extracted
         assert_eq!(
             extract_error_code("| E-core-001 | VAL | broken | BC-2.01.001 | `msg` |"),
-            None
+            Some("E-core-001".to_string())
         );
     }
 
@@ -183,11 +204,48 @@ mod tests {
         assert!(is_valid_error_code("E-CORE-001"));
         assert!(is_valid_error_code("E-MCP-012"));
         assert!(is_valid_error_code("E-GRAPH-099"));
-        assert!(!is_valid_error_code("E-core-001")); // lowercase component
+        // Custom (lowercase) namespace codes are valid
+        assert!(is_valid_error_code("E-core-001"));
+        assert!(is_valid_error_code("E-newcrate-001"));
+        assert!(is_valid_error_code("E-my-crate-001"));
+        assert!(is_valid_error_code("E-my_crate-001"));
+        // Must-fail cases
         assert!(!is_valid_error_code("ERROR-001")); // no E- prefix
         assert!(!is_valid_error_code("E-CORE-")); // no number
         assert!(!is_valid_error_code("E--001")); // empty component
         assert!(!is_valid_error_code("E-CORE-ABC")); // non-digit suffix
+        // Exactly-3-digit enforcement
+        assert!(!is_valid_error_code("E-CORE-12")); // 2-digit suffix
+        assert!(!is_valid_error_code("E-CORE-1000")); // 4-digit suffix
+    }
+
+    /// Coupling test: `is_valid_error_code` must agree with the production runtime
+    /// validation predicate in `PregolyaError::new` (pregolya-core/src/error.rs) on a
+    /// shared fixture table.
+    ///
+    /// If the xtask gate and the runtime diverge, this test catches it before CI catches
+    /// it in production. The fixture rows cover the complete set of cases described in
+    /// finding F-P51-MED-003.
+    #[test]
+    fn test_is_valid_error_code_coupling() {
+        let cases: &[(&str, bool)] = &[
+            ("E-CORE-001", true),
+            ("E-MCP-042", true),
+            ("E-newcrate-001", true),
+            ("E-my-crate-001", true),
+            ("E-my_crate-001", true),
+            ("E-CORE-12", false),   // 2-digit suffix
+            ("E-CORE-1000", false), // 4-digit suffix
+            ("E-CORE-", false),     // no suffix
+            ("E-", false),          // no component
+        ];
+        for (code, expected) in cases {
+            assert_eq!(
+                is_valid_error_code(code),
+                *expected,
+                "is_valid_error_code({code:?}) expected {expected}"
+            );
+        }
     }
 
     #[test]

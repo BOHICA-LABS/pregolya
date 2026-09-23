@@ -45,14 +45,14 @@ Shows: `cargo xtask check-no-panic` — output: `check-no-panic PASSED: 25 analy
 Covered by: `test_BC_2_14_003_debug_assert_not_flagged` in `xtask::tests` — places a synthetic `debug_assert!` call in non-test scope and asserts the gate returns Ok with 0 violations; discriminating (the test would fail if the `debug_assert!` exemption was removed). The gate PASS recording (AC-002) is not itself load-bearing for the exemption because the production tree contains zero `debug_assert!` or exhaustive-match `unreachable!` sites; a gate PASS on an empty scan set proves nothing about the exemption path.
 
 ### AC-004 — build_client 30s timeout (BC-2.14.004 PC-001/PC-003)
-Covered by: AC-005 recording (gate verifies no Client::new() or missing timeout in production paths).
+Covered by: `test_BC_2_14_004_default_timeout_applied` in `crates/pregolya-core/src/http.rs`. This test is the primary load-bearing artifact: it asserts that the `HTTP_CLIENT_TIMEOUT_SECS` constant value (`30`) appears in the reqwest `Client`'s `Debug` output, discriminating 30 seconds from any other non-zero timeout value. The check-client-timeout gate PASS (AC-005 recording) provides secondary confirmation that no production call site is missing a `.timeout()` call, but the gate cannot distinguish 30 s from 1 s and is therefore non-load-bearing for this AC.
 
 ### AC-005 — check-client-timeout exits 0 (BC-2.14.004 PC-003)
 Recording: `AC-005-check-client-timeout-pass.{webm,gif}` — re-recorded 2026-09-22
 Shows: `cargo xtask check-client-timeout` — output: `check-client-timeout PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations`
 
 ### AC-006 — build_client returns Ok (BC-2.14.004 PC-005)
-Covered by: AC-005 recording proves the production code compiles and the xtask gate passes.
+Covered by: `test_BC_2_14_004_build_client_returns_ok` and `test_BC_2_14_004_timeout_error_shape` in `crates/pregolya-core/src/http.rs` (both non-`#[ignore]`). These are the primary load-bearing artifacts: `test_BC_2_14_004_build_client_returns_ok` actually invokes `build_client()` and asserts the `Ok` return, while `test_BC_2_14_004_timeout_error_shape` asserts the error shape for the ClientBuilder failure path. The AC-005 gate PASS proves only that no production call site is structurally missing `.timeout()`; it is a static lint that never invokes `build_client()` and therefore carries no information about the function's `Ok` return value.
 
 ### AC-007 — newtype not type-alias (BC-2.14.005 PC-001/PC-004)
 Compile-time static assertion — no runtime demo required (structural property enforced at compile time by `static_assertions::assert_not_impl_any!`).
@@ -221,6 +221,29 @@ Clause (a): no `crates/` production files added or deleted — the multibyte tes
 Gate outputs remain valid because the syn rewrite finds the same 0 violations on the workspace: no `crates/` code uses `reqwest::Client::new()` without `.timeout()`, and the pre-push hook confirmed all xtask gates PASSED (check-client-timeout, check-no-panic, check-error-code-registry, deny-bare-api-key, deny-anyhow, deny-description-cache-key). Counts: `check-client-timeout PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations` (unchanged). All other gate counts unchanged from prior attestation. Implementer run (fix-burst-26): 300 tests pass, 7 skipped. KL-4 tests now assert detection (was: known-limitation zero-finding, is: positive finding assertion). All other gate tests pass unchanged.
 
 The fix-burst-26 evidence-report docs commit (this commit) is docs-only and does NOT trigger clause (d).
+
+## fix-burst-53 re-verification
+
+**Adversary pass 51 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH + 3 MED + 1 LOW + 1 OBS.
+
+| Finding | Severity | Detection class | Load-bearing artifact |
+|---------|----------|-----------------|-----------------------|
+| F-P51-HIGH-001 | HIGH | Burst-parity hook inert (regexes never matched CHANGELOG bare headings or ER `result:**` tally format; false-green PASS on zero comparisons) | `scripts/check-burst-records-parity.sh` with fixed regexes; fail-closed empty extraction; self-probe (`--self-probe` flag) smoke test: `[SELF-PROBE PASS] burst-parity deliberately-divergent pair correctly detected mismatch` |
+| F-P51-MED-001 | MED | PROCESS-GAP IDs with internal hyphen not matched by `[A-Z]+` in severity token | All severity patterns changed to `(CRIT\|HIGH\|MED\|LOW\|OBS\|PROCESS-GAP)` throughout both extraction paths |
+| F-P51-MED-002 | MED | AC-004/AC-006 vacuous gate-PASS attributions (incomplete sibling sweep of F-P50-MED-002) | AC-004 → `test_BC_2_14_004_default_timeout_applied`; AC-006 → `test_BC_2_14_004_build_client_returns_ok` + `test_BC_2_14_004_timeout_error_shape` |
+| F-P51-MED-003 | MED | xtask `is_valid_error_code` rejected Custom-namespace codes; accepted unconstructible 2/4-digit suffix codes | `is_valid_component_segment_xtask` added; suffix exactly-3-digits enforced; `test_is_valid_error_code_coupling` added (9-row fixture) |
+| F-P51-LOW-001 | LOW | `ID_COUNT` doubled on empty (`grep -c` exit-1 + `\|\| echo "0"` double-emission) | `printf '%s\n' "$cl_ids" \| wc -l \| tr -d ' '` |
+| F-P51-OBS-001 | OBS | Adversary dispatch-brief paraphrase diverges from code (`display_message()`/`ApiKeyExposed` absent; `debug_assert!` polarity inverted; enum-variant notation for struct) | DISCARDED — code is correct; adversary prompt error, not product defect |
+
+**Test count:** 345 tests pass (cargo nextest), 7 skipped (pregolya-core unchanged); xtask 254 tests pass (3 updated/added: `test_is_valid_error_code_coupling`, updated `test_is_valid_error_code`, updated `test_extract_error_code_not_a_row`).
+
+**Gate output:**
+- Lefthook pre-push: `just check` PASSES; `check-burst-records-parity` → `[BURST-PARITY PASS] fix-burst-53: 6 finding IDs matched; tally verified.`; `burst-parity-self-probe` → `[SELF-PROBE PASS] burst-parity deliberately-divergent pair correctly detected mismatch`
+- Factory-dispatcher chain: `records-lint.sh` exits 0 on factory-artifacts branch
+
+**Known limitations:** none — all pass-51 findings closed by fix-burst-53 (OBS-001 discarded per triage).
+
+---
 
 ## fix-burst-52 re-verification
 
