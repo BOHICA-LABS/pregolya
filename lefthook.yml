@@ -26,8 +26,9 @@ pre-push:
     check-burst-records-parity:
       run: bash scripts/check-burst-records-parity.sh
     # Self-probe: runs the script's --self-probe mode to verify the regex logic.
-    # Runs four synthetic probes covering ID-mismatch, tally-divergent,
-    # tally-sum≠id-count, and pass-number-divergent scenarios.
+    # Runs six synthetic probes covering ID-mismatch, tally-divergent,
+    # tally-sum≠id-count, pass-number-divergent, tally-line-absent, and
+    # er-newest-burst-divergent scenarios.
     # Always passes on a correctly-functioning script; fails if a regex
     # regression is introduced.
     burst-parity-self-probe:

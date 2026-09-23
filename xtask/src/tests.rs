@@ -1704,33 +1704,35 @@ pub fn make_client() -> reqwest::Client {
 // ═══════════════════════════════════════════════════════════════════════════
 // BC-2.14.005 (S-1.02 AC-010) — deny-bare-api-key subprocess tests
 //
-// `deny_bare_api_key::run()` has no per-source scanner exposed as pub(crate),
-// so these tests exercise the gate via subprocess (cargo xtask deny-bare-api-key).
+// `scan_for_bare_api_keys_in_source` provides in-process unit coverage of the
+// scanner behavior; these subprocess tests verify the CLI exit-code contract at
+// the process boundary.
 // Since run() was authored as todo!() it panicked → non-zero exit → the assertions below failed
 // if the command exited 0, giving us the Red Gate signal in the other direction.
 //
 // These tests are #[ignore]'d because they require a full `cargo build` per
-// invocation, which is expensive in CI. SID-1 is satisfied by the compile-time
-// trait assertions in credentials.rs (static_assertions) which provide unit-level
-// coverage of the bare-api-key contract at the dependency boundary.
+// invocation, which is expensive in CI. SID-1 is satisfied by
+// `test_BC_2_14_005_flags_derive_debug_on_token_struct` and its siblings, which
+// provide in-process unit coverage of the scanner at the function boundary.
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// AC-010 (traces to BC-2.14.005 {PC-003}, {PC-004}, {PC-006})
 ///
-/// `cargo xtask deny-bare-api-key` exits non-zero when the workspace contains
-/// a bare (non-newtype) API key pattern. This test asserts the command can
-/// be invoked and returns a process exit code. On a clean workspace the command
-/// exits 0 (run() is implemented; violations cause non-zero exit).
+/// `cargo xtask deny-bare-api-key` exits 0 on a clean workspace (no credential
+/// struct safety violations found). This test asserts the command exits 0 when
+/// invoked against the current workspace; violations cause non-zero exit.
 ///
-/// SID-1 note: compile-time trait assertions in `credentials.rs` (assert_not_impl_any!)
-/// provide the in-process unit boundary for the same contract. This subprocess test
-/// covers the CLI integration path.
+/// SID-1 note: `test_BC_2_14_005_flags_derive_debug_on_token_struct` and its
+/// siblings (`test_BC_2_14_005_flags_serialize_on_secret_struct`,
+/// `test_BC_2_14_005_flags_deref_str_on_credential_struct`) provide the
+/// in-process unit boundary for the scanner behavior. This subprocess test
+/// covers the CLI exit-code contract at the process boundary.
 ///
 /// Blocked dependency: requires `cargo build -p xtask` (~30s cold) on each run.
 #[test]
 #[ignore = "EXT-BC214005: requires cargo build as subprocess; gate is wired in CI \
             via the lint-extra job's deny-bare-api-key step — see .github/workflows/ci.yml"]
-fn test_BC_2_14_005_deny_bare_api_key_subprocess_exits_nonzero_on_violation() {
+fn test_BC_2_14_005_deny_bare_api_key_subprocess_exits_zero_on_clean_workspace() {
     use std::process::{Command, Stdio};
 
     // Invoke the xtask deny-bare-api-key command; exits 0 on a clean workspace.

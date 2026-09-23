@@ -112,14 +112,6 @@ do_parity_check() {
         return 1
     fi
 
-    # ── Compare ID sets ───────────────────────────────────────────────────────
-    if [ "$cl_ids" != "$er_ids" ]; then
-        echo "[BURST-PARITY FAIL] fix-burst-${newest_burst}: finding ID mismatch between CHANGELOG and evidence-report"
-        echo "  In CHANGELOG only:      $(comm -23 <(printf '%s\n' "$cl_ids") <(printf '%s\n' "$er_ids") | tr '\n' ' ')"
-        echo "  In evidence-report only: $(comm -13 <(printf '%s\n' "$cl_ids") <(printf '%s\n' "$er_ids") | tr '\n' ' ')"
-        return 1
-    fi
-
     # ── Compare tally counts (soft — fails only when both lines present and diverge) ──
     #
     # CHANGELOG tally line format:
@@ -138,11 +130,21 @@ do_parity_check() {
     er_tally=$(printf '%s\n' "$er_section" \
         | grep -oE '\*\*Adversary pass [0-9]+ result:\*\*.*' | head -1 || true)
 
+    # ── Fail-closed: tally lines must be extractable to certify the tally ───────
+    # Hoisted before pass-number comparison: both cl_pass and er_pass are always
+    # non-empty when cl_tally/er_tally are non-empty (the tally regex requires
+    # Pass-<N>). Format drift that makes the pass token absent will also make the
+    # tally line un-extractable, caught here first. This guard fires before any
+    # downstream check that depends on tally content.
+    if [ -z "$cl_tally" ] || [ -z "$er_tally" ]; then
+        echo "[BURST-PARITY FAIL] fix-burst-${newest_burst}: tally extraction empty — cannot certify tally"
+        return 1
+    fi
+
     # ── Pass-number agreement between CHANGELOG and evidence-report ─────────────
-    # Both cl_pass and er_pass are always non-empty when cl_tally/er_tally are
-    # non-empty (the tally regex requires Pass-<N>). Format drift that makes the
-    # pass token absent will also make the tally line un-extractable, caught by
-    # the empty-tally fail-closed guard. This guard fires only when both
+    # The -n guards on cl_pass/er_pass are redundant: non-empty tally implies
+    # non-empty pass (the tally regex requires Pass-<N>). The empty-tally guard
+    # above catches the unreachable case. This guard fires only when both
     # extractions succeed and they disagree.
     local cl_pass er_pass
     cl_pass=$(printf '%s\n' "$cl_tally" \
@@ -150,7 +152,7 @@ do_parity_check() {
     er_pass=$(printf '%s\n' "$er_tally" \
         | grep -oE 'pass [0-9]+' | grep -oE '[0-9]+' | head -1 || true)
 
-    if [ -n "$cl_pass" ] && [ -n "$er_pass" ] && [ "$cl_pass" != "$er_pass" ]; then
+    if [ "$cl_pass" != "$er_pass" ]; then
         echo "[BURST-PARITY FAIL] fix-burst-${newest_burst}: CHANGELOG cites Pass-${cl_pass} but evidence-report cites Adversary pass ${er_pass}"
         return 1
     fi
@@ -160,13 +162,6 @@ do_parity_check() {
         | grep -oE "[0-9]+ ${SEV}" | sort || true)
     er_counts=$(printf '%s\n' "$er_tally" \
         | grep -oE "[0-9]+ ${SEV}" | sort || true)
-
-    # ── Fail-closed: tally lines must be extractable to certify the tally ───────
-    # If either raw tally line is absent (format drift), we cannot compare — fail.
-    if [ -z "$cl_tally" ] || [ -z "$er_tally" ]; then
-        echo "[BURST-PARITY FAIL] fix-burst-${newest_burst}: tally extraction empty — cannot certify tally"
-        return 1
-    fi
 
     if [ -n "$cl_counts" ] && [ -n "$er_counts" ] && [ "$cl_counts" != "$er_counts" ]; then
         echo "[BURST-PARITY FAIL] fix-burst-${newest_burst}: tally mismatch between CHANGELOG and evidence-report"
@@ -191,6 +186,46 @@ do_parity_check() {
 
     if [ "$tally_sum" -ne "$id_count" ]; then
         echo "[BURST-PARITY FAIL] fix-burst-${newest_burst}: declared tally sums to ${tally_sum} but ${id_count} finding IDs enumerated"
+        return 1
+    fi
+
+    # ── Per-severity histogram: declared counts vs extracted ID counts ───────────
+    # Catches cases where the total tally sum is correct but the per-severity
+    # breakdown disagrees (e.g. "2 HIGH + 2 OBS" declared but IDs show 1 HIGH + 3 OBS).
+    for sev in HIGH MED LOW OBS; do
+        cl_declared=$(printf '%s' "$cl_tally" | grep -oE "[0-9]+ ${sev}" | grep -oE '^[0-9]+' | head -1)
+        cl_actual=$(printf '%s' "$cl_ids" | grep -c "^${sev}-" || true)
+        if [ -n "$cl_declared" ] && [ "$cl_declared" != "$cl_actual" ]; then
+            echo "[BURST-PARITY FAIL] fix-burst-${newest_burst}: CHANGELOG declares ${cl_declared} ${sev} findings but ${cl_actual} ${sev}-prefixed IDs extracted"
+            return 1
+        fi
+    done
+    for sev in HIGH MED LOW OBS; do
+        er_declared=$(printf '%s' "$er_tally" | grep -oE "[0-9]+ ${sev}" | grep -oE '^[0-9]+' | head -1)
+        er_actual=$(printf '%s' "$er_ids" | grep -c "^${sev}-" || true)
+        if [ -n "$er_declared" ] && [ "$er_declared" != "$er_actual" ]; then
+            echo "[BURST-PARITY FAIL] fix-burst-${newest_burst}: evidence-report declares ${er_declared} ${sev} findings but ${er_actual} ${sev}-prefixed IDs extracted"
+            return 1
+        fi
+    done
+
+    # ── Duplicate-ID guard: duplicate IDs in either document are a defect ───────
+    cl_dupes=$(printf '%s' "$cl_ids" | sort | uniq -d)
+    er_dupes=$(printf '%s' "$er_ids" | sort | uniq -d)
+    if [ -n "$cl_dupes" ]; then
+        echo "[BURST-PARITY FAIL] fix-burst-${newest_burst}: duplicate finding IDs in CHANGELOG: $cl_dupes"
+        return 1
+    fi
+    if [ -n "$er_dupes" ]; then
+        echo "[BURST-PARITY FAIL] fix-burst-${newest_burst}: duplicate finding IDs in evidence-report: $er_dupes"
+        return 1
+    fi
+
+    # ── Compare ID sets ───────────────────────────────────────────────────────
+    if [ "$cl_ids" != "$er_ids" ]; then
+        echo "[BURST-PARITY FAIL] fix-burst-${newest_burst}: finding ID mismatch between CHANGELOG and evidence-report"
+        echo "  In CHANGELOG only:      $(comm -23 <(printf '%s\n' "$cl_ids") <(printf '%s\n' "$er_ids") | tr '\n' ' ')"
+        echo "  In evidence-report only: $(comm -13 <(printf '%s\n' "$cl_ids") <(printf '%s\n' "$er_ids") | tr '\n' ' ')"
         return 1
     fi
 
@@ -411,6 +446,84 @@ PROBE_HEREDOC
         echo "[SELF-PROBE PASS] probe-4 (pass-number-divergent): divergent pass numbers (CHANGELOG Pass-94 vs evidence-report pass 93) correctly detected"
     else
         echo "[SELF-PROBE FAIL] probe-4 (pass-number-divergent): pass-number mismatch was not detected (pass-number guard untested)"
+        all_passed=1
+    fi
+
+    # ── Probe 5: tally-line-absent ─────────────────────────────────────────────
+    # CHANGELOG section has finding headings but no tally line.
+    # The hoisted empty-tally fail-closed guard must detect the absent CHANGELOG
+    # tally and return non-zero.
+    local tmpdir5
+    tmpdir5="$(mktemp -d)"
+
+    local fake_cl5="$tmpdir5/CHANGELOG.md"
+    cat > "$fake_cl5" <<'PROBE_HEREDOC'
+## fix-burst-94 (pass-92 findings)
+
+### HIGH-001: Some finding
+
+Description of the finding.
+PROBE_HEREDOC
+
+    local fake_er5="$tmpdir5/evidence-report.md"
+    cat > "$fake_er5" <<'PROBE_HEREDOC'
+## fix-burst-94 re-verification
+
+**Adversary pass 92 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH.
+
+| Finding | Severity | Detection class | Load-bearing artifact |
+|---------|----------|-----------------|-----------------------|
+| F-P92-HIGH-001 | HIGH | test class | test artifact |
+PROBE_HEREDOC
+
+    local probe5_exit=0
+    do_parity_check "$fake_cl5" "$fake_er5" >/dev/null 2>&1 || probe5_exit=$?
+    rm -rf "$tmpdir5"
+
+    if [ "$probe5_exit" -ne 0 ]; then
+        echo "[SELF-PROBE PASS] probe-5 (tally-line-absent): absent CHANGELOG tally correctly detected mismatch"
+    else
+        echo "[SELF-PROBE FAIL] probe-5 (tally-line-absent): absent CHANGELOG tally was NOT detected"
+        all_passed=1
+    fi
+
+    # ── Probe 6: er-newest-burst-divergent ────────────────────────────────────────
+    # ER newest burst (95) is newer than CHANGELOG newest burst (94).
+    # The re-verification-section-existence guard (or er_newest_burst guard) must
+    # return non-zero.
+    local tmpdir6
+    tmpdir6="$(mktemp -d)"
+
+    local fake_cl6="$tmpdir6/CHANGELOG.md"
+    cat > "$fake_cl6" <<'PROBE_HEREDOC'
+## fix-burst-94 (pass-92 findings)
+
+**Pass-92 finding tally: 1 HIGH**
+
+### HIGH-001: Some finding
+
+Description of the finding.
+PROBE_HEREDOC
+
+    local fake_er6="$tmpdir6/evidence-report.md"
+    cat > "$fake_er6" <<'PROBE_HEREDOC'
+## fix-burst-95 re-verification
+
+**Adversary pass 93 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH.
+
+| Finding | Severity | Detection class | Load-bearing artifact |
+|---------|----------|-----------------|-----------------------|
+| F-P93-HIGH-001 | HIGH | test class | test artifact |
+PROBE_HEREDOC
+
+    local probe6_exit=0
+    do_parity_check "$fake_cl6" "$fake_er6" >/dev/null 2>&1 || probe6_exit=$?
+    rm -rf "$tmpdir6"
+
+    if [ "$probe6_exit" -ne 0 ]; then
+        echo "[SELF-PROBE PASS] probe-6 (er-newest-burst-divergent): ER-newer-than-CHANGELOG correctly detected mismatch"
+    else
+        echo "[SELF-PROBE FAIL] probe-6 (er-newest-burst-divergent): ER-newer-than-CHANGELOG was NOT detected"
         all_passed=1
     fi
 

@@ -31,6 +31,7 @@ status: complete
 | AC-014 | BC-2.14.006 PC-004 | error code E-CORE-005 + message format | same recording as AC-008 | — | — | recorded |
 | AC-016 | BC-2.14.006 EC-006 | `new("   ")` whitespace-only rejected with same `E-CORE-005` error | same recording as AC-008 | — | — | recorded |
 | AC-017 | BC-2.14.003 EC-007 | `cargo xtask check-no-panic --fixture-mode` FLAGS violations in 14 of 17 fixture files spanning five violation classes: bare `assert!` (incl. short BC-ID + BC-ID in condition), catch-all `unreachable!()` arms (wildcard `_ =>` and irrefutable-binding forms `other =>`, `ref other =>`, `mut other =>`, guarded `other if ... =>`, `_other =>`), `.unwrap()` in macros, `todo!()` (unimplemented!() covered by inline unit test only), `assert_eq!`/`assert_ne!` with BC-ID in comparand — 14/17 fixture files flagged | [AC-017-check-no-panic-flags-violations.webm](AC-017-check-no-panic-flags-violations.webm) | [AC-017-check-no-panic-flags-violations.gif](AC-017-check-no-panic-flags-violations.gif) | [tape](AC-017-check-no-panic-flags-violations.tape) | recorded (re-recorded 2026-09-22) |
+| AC-018 | BC-2.14.003 EC-006 | programmer-error guards compliant | same recording as AC-002 | — | — | recorded |
 | AC-020 | BC-2.14.001 EC-004 / VP-BC214001-01 | `cargo xtask check-error-code-registry` exits 0 — 148 error codes validated, 0 collisions | text evidence (gate stdout) | — | — | captured 2026-09-22 (post-fix-burst-5) |
 
 ---
@@ -241,7 +242,51 @@ Gate outputs remain valid because the syn rewrite finds the same 0 violations on
 
 The fix-burst-26 evidence-report docs commit (this commit) is docs-only and does NOT trigger clause (d).
 
-## fix-burst-57 re-verification (adversary pass-56 streak attempt 1/3)
+## fix-burst-58 re-verification
+
+[Reviewed HEAD (adversary pass 56): 359e8e0c9db2da0f0c022c0c06ec317a20efe6ab]
+[Re-verification HEAD (post-fix-burst-58): 359e8e0c9db2da0f0c022c0c06ec317a20efe6ab (pre-commit placeholder; will be superseded by fix-burst-58 commit)]
+
+**Test count:** 92 passed, 2 skipped (pregolya-core); 255 passed, 5 skipped (xtask). No production code logic changed. Clauses (a)–(d) remain valid (same rationale as CHANGELOG test-count paragraph above).
+
+**Adversary pass 56 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 2 HIGH + 5 MED + 4 LOW + 2 OBS = 13 findings.
+
+**Gate output (burst-parity normal mode):**
+```
+[BURST-PARITY PASS] fix-burst-58: 13 finding IDs matched; tally: 2H+2OBS+4L+5M.
+```
+
+**Gate output (burst-parity self-probe):**
+```
+[SELF-PROBE PASS] probe-1 (ID-mismatch): divergent ID pair correctly detected mismatch
+[SELF-PROBE PASS] probe-2 (tally-divergent): identical IDs with divergent tallies correctly detected mismatch
+[SELF-PROBE PASS] probe-3 (tally-sum≠id-count): declared tally sum 3 vs 2 IDs correctly detected
+[SELF-PROBE PASS] probe-4 (pass-number-divergent): divergent pass numbers (CHANGELOG Pass-94 vs evidence-report pass 93) correctly detected
+[SELF-PROBE PASS] probe-5 (tally-line-absent): absent CHANGELOG tally correctly detected mismatch
+[SELF-PROBE PASS] probe-6 (er-newest-burst-divergent): ER-newer-than-CHANGELOG correctly detected mismatch
+```
+
+| Finding | Severity | Disposition | Detection class | Load-bearing artifact |
+|---------|----------|-------------|-----------------|----------------------|
+| F-P56-HIGH-001 | HIGH | CLOSED | duplicate ID / per-severity tally false | merged `### HIGH-001` heading + `### OBS-002` heading added; ER table corrected (one `F-P55-HIGH-001` row, `F-P55-OBS-002` row added) |
+| F-P56-HIGH-002 | HIGH | CLOSED | script structural gap (TD-VSDD-059) | per-severity histogram loop in `do_parity_check`; `sort \| uniq -d` duplicate-ID guard in `do_parity_check` |
+| F-P56-MED-001 | MED | CLOSED | phantom symbol in closure record | `do_parity_check` substituted for phantom `check_pass_number_agreement` in HIGH-001 body |
+| F-P56-MED-002 | MED | CLOSED | missing attestation (recurrence F-P55-HIGH-001 class) | `**Test count:**` + clause (a)–(d) walk added to `## fix-burst-57` |
+| F-P56-MED-003 | MED | CLOSED | unprobed guard (recurrence F-P52-MED-002/F-P54-MED-001 class) | `run_self_probes` probe-5 (tally-line-absent) + probe-6 (er-newest-burst-divergent) added |
+| F-P56-MED-004 | MED | CLOSED | false factual claim + wrong SID-1 (sibling of F-P55-MED-002; TD-VSDD-060) | false `pub(crate)` claim deleted; `/// SID-1 note:` re-pointed to `test_BC_2_14_005_flags_derive_debug_on_token_struct` and siblings |
+| F-P56-MED-005 | MED | CLOSED | test name contradicts body (recurrence F-P52-MED-001 class) | renamed to `test_BC_2_14_005_deny_bare_api_key_subprocess_exits_zero_on_clean_workspace` |
+| F-P56-LOW-001 | LOW | CLOSED | heading convention violation | `## fix-burst-57 (pass-55 findings)` |
+| F-P56-LOW-002 | LOW | CLOSED | pre-declared streak position | `## fix-burst-57 re-verification` (parenthetical removed) |
+| F-P56-LOW-003 | LOW | CLOSED | missing HEAD annotation | `[Reviewed HEAD (adversary pass 55)…]` + `[Re-verification HEAD (post-fix-burst-57)…]` added |
+| F-P56-LOW-004 | LOW | CLOSED | incomplete table ("completed" overclaim) | `AC-018` row added to `## Per-AC Demo Recordings` |
+| F-P56-OBS-001 | OBS | CLOSED | missing column (consistency) | `Detection class` column added to fix-burst-57 re-verification table |
+| F-P56-OBS-002 | OBS | CLOSED | redundant guard conjuncts + guard order | `-n` conjuncts removed from pass-number comparison; empty-tally guard hoisted; addressed as part of HIGH-002 fix |
+
+---
+
+## fix-burst-57 re-verification
+[Reviewed HEAD (adversary pass 55): 26384d58a4df7fd37f6e019b578736212c18ec04]
+[Re-verification HEAD (post-fix-burst-57): 359e8e0c9db2da0f0c022c0c06ec317a20efe6ab]
 
 **Test count:** 92 passed, 2 skipped (unchanged). The `#[ignore]` reason change in `test_BC_2_14_004_timeout_fires_against_mock_server` is text-only; no test logic or production code behavior changed. The script changes to `check-burst-records-parity.sh` are in `scripts/` (not `crates/`). Clauses (a)–(d) of Recording Provenance remain valid: no production code behavior changed, no demo video files changed, test count unchanged, gate output captured below on the actual evidence file after fix-burst-57 CHANGELOG section written.
 
@@ -258,20 +303,22 @@ The fix-burst-26 evidence-report docs commit (this commit) is docs-only and does
 [SELF-PROBE PASS] probe-2 (tally-divergent): identical IDs with divergent tallies correctly detected mismatch
 [SELF-PROBE PASS] probe-3 (tally-sum≠id-count): declared tally sum 3 vs 2 IDs correctly detected
 [SELF-PROBE PASS] probe-4 (pass-number-divergent): divergent pass numbers (CHANGELOG Pass-94 vs evidence-report pass 93) correctly detected
+[SELF-PROBE PASS] probe-5 (tally-line-absent): absent CHANGELOG tally correctly detected mismatch
+[SELF-PROBE PASS] probe-6 (er-newest-burst-divergent): ER-newer-than-CHANGELOG correctly detected mismatch
 ```
 
-| Finding | Severity | Disposition | Load-bearing artifact |
-|---------|----------|-------------|----------------------|
-| F-P55-HIGH-001 | HIGH | CLOSED | pre-existing empty-tally fail-closed guard in `check-burst-records-parity.sh`; unreachable guards deleted |
-| F-P55-HIGH-001 | HIGH | CLOSED | CHANGELOG fix-burst-56 MED-002 and ER F-P54-MED-002 row corrected to cite empty-tally guard (records fix) |
-| F-P55-MED-001 | MED | CLOSED | AC-006 body + CHANGELOG MED-004 body corrected to cite `PERF-BC214004` |
-| F-P55-MED-002 | MED | CLOSED | AC-006 body now names `test_BC_2_14_004_default_timeout_applied` as PC-002 SID-1 substitute |
-| F-P55-MED-003 | MED | CLOSED | Two labeled lines distinguish reviewed HEAD (pass 54) from re-verification HEAD (post-fix-burst-56) |
-| F-P55-LOW-001 | LOW | CLOSED | `lefthook.yml` comments updated to enumerate four probes |
-| F-P55-LOW-002 | LOW | CLOSED | Rows added for AC-001, AC-012, AC-014 (same recording as AC-008) in `## Per-AC Demo Recordings`; table reordered to monotonic AC number order (OBS-002 addressed here) |
-| F-P55-LOW-003 | LOW | CLOSED | `#[ignore]` reason on `test_BC_2_14_004_timeout_fires_against_mock_server` corrected to `~30 s wall-clock (client timeout fires at 30 s; inline stall server sleeps 35 s on a detached thread)` |
-| F-P55-OBS-001 | OBS | CLOSED | `| head -1` appended to `cl_pass` and `er_pass` extraction pipelines |
-| F-P55-OBS-003 | OBS | CLOSED | Duplicate clause-walk text removed from fix-burst-55 re-verification `Gate output` bullet |
+| Finding | Severity | Disposition | Detection class | Load-bearing artifact |
+|---------|----------|-------------|-----------------|-----------------------|
+| F-P55-HIGH-001 | HIGH | CLOSED | dead code / paper-fix (TD-VSDD-059) | pre-existing empty-tally fail-closed guard in `check-burst-records-parity.sh`; unreachable guards deleted; CHANGELOG fix-burst-56 MED-002 and ER F-P54-MED-002 row corrected to cite empty-tally guard (records fix) |
+| F-P55-MED-001 | MED | CLOSED | phantom symbol in closure record | AC-006 body + CHANGELOG MED-004 body corrected to cite `PERF-BC214004` |
+| F-P55-MED-002 | MED | CLOSED | wrong SID-1 substitute (sibling of F-P54-MED-002) | AC-006 body now names `test_BC_2_14_004_default_timeout_applied` as PC-002 SID-1 substitute |
+| F-P55-MED-003 | MED | CLOSED | ambiguous HEAD annotation | Two labeled lines distinguish reviewed HEAD (pass 54) from re-verification HEAD (post-fix-burst-56) |
+| F-P55-LOW-001 | LOW | CLOSED | stale lefthook comment | `lefthook.yml` comments updated to enumerate four probes |
+| F-P55-LOW-002 | LOW | CLOSED | missing table rows | Rows added for AC-001, AC-012, AC-014 (same recording as AC-008) in `## Per-AC Demo Recordings`; table reordered to monotonic AC number order (OBS-002 addressed here) |
+| F-P55-LOW-003 | LOW | CLOSED | overstated wall-clock duration | `#[ignore]` reason on `test_BC_2_14_004_timeout_fires_against_mock_server` corrected to `~30 s wall-clock (client timeout fires at 30 s; inline stall server sleeps 35 s on a detached thread)` |
+| F-P55-OBS-001 | OBS | CLOSED | missing head -1 guard | `| head -1` appended to `cl_pass` and `er_pass` extraction pipelines |
+| F-P55-OBS-002 | OBS | CLOSED | non-monotonic table row order | Per-AC Demo Recordings table reordered to monotonic AC number order |
+| F-P55-OBS-003 | OBS | CLOSED | duplicate prose | Duplicate clause-walk text removed from fix-burst-55 re-verification `Gate output` bullet |
 
 ---
 
