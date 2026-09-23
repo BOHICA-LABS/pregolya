@@ -39,12 +39,9 @@
 //! arm would qualify for Exemption 1 or Exemption 2. This is intentional: macro arguments
 //! are opaque to the AST visitor.
 //!
-//! **KNOWN-LIMITATION 2 — turbofish comma counting in `syn_macro_has_bc_id`:** The
-//! top-level comma scan counts turbofish generic-argument commas (e.g. `Vec::<A, B>`)
-//! as argument-separator commas, because `<`/`>` lex as `Punct` and are not grouped by
-//! `proc_macro2`. A condition operand containing a comma-separated turbofish can shift
-//! the message-argument index. This pattern does not occur in the current `crates/`
-//! production code. Sound fix: track angle-bracket depth when collecting top-level commas.
+//! **KNOWN-LIMITATION 2** — turbofish comma counting: fixed. `syn_macro_has_bc_id` now
+//! tracks angle-bracket depth to avoid counting turbofish generic-argument commas
+//! (e.g. `Vec::<A, B>`) as argument-separator commas.
 
 use std::process::exit;
 
@@ -381,12 +378,9 @@ fn check_bc_id_shape(s: &str) -> bool {
 /// would be a false negative — Exemption-2 granted when the BC-ID is in the comparand.
 /// With arity awareness, the 2nd comma is required, so the call is correctly flagged.
 ///
-/// **KNOWN-LIMITATION 2:** The top-level comma scan counts turbofish generic-argument
-/// commas (e.g. `Vec::<A, B>`) as argument-separator commas, because `<`/`>` lex as
-/// `Punct` and are not grouped by `proc_macro2`. A condition operand containing a
-/// comma-separated turbofish can shift the message-argument index. This pattern does
-/// not occur in the current `crates/` production code. Sound fix: track angle-bracket
-/// depth when collecting top-level commas.
+/// Angle-bracket depth is tracked when collecting top-level commas to avoid counting
+/// turbofish generic-argument commas (e.g. `Vec::<A, B>`) as argument-separator commas
+/// (formerly KNOWN-LIMITATION 2 of the flat-token scanner — eliminated).
 fn syn_macro_has_bc_id(mac: &syn::Macro, macro_name: &str) -> bool {
     use proc_macro2::TokenTree;
     let tokens_vec: Vec<TokenTree> = mac.tokens.clone().into_iter().collect();
@@ -399,20 +393,25 @@ fn syn_macro_has_bc_id(mac: &syn::Macro, macro_name: &str) -> bool {
         _ => 0, // assert! and any unknown assert-family macros
     };
 
-    // Collect all top-level comma positions.
-    let top_level_commas: Vec<usize> = tokens_vec
-        .iter()
-        .enumerate()
-        .filter_map(|(i, tt)| {
-            if let TokenTree::Punct(p) = tt
-                && p.as_char() == ','
-            {
-                Some(i)
-            } else {
-                None
+    // Collect all top-level comma positions, ignoring commas inside angle-bracket
+    // groups (e.g. turbofish `Vec::<A, B>`) where `<` and `>` are not grouped by
+    // proc_macro2. Angle-bracket depth tracking prevents turbofish commas from
+    // shifting the message-argument index.
+    let top_level_commas: Vec<usize> = {
+        let mut commas = Vec::new();
+        let mut angle_depth: u32 = 0;
+        for (i, tt) in tokens_vec.iter().enumerate() {
+            if let TokenTree::Punct(p) = tt {
+                match p.as_char() {
+                    '<' => angle_depth += 1,
+                    '>' => angle_depth = angle_depth.saturating_sub(1),
+                    ',' if angle_depth == 0 => commas.push(i),
+                    _ => {}
+                }
             }
-        })
-        .collect();
+        }
+        commas
+    };
 
     // The message argument starts after the comma at `message_comma_index`.
     // If there are not enough commas, there is no message argument → return false.
@@ -628,10 +627,16 @@ impl<'ast> syn::visit::Visit<'ast> for PanicVisitor<'_> {
     }
 
     fn visit_expr_macro(&mut self, node: &'ast syn::ExprMacro) {
+        if syn_has_cfg_test(&node.attrs) {
+            return;
+        }
         self.handle_macro_invocation(&node.mac);
     }
 
     fn visit_stmt_macro(&mut self, node: &'ast syn::StmtMacro) {
+        if syn_has_cfg_test(&node.attrs) {
+            return;
+        }
         self.handle_macro_invocation(&node.mac);
     }
 

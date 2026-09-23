@@ -8,7 +8,9 @@
 //!
 //! - Scans `crates/**/*.rs` for `reqwest::Client::new()`, `Client::new()`,
 //!   `reqwest::Client::default()`, and `Client::default()` (both fully qualified
-//!   and unqualified forms, including UFCS `<reqwest::Client as Default>::default()`)
+//!   and unqualified forms, including UFCS forms: `<reqwest::Client as Default>::default()`,
+//!   `<reqwest::Client>::new()`, and Pattern-B UFCS forms `<reqwest::ClientBuilder>::new().build()`
+//!   and `<reqwest::Client>::builder().build()`)
 //!   in non-test source.
 //! - Also scans for `ClientBuilder` chains (including `ClientBuilder::default()`)
 //!   that call `.build()` without a preceding `.timeout(d)` call where
@@ -55,7 +57,7 @@
 //! .timeout(NO_TIMEOUT)`), the gate will not detect it as zero-valued. The gate
 //! only inspects the syntactic form of the timeout argument.
 //!
-//! **KNOWN-LIMITATION 4 — opaque macro bodies:** Macro bodies that fail all three
+//! **KL-macro — opaque macro bodies:** Macro bodies that fail all three
 //! syn parse strategies (not valid as Rust item sequence, wrapped-fn, or
 //! initializer-expression extraction) cannot be analyzed — these bodies are
 //! skipped rather than flagged conservatively.
@@ -73,10 +75,12 @@ use syn::visit::Visit;
 /// Entry point for `cargo xtask check-client-timeout`.
 ///
 /// Scans `crates/**/*.rs` using syn AST-based analysis to detect `Client::new()`,
-/// `Client::default()`, UFCS `<reqwest::Client as Default>::default()`, and
-/// `ClientBuilder` chains (including `ClientBuilder::default()`) missing
-/// `.timeout(...)`. Macro invocations are scanned via recursive syn re-parsing
-/// (see module-level doc). Exits non-zero on any violation (BC-2.14.004 {PC-003}).
+/// `Client::default()`, UFCS forms (`<reqwest::Client as Default>::default()`,
+/// `<reqwest::Client>::new()`, `<reqwest::ClientBuilder>::new().build()`,
+/// `<reqwest::Client>::builder().build()`), and `ClientBuilder` chains
+/// (including `ClientBuilder::default()`) missing `.timeout(...)`. Macro invocations
+/// are scanned via recursive syn re-parsing (see module-level doc).
+/// Exits non-zero on any violation (BC-2.14.004 {PC-003}).
 pub fn run() {
     let output = std::process::Command::new("find")
         .args(["crates/", "-name", "*.rs", "-not", "-path", "*/target/*"])
@@ -152,8 +156,10 @@ pub fn run() {
 }
 
 /// Scans a single Rust source file (as a string) for `Client::new()`,
-/// `Client::default()`, UFCS `<reqwest::Client as Default>::default()`, or
-/// `ClientBuilder` chains that call `.build()` without a preceding `.timeout(d)`.
+/// `Client::default()`, UFCS forms (`<reqwest::Client as Default>::default()`,
+/// `<reqwest::Client>::new()`, `<reqwest::ClientBuilder>::new().build()`,
+/// `<reqwest::Client>::builder().build()`), or `ClientBuilder` chains that call
+/// `.build()` without a preceding `.timeout(d)`.
 /// Also scans macro bodies via recursive syn re-parsing strategies.
 ///
 /// Returns a `Vec<String>` of human-readable violation messages. Returns an
@@ -484,7 +490,7 @@ fn analyze_build_chain(expr: &syn::Expr) -> Option<ChainResult> {
 ///    the first standalone `=` per statement — handles `lazy_static!`-style
 ///    `static ref NAME: TYPE = EXPR;` bodies whose `static ref` prefix is not valid Rust.
 ///
-/// If all strategies fail, returns an empty `Vec` (KNOWN-LIMITATION 4 — KL-macro).
+/// If all strategies fail, returns an empty `Vec` (KL-macro).
 fn scan_macro_body_as_ast(tokens: proc_macro2::TokenStream, path: &str) -> Vec<String> {
     let mut sub = TimeoutChecker {
         path,
@@ -700,14 +706,16 @@ impl<'ast> Visit<'ast> for TimeoutChecker<'_> {
                 ));
             }
 
-            // UFCS form: `<reqwest::Client as Default>::default()`,
-            // `<reqwest::Client>::new()`, or `<reqwest::Client>::builder()` —
-            // an ExprPath with a QSelf carries the reqwest Client type in the qself,
+            // UFCS form: `<reqwest::Client as Default>::default()` and
+            // `<reqwest::Client>::new()` — Pattern A UFCS forms for direct Client construction.
+            // `<reqwest::Client>::builder()` is NOT handled here — it starts a builder chain
+            // and is handled by Pattern B (`analyze_build_chain` / `visit_expr_method_call`).
+            // An ExprPath with a QSelf carries the reqwest Client type in the qself,
             // not in the path segments.
             // Emit a conservative violation unless the qself type is clearly non-reqwest.
             if let Some(qself) = &p.qself {
                 let last_method = seg_strings.last().map(|s| s.as_str()).unwrap_or("");
-                if matches!(last_method, "default" | "new" | "builder")
+                if matches!(last_method, "default" | "new")
                     && let syn::Type::Path(tp) = &*qself.ty
                 {
                     let qself_segs: Vec<String> = tp
@@ -762,6 +770,9 @@ impl<'ast> Visit<'ast> for TimeoutChecker<'_> {
     // visitor to detect violations (e.g. `reqwest::Client::new()` inside
     // `thread_local!{}` or `lazy_static!{}`).
     fn visit_expr_macro(&mut self, node: &'ast syn::ExprMacro) {
+        if has_cfg_test_attr(&node.attrs) {
+            return;
+        }
         if !self.in_test_context {
             self.findings
                 .extend(scan_macro_body_as_ast(node.mac.tokens.clone(), self.path));
@@ -770,6 +781,9 @@ impl<'ast> Visit<'ast> for TimeoutChecker<'_> {
     }
 
     fn visit_stmt_macro(&mut self, node: &'ast syn::StmtMacro) {
+        if has_cfg_test_attr(&node.attrs) {
+            return;
+        }
         if !self.in_test_context {
             self.findings
                 .extend(scan_macro_body_as_ast(node.mac.tokens.clone(), self.path));
@@ -1486,7 +1500,7 @@ pub fn build_client() -> reqwest::Client {
         assert!(
             !findings.is_empty(),
             "parenthesized base subexpression (reqwest::ClientBuilder::new()).build() \
-             must be flagged (KNOWN-LIMITATION 4 eliminated by syn AST visitor); got: {findings:?}"
+             must be flagged (formerly KL-4 of the flat-token scanner — eliminated); got: {findings:?}"
         );
     }
 
@@ -1575,7 +1589,7 @@ pub fn build_client() -> reqwest::Client {
         assert!(
             !findings.is_empty(),
             "braced base subexpression {{ reqwest::ClientBuilder::new() }}.build() \
-             must be flagged (KNOWN-LIMITATION 4 eliminated by syn AST visitor); got: {findings:?}"
+             must be flagged (formerly KL-4 of the flat-token scanner — eliminated); got: {findings:?}"
         );
     }
 
@@ -1808,7 +1822,8 @@ pub fn build_client() -> reqwest::Client {
     /// F-P25-HIGH-001 — `reqwest::Client::new()` inside `thread_local!{}` must be flagged.
     ///
     /// `thread_local!` is opaque to the syn AST visitor; `visit_item_macro` delegates
-    /// to `scan_macro_tokens_for_timeout_violations` which scans the flat token stream.
+    /// to `scan_macro_body_as_ast` which recursively parses via Strategy 1
+    /// (the `thread_local!` body is a valid Rust item).
     /// Pattern A (direct construction) is always flagged in macro context.
     #[test]
     fn test_timeout_checker_detects_reqwest_client_in_thread_local() {
@@ -1827,8 +1842,10 @@ pub fn build_client() -> reqwest::Client {
     /// F-P25-HIGH-001 — `reqwest::ClientBuilder::new().build()` inside `lazy_static!{}` without
     /// `.timeout()` must be flagged.
     ///
-    /// `lazy_static!` is opaque to the syn AST visitor; the macro scanner detects Pattern B
-    /// (builder chain) when `.build()` appears before `.timeout()` in the token stream.
+    /// `lazy_static!` is opaque to the syn AST visitor; `visit_item_macro` delegates to
+    /// `scan_macro_body_as_ast` which uses Strategy 3 (`extract_initializer_exprs_from_tokens`)
+    /// for `lazy_static!`-style `static ref NAME: T = EXPR;` bodies that are not valid
+    /// Rust files or fn bodies.
     #[test]
     fn test_timeout_checker_detects_builder_in_lazy_static() {
         let src = r#"
@@ -1847,8 +1864,10 @@ pub fn build_client() -> reqwest::Client {
     /// F-P25-HIGH-001 negative — `reqwest::ClientBuilder::new().timeout(...).build()` inside
     /// `lazy_static!{}` must NOT be flagged.
     ///
-    /// The macro scanner finds `.timeout()` before `.build()` in the token stream and correctly
-    /// suppresses the finding.
+    /// `scan_macro_body_as_ast` uses Strategy 3 (`extract_initializer_exprs_from_tokens`)
+    /// for `lazy_static!`-style `static ref NAME: T = EXPR;` bodies. The recursive AST
+    /// scanner correctly traces the builder chain and suppresses the finding when
+    /// `.timeout()` is present.
     #[test]
     fn test_timeout_checker_detects_builder_with_timeout_in_lazy_static() {
         let src = r#"
