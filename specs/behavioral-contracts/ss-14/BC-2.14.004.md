@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.004
-version: "1.11"
+version: "1.12"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -26,6 +26,7 @@ changelog:
   - "1.9 (S-1.02-adv-pass-4/F-06/2026-09-22, product-owner): {PC-005} pregolya-core scoping clarification added — build_client() satisfies DI-009 by setting .timeout(d > 0); the E-PROV-002 error-shape conversion is the provider adapter's responsibility (pregolya-openai/anthropic/ollama), verified in S-2.07 (unary invoke() path traces to this {PC-005}; streaming stall path is BC-2.08.007/AC-022 in S-2.07). TV-004 illustrative-path note added below Canonical Test Vectors table. pregolya-core does NOT produce E-PROV-002 directly."
   - "1.10 (S-1.02-adv-pass-15/F-P15-M04/2026-09-22, product-owner): EC-006 <reason> redefined to include mandatory credential-redaction and 200-char cap per DI-010 / BC-2.14.005 {INV-001} (CWE-209). The raw build() error string MUST NOT appear verbatim in the structured error; sanitize_error_message (or equivalent) must be applied before constructing the PregolyaError message field. Reference to BC-2.14.005 {INV-001} added to EC-006 Reference line."
   - "1.11 (F-P16-MED-004/2026-09-22, product-owner): EC-001 scoped-coverage note added: 'documented' qualifier enforced by {PC-002}/review, not by the mechanical gate (gate is comment-blind per token-stream parsing)."
+  - "1.12 (F-PC006-scoped-coverage/2026-09-22, product-owner): {PC-006} scoped-coverage note added; conjunctive connect_timeout≤timeout constraint is review-enforced, not gate-enforced; gate extension deferred to first connect_timeout call site."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-009
@@ -107,6 +108,13 @@ Connection Timeout) uniformly.
    `.timeout(duration > 0)` is already set. If both are configured, `.connect_timeout()` must also
    be a non-zero duration less than or equal to the total `.timeout()` (e.g.
    `.connect_timeout(Duration::from_secs(10)).timeout(Duration::from_secs(30))`).
+
+   > **Scoped-coverage note (BC-2.14.004 {PC-006}):** The conjunctive constraint
+   > (`.connect_timeout() > 0` AND `.connect_timeout() ≤ .timeout()`) is enforced by code
+   > convention and PR review, NOT by `cargo xtask check-client-timeout`. The gate verifies
+   > only that `.timeout(d > 0)` is called before `.build()` — it cannot compare two duration
+   > values at AST-scan time. The gate will be extended to check `.connect_timeout()`
+   > coordination when the first `.connect_timeout()` call site lands in the codebase.
 
 ## Invariants
 
