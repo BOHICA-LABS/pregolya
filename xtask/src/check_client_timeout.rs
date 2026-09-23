@@ -294,6 +294,82 @@ fn flatten_tokens_no_test(
     }
 }
 
+/// Scans a `reqwest::blocking::` path starting at cursor position `i` (the `reqwest` token)
+/// for Client/ClientBuilder timeout violations.
+///
+/// Returns `Some(new_i)` with the updated cursor position when a blocking pattern is matched
+/// (regardless of whether a finding was emitted — the `.blocking.` module segment was
+/// definitively consumed). Returns `None` when no blocking pattern matches (the caller should
+/// continue with non-blocking or fallthrough pattern matching).
+///
+/// Token layout for the blocking path (offsets relative to `i`):
+/// ```text
+/// reqwest [i] :: [i+1,i+2] blocking [i+3] :: [i+4,i+5] <Type> [i+6]
+///   :: [i+7,i+8] new|builder [i+9] () [i+10]
+/// ```
+fn scan_reqwest_blocking_pattern(
+    flat: &[FlatToken],
+    i: usize,
+    path: &str,
+    findings: &mut Vec<String>,
+) -> Option<usize> {
+    // Require: reqwest :: blocking ::
+    if !matches_double_colon(flat, i + 1)
+        || !matches_ident(flat, i + 3, "blocking")
+        || !matches_double_colon(flat, i + 4)
+    {
+        return None;
+    }
+
+    // reqwest :: blocking :: Client :: new ( ) — always a violation.
+    if matches_ident(flat, i + 6, "Client")
+        && matches_double_colon(flat, i + 7)
+        && matches_ident(flat, i + 9, "new")
+        && matches!(flat.get(i + 10), Some(FlatToken::ParenGroup(_)))
+    {
+        let line = flat[i].line();
+        findings.push(format!(
+            "{}:{}: reqwest::blocking::Client::new() without .timeout() — use build_client() (BC-2.14.004)",
+            path, line
+        ));
+        return Some(i + 11);
+    }
+
+    // reqwest :: blocking :: Client :: builder ... .build() without .timeout()
+    if matches_ident(flat, i + 6, "Client")
+        && matches_double_colon(flat, i + 7)
+        && matches_ident(flat, i + 9, "builder")
+    {
+        let line = flat[i].line();
+        let chain_end = find_chain_end(flat, i);
+        if has_build_without_timeout(flat, i) {
+            findings.push(format!(
+                "{}:{}: reqwest::blocking::Client::builder() without .timeout() (BC-2.14.004)",
+                path, line
+            ));
+        }
+        return Some(chain_end);
+    }
+
+    // reqwest :: blocking :: ClientBuilder :: new ... .build() without .timeout()
+    if matches_ident(flat, i + 6, "ClientBuilder")
+        && matches_double_colon(flat, i + 7)
+        && matches_ident(flat, i + 9, "new")
+    {
+        let line = flat[i].line();
+        let chain_end = find_chain_end(flat, i);
+        if has_build_without_timeout(flat, i) {
+            findings.push(format!(
+                "{}:{}: reqwest::blocking::ClientBuilder::new() without .timeout() (BC-2.14.004)",
+                path, line
+            ));
+        }
+        return Some(chain_end);
+    }
+
+    None
+}
+
 /// Scan the flat token list for timeout violations.
 ///
 /// Patterns detected:
@@ -333,11 +409,15 @@ fn flatten_tokens_no_test(
 /// is enforced via code review; `test_timeout_scanner_constant_zero_false_negative_known_limitation`
 /// pins this accepted false-negative.
 ///
-/// **KNOWN-LIMITATION 4 — parenthesized base subexpression:** A parenthesized or braced base
-/// subexpression — `(reqwest::ClientBuilder::new()).build()` — causes a depth-0
-/// `ParenGroupEnd` to fire before the terminal `.build()`, so the violation is not reported.
-/// The test `test_timeout_scanner_parenthesized_base_subexpr_known_limitation` pins this
-/// accepted false-negative (BC-2.14.004 {PC-001}).
+/// **KNOWN-LIMITATION 4 — parenthesized or braced base subexpression:** A parenthesized
+/// **or braced** base subexpression causes a depth-0 `ParenGroupEnd` **or `BraceGroupEnd`**
+/// to fire before the terminal `.build()`, so the violation is not reported.
+/// Example forms: `(reqwest::ClientBuilder::new()).build()` (depth-0 `ParenGroupEnd`
+/// terminator) and `{ reqwest::ClientBuilder::new() }.build()` (depth-0 `BraceGroupEnd`
+/// terminator). Pinned by:
+/// `test_timeout_scanner_parenthesized_base_subexpr_known_limitation` (paren form) and
+/// `test_timeout_scanner_braced_base_subexpr_known_limitation` (brace form)
+/// (BC-2.14.004 {PC-001}).
 fn scan_flat_for_timeout_violations(flat: &[FlatToken], path: &str, findings: &mut Vec<String>) {
     let n = flat.len();
     let mut i = 0;
@@ -395,6 +475,12 @@ fn scan_flat_for_timeout_violations(flat: &[FlatToken], path: &str, findings: &m
                 i = chain_end;
                 continue;
             }
+            // reqwest::blocking::* patterns — extracted to keep this function within the
+            // clippy::too_many_lines threshold.
+            if let Some(new_i) = scan_reqwest_blocking_pattern(flat, i, path, findings) {
+                i = new_i;
+                continue;
+            }
         }
 
         // Pattern 2: bare Client :: new ( ) — but NOT if preceded by a non-reqwest qualifier
@@ -426,7 +512,14 @@ fn scan_flat_for_timeout_violations(flat: &[FlatToken], path: &str, findings: &m
                 } else {
                     false
                 };
-            if !preceded_by_non_reqwest {
+            // De-duplication guard: prevents double-reporting of `reqwest::Client::new()`
+            // already reported by Pattern 1's reqwest block. If Pattern 1's cursor advance
+            // logic ever changes and this case reaches Pattern 2, this guard ensures we fall
+            // through rather than emit a duplicate finding.
+            let preceded_by_reqwest = i >= 3
+                && matches_double_colon(flat, i - 2)
+                && matches_ident(flat, i - 3, "reqwest");
+            if !preceded_by_non_reqwest && !preceded_by_reqwest {
                 let line = flat[i].line();
                 findings.push(format!(
                     "{}:{}: Client::new() without .timeout() — use build_client() (BC-2.14.004)",
@@ -458,7 +551,14 @@ fn scan_flat_for_timeout_violations(flat: &[FlatToken], path: &str, findings: &m
                 } else {
                     false
                 };
-            if !preceded_by_non_reqwest {
+            // De-duplication guard: prevents double-reporting of `reqwest::ClientBuilder::new()`
+            // already reported by Pattern 1's reqwest block. If Pattern 1's cursor advance
+            // logic ever changes and this case reaches Pattern 3, this guard ensures we fall
+            // through rather than emit a duplicate finding.
+            let preceded_by_reqwest = i >= 3
+                && matches_double_colon(flat, i - 2)
+                && matches_ident(flat, i - 3, "reqwest");
+            if !preceded_by_non_reqwest && !preceded_by_reqwest {
                 let line = flat[i].line();
                 let chain_end = find_chain_end(flat, i);
                 if has_build_without_timeout(flat, i) {
@@ -490,10 +590,10 @@ fn scan_flat_for_timeout_violations(flat: &[FlatToken], path: &str, findings: &m
                 } else {
                     false
                 };
-            // Defense-in-depth: this guard catches `reqwest::Client::builder()` if the reqwest
-            // block's cursor advance ever changes in a way that leaves it unconsumed. Currently
-            // unreachable because the reqwest block's find_chain_end consumes the full path,
-            // but kept to make the scanner robust against future refactoring.
+            // De-duplication guard: prevents double-reporting of `reqwest::Client::builder()`
+            // already reported by Pattern 1's reqwest block. If Pattern 1's cursor advance
+            // logic ever changes and this case reaches Pattern 4, this guard ensures we fall
+            // through rather than emit a duplicate finding.
             let preceded_by_reqwest = i >= 3
                 && matches_double_colon(flat, i - 2)
                 && matches_ident(flat, i - 3, "reqwest");
@@ -1660,6 +1760,165 @@ pub fn build_client() -> reqwest::Client {
             findings.is_empty(),
             "KNOWN-LIMITATION 4: braced base subexpression is a known false negative; \
              if this test fails, the limitation has been fixed and this test should be updated"
+        );
+    }
+
+    // ── F-P23-HIGH-001: reqwest::blocking surface detection ──────────────────
+
+    /// F-P23-HIGH-001 — `reqwest::blocking::Client::new()` must be flagged.
+    ///
+    /// Pattern 1 is extended to handle the optional `blocking ::` module segment between
+    /// `reqwest ::` and the type ident. Without this fix, the blocking qualifier at offset
+    /// +3 causes Pattern 1 to fall through, and `preceded_by_non_reqwest` in Pattern 2
+    /// then suppresses detection (blocking is not in the path-relative exclusion set).
+    #[test]
+    fn test_timeout_scanner_blocking_client_new_flagged() {
+        let src = r#"
+            fn f() -> reqwest::blocking::Client {
+                reqwest::blocking::Client::new()
+            }
+        "#;
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert_eq!(
+            findings.len(),
+            1,
+            "reqwest::blocking::Client::new() must produce exactly 1 finding; got: {findings:?}"
+        );
+    }
+
+    /// F-P23-HIGH-001 — `reqwest::blocking::ClientBuilder::new().build()` without
+    /// `.timeout()` must be flagged.
+    ///
+    /// The `reqwest::blocking::` module segment is detected by Pattern 1's extended
+    /// blocking sub-pattern, which calls `has_build_without_timeout` to verify the chain
+    /// is missing `.timeout()`.
+    #[test]
+    fn test_timeout_scanner_blocking_client_builder_no_timeout_flagged() {
+        let src = r#"
+            fn f() -> reqwest::blocking::Client {
+                reqwest::blocking::ClientBuilder::new()
+                    .build()
+                    .unwrap()
+            }
+        "#;
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert_eq!(
+            findings.len(),
+            1,
+            "reqwest::blocking::ClientBuilder::new().build() without .timeout() must produce 1 finding; \
+             got: {findings:?}"
+        );
+    }
+
+    /// F-P23-HIGH-001 — `reqwest::blocking::Client::builder().build()` without
+    /// `.timeout()` must be flagged.
+    ///
+    /// The `reqwest::blocking::` module segment is detected by Pattern 1's extended
+    /// blocking sub-pattern for the `Client::builder()` form.
+    #[test]
+    fn test_timeout_scanner_blocking_client_builder_flagged() {
+        let src = r#"
+            fn f() -> reqwest::blocking::Client {
+                reqwest::blocking::Client::builder()
+                    .build()
+                    .unwrap()
+            }
+        "#;
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert_eq!(
+            findings.len(),
+            1,
+            "reqwest::blocking::Client::builder().build() without .timeout() must produce 1 finding; \
+             got: {findings:?}"
+        );
+    }
+
+    /// F-P23-HIGH-001 negative — `other_sdk::blocking::Client::new()` must NOT be flagged.
+    ///
+    /// The `blocking` module segment in a non-reqwest path must not be misidentified as
+    /// reqwest. Pattern 1 only fires when `reqwest` is confirmed at the start of the path;
+    /// Pattern 2's `preceded_by_non_reqwest` guard correctly suppresses `blocking::Client`.
+    #[test]
+    fn test_timeout_scanner_other_sdk_blocking_not_flagged() {
+        let src = r#"
+            fn f() {
+                other_sdk::blocking::Client::new();
+            }
+        "#;
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert!(
+            findings.is_empty(),
+            "other_sdk::blocking::Client::new() must NOT be flagged; got: {findings:?}"
+        );
+    }
+
+    // ── F-P23-MED-005: self::/super::/Self:: qualifier pinning tests ─────────
+
+    /// F-P23-MED-005 — `self::Client::new()` must be flagged (Pattern 2 path).
+    ///
+    /// `self` is a path-relative qualifier, not a third-party crate name. The
+    /// `preceded_by_non_reqwest` guard excludes `self` from the non-reqwest suppression
+    /// set (alongside `crate`, `super`, `Self`), so Pattern 2 emits a finding.
+    /// This test pins the `self::` form to prevent regression if the exclusion set is
+    /// ever narrowed back to `"crate"` alone.
+    #[test]
+    fn test_timeout_scanner_self_qualified_client_new_flagged() {
+        let src = r#"
+            fn f() {
+                self::Client::new();
+            }
+        "#;
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert_eq!(
+            findings.len(),
+            1,
+            "self::Client::new() must be flagged (Pattern 2 path); got: {findings:?}"
+        );
+    }
+
+    /// F-P23-MED-005 — `super::ClientBuilder::new().build()` without `.timeout()` must be
+    /// flagged (Pattern 3 path).
+    ///
+    /// `super` is a path-relative qualifier. The `preceded_by_non_reqwest` guard excludes
+    /// it from suppression, so Pattern 3 emits a finding. Pins the `super::` form for
+    /// `ClientBuilder` to prevent regression.
+    #[test]
+    fn test_timeout_scanner_super_qualified_client_builder_new_flagged() {
+        let src = r#"
+            fn f() {
+                super::ClientBuilder::new().build().unwrap();
+            }
+        "#;
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert_eq!(
+            findings.len(),
+            1,
+            "super::ClientBuilder::new().build() without .timeout() must be flagged (Pattern 3 path); \
+             got: {findings:?}"
+        );
+    }
+
+    /// F-P23-MED-005 — `Self::Client::builder().build()` without `.timeout()` must be
+    /// flagged (Pattern 4 path).
+    ///
+    /// `Self` is a path-relative qualifier (associated item resolution). The
+    /// `preceded_by_non_reqwest` guard excludes it from suppression, so Pattern 4 emits a
+    /// finding. Pins the `Self::` form for `Client::builder()` to prevent regression if the
+    /// exclusion set is ever narrowed back to `"crate"` alone. Test name uses `self_type`
+    /// (snake-case) to satisfy the non_snake_case lint; the fixture uses `Self::` (capital).
+    #[test]
+    fn test_timeout_scanner_self_type_qualified_client_builder_flagged() {
+        let src = r#"
+            fn f() {
+                Self::Client::builder().build().unwrap();
+            }
+        "#;
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert_eq!(
+            findings.len(),
+            1,
+            "Self::Client::builder().build() without .timeout() must be flagged (Pattern 4 path); \
+             got: {findings:?}"
         );
     }
 }
