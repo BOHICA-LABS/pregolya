@@ -16,6 +16,50 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-46 (pass-44 findings)
+
+### CHANGELOG attestation correction, test-count reconciliation, STATE.md structural fixes, normalization regression pins, L13 denominator fix, story-spec AC-009 phantom cite
+
+**HIGH-001 (F-P44-HIGH-001) — CHANGELOG fix-burst-43 OBS-001 stale labels:**
+The fix-burst-43 OBS-001 paragraph attesting the L13 implementation cited "Phase Progress COMPLETE rows" (wrong source table — should be "§Current Phase Steps") and "Three self-probes" (wrong count — four probes ship). This paragraph was the *originating* claim; it was never swept when fix-burst-44/45 corrected the same labels in records-lint.sh and other documents. Fixed by technical-writer in this burst.
+
+**MED-001 (F-P44-MED-001) — fix-burst-45 test count missing skipped count and undocumented basis change:**
+fix-burst-45 attested "343 run: 343 passed" with no skipped count, while fix-burst-44 said "251 run: 251 passed, 5 skipped." The 343 is the full workspace count (`cargo nextest run --workspace`), which is larger because it includes pregolya-core and other workspace crate tests in addition to xtask. The basis change from per-crate to full workspace was not documented, and the "5 skipped" term disappeared despite five `#[ignore]` tests remaining in xtask. Fixed: corrected to "343 run: 343 passed, 7 skipped" with explicit basis statement.
+
+**MED-002 (F-P44-MED-002) — §Convergence Status duplicated paragraph + inline heading fragment:**
+STATE.md §Convergence Status had the Counter paragraph appear twice back-to-back (two copies, neither identical to the other), and the second copy terminated with `…Streak: 0/3.## Session Resume Checkpoint` glued to prose instead of a clean line break. Fixed by state-manager: duplicate removed, inline heading fragment removed.
+
+**MED-003 (F-P44-MED-003) — Two of six path-normalization sites lacked load-bearing regression pins:**
+`AllowList::is_allowed` and the `check_file_size` exclusion loop (`name_n` site) had no backslash test assertions — reverting normalization at either site left the test suite green. Fixed by implementer: `is_size_gate_excluded(name: &str) -> bool` extracted as `pub(crate)` function from the `check_file_size` loop, pinned with `test_is_size_gate_excluded_windows_paths` (5 assertions: 3 positive backslash paths for `/target/`, `/tests/fixtures/`, `.gen.rs`; 2 negative controls); `test_allowlist_exact_match` extended with one backslash assertion against the existing entry.
+
+**MED-004 (F-P44-MED-004) — L13 hardcoded "3/3" on convergence-absent skip path:**
+When §Convergence Status was absent or carried no `**D-NNN` bold entry, `check_l13` emitted "3/3 surfaces in sync" despite only asserting 2 surfaces. Fixed by devops-engineer: denominator computed at runtime (`ASSERTED=2` when skipped, `3` otherwise); probe E added for convergence-absent path.
+
+**MED-005 (F-P44-MED-005) — STATE.md checkpoint stale (D-411 IN FLIGHT at review time):**
+STATE.md was reviewed mid-update with D-411 still IN FLIGHT and D-412 not yet recorded. Fixed by state-manager.
+
+**MED-006 (F-P44-MED-006) — AC-009 phantom compile-fail cite + missing AnthropicApiKey + stale `.as_str()`:**
+STORY-S-1.02 AC-009 Verified-by cited "compile-fail test or `static_assertions::assert_not_impl_any!(OpenAiApiKey: AsRef<str>)`" — no compile-fail test exists; only the static assertion. `AnthropicApiKey` was also omitted despite the same assertion existing in credentials.rs. And "`.as_str()` or `.expose_secret()` method" was stale — `.as_str()` doesn't exist on either type. Fixed by story-writer: Verified-by rewritten to cite both `OpenAiApiKey` and `AnthropicApiKey` static assertions; phantom compile-fail hedge removed; `.as_str()` removed from exposure-path sentence.
+
+**Test count (fix-burst-46):** 252 run: 252 passed, 5 skipped (xtask per-crate: `cargo nextest run -p xtask`). Full workspace: 344 run: 344 passed, 7 skipped (`cargo nextest run --workspace`). Net change from fix-burst-45: +1 xtask test (`test_is_size_gate_excluded_windows_paths`), +1 assertion in `test_allowlist_exact_match`.
+
+### Known limitations after fix-burst-46
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED** in fix-burst-26 | Parenthesized/braced base subexpression — eliminated by syn AST visitor |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+Test count: 252 run: 252 passed, 5 skipped (xtask per-crate); 344 run: 344 passed, 7 skipped (workspace). Gate output unchanged: 25 analyzed / 16 exempt / 0 violations per scanning gate; fixture-mode 14/17; 148 codes / 0 collisions.
+
 ## fix-burst-45 (pass-43 findings)
 
 ### records-lint.sh header / STATE.md PGAP / evidence-report — stale source-table labels, skip-conditions rewrite, attestation table
@@ -29,7 +73,7 @@ The L13 header entry's "Skip conditions (PASS without blocking assertion)" parag
 **LOW-001 (F-P43-LOW-001) — evidence-report fix-burst-44 re-verification missing attestation table:**
 `## fix-burst-44 re-verification` had no per-detection-class attestation table for MED-003 (anchor sweep) or MED-005 (vacuity guards + probe D), unlike the fix-burst-43 section which carried a row for its records-lint change. Fixed by adding a two-row attestation table naming `L13-probe-D` as the load-bearing artifact for MED-005.
 
-**Test count:** 343 run: 343 passed (full workspace; no code or test changes in fix-burst-45 — all records-lint.sh header corrections and CHANGELOG/evidence-report attestation fixes). 10-row KL table (same structure; no new KL entries).
+**Test count:** 343 run: 343 passed, 7 skipped (`cargo nextest run --workspace`; includes pregolya-core and other workspace crate tests; xtask per-crate: `cargo nextest run -p xtask` → 251 run: 251 passed, 5 skipped; basis changed to full workspace from push hook starting fix-burst-45 — no test additions in fix-burst-45). 10-row KL table (same structure; no new KL entries).
 
 ### Known limitations after fix-burst-45
 
@@ -95,7 +139,7 @@ Test count: 251 run: 251 passed, 5 skipped. Gate output unchanged: 25 analyzed /
 
 **LOW-002 (F-P41-LOW-002) — `validate_allowlist_entry_path` POSIX-only predicates:** Last unswept path predicate in the allowlist family. Fixed by implementer: `let path = path.replace('\\', "/");` added as first statement in `validate_allowlist_entry_path`. Load-bearing test `test_validate_allowlist_entry_path_windows_separator` added (3 assertions: 2 positive backslash cases, 1 negative control).
 
-**OBS-001 (F-P41-OBS-001) — PGAP-RECORDS-LINT-FIXBURST-PARITY implemented:** 5 consecutive recurrences of the STATE.md checkpoint staleness defect class triggered production-grade default (CLAUDE.md Rule 3). Devops-engineer extended `.factory/hooks/records-lint.sh` with L13 (D-NNN parity assertion): extracts max D-NNN from Phase Progress COMPLETE rows, asserts same value appears in §Session Resume Checkpoint and §Convergence Status. Three self-probes validate the check is not false-green. The D-NNN parity half of PGAP-RECORDS-LINT-FIXBURST-PARITY shipped (records-lint.sh L13). The primary obligation — asserting newest `## fix-burst-N` in CHANGELOG matches `## fix-burst-N re-verification` in evidence-report and a corresponding story-spec changelog row — remains unimplemented. PGAP entry remains IN PROGRESS in STATE.md OPEN SELF-IMPROVEMENT ITEMS pending the fix-burst-N ↔ evidence-report ↔ story-spec parity check.
+**OBS-001 (F-P41-OBS-001) — PGAP-RECORDS-LINT-FIXBURST-PARITY implemented:** 5 consecutive recurrences of the STATE.md checkpoint staleness defect class triggered production-grade default (CLAUDE.md Rule 3). Devops-engineer extended `.factory/hooks/records-lint.sh` with L13 (D-NNN parity assertion): extracts max D-NNN from §Current Phase Steps rows carrying `| COMPLETE |`, asserts same value appears in §Session Resume Checkpoint and §Convergence Status. Four self-probes (A/B/C/D); note probe D (checkpoint-absent path) was added in fix-burst-44. The D-NNN parity half of PGAP-RECORDS-LINT-FIXBURST-PARITY shipped (records-lint.sh L13). The primary obligation — asserting newest `## fix-burst-N` in CHANGELOG matches `## fix-burst-N re-verification` in evidence-report and a corresponding story-spec changelog row — remains unimplemented. PGAP entry remains IN PROGRESS in STATE.md OPEN SELF-IMPROVEMENT ITEMS pending the fix-burst-N ↔ evidence-report ↔ story-spec parity check.
 
 **Test count:** 251 run: 251 passed, 5 skipped (+1 `test_validate_allowlist_entry_path_windows_separator`; was 250 from fix-burst-42).
 
