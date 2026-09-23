@@ -106,8 +106,9 @@
 #                 ferroctmp→pregolya-checkpoint, FerrochainError→PregolyaError).
 #
 #   L13 — STATE.md D-NNN Parity (BLOCKING): the newest D-NNN decision number in
-#        STATE.md's Decision Log / Phase Progress table rows (lines of the form
-#        `| D-NNN`) must equal the D-NNN referenced in §Session Resume Checkpoint
+#        STATE.md's §Current Phase Steps table rows of the form
+#        `| D-NNN/YYYY-MM-DD` carrying a `| COMPLETE |` status column (IN FLIGHT
+#        rows excluded) must equal the D-NNN referenced in §Session Resume Checkpoint
 #        (canonical forms: "D-NNN checkpoint is current" in the archival comment,
 #        OR "post-D-NNN state" in the §RESUME NEXT-ACTIONS heading) AND the
 #        §Convergence Status section (terminal bold **D-NNN entry; max number
@@ -115,9 +116,14 @@
 #        F-P39-MED-001, F-P40-MED-003, F-P41-MED-001 (5 consecutive recurrences;
 #        PGAP-RECORDS-LINT-FIXBURST-PARITY). Positive-coverage log line on PASS so
 #        the check cannot go silently inert.
-#        Skip conditions (PASS without blocking assertion): STATE.md absent (non-
-#        STATE.md commit); no `| D-NNN` rows in the file (Decision Log not yet
-#        started); §Convergence Status section absent (pre-convergence state).
+#        Blocking FAIL (vacuity guards, F-P42-MED-005): STATE.md absent; zero
+#        `| D-NNN/YYYY-MM-DD … | COMPLETE |` rows in §Current Phase Steps;
+#        §Session Resume Checkpoint section absent or containing no D-NNN.
+#        Genuine skip (no assertion): §Convergence Status section absent or
+#        containing no `**D-NNN` bold entry (pre-convergence state — check emits
+#        a SKIPPED label, not FAIL).
+#        Self-probes: four probes exercise this check (A: checkpoint-stale,
+#        B: convergence-stale, C: clean-pass, D: checkpoint-absent).
 #        Routing: state-manager (propagate newest D-NNN to §Session Resume
 #                 Checkpoint and §Convergence Status).
 #
