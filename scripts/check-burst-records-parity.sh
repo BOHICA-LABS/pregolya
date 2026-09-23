@@ -34,7 +34,15 @@ do_parity_check() {
     newest_burst=$(grep -oE '^## fix-burst-[0-9]+' "$cl_file" 2>/dev/null \
         | grep -oE '[0-9]+' | sort -rn | head -1 || true)
     if [ -z "$newest_burst" ]; then
-        echo "[BURST-PARITY] No fix-burst sections found in CHANGELOG — skipping."
+        # Case-insensitive search: if any 'fix-burst' token exists but the canonical
+        # '^## fix-burst-N' pattern matched zero headings, that is heading-format drift.
+        # Only skip entirely when no fix-burst token is present at all (e.g., brand-new
+        # story branch with no adversary passes yet).
+        if grep -qi 'fix-burst' "$cl_file" 2>/dev/null; then
+            echo "[BURST-PARITY FAIL] heading-format drift detected: 'fix-burst' tokens present but no canonical '## fix-burst-N' headings matched"
+            return 1
+        fi
+        echo "[BURST-PARITY SKIP] No fix-burst content in CHANGELOG — skipping."
         return 0
     fi
 
@@ -126,6 +134,13 @@ do_parity_check() {
     er_counts=$(printf '%s\n' "$er_tally" \
         | grep -oE "[0-9]+ ${SEV}" | sort || true)
 
+    # ── Fail-closed: tally lines must be extractable to certify the tally ───────
+    # If either raw tally line is absent (format drift), we cannot compare — fail.
+    if [ -z "$cl_tally" ] || [ -z "$er_tally" ]; then
+        echo "[BURST-PARITY FAIL] fix-burst-${newest_burst}: tally extraction empty — cannot certify tally"
+        return 1
+    fi
+
     if [ -n "$cl_counts" ] && [ -n "$er_counts" ] && [ "$cl_counts" != "$er_counts" ]; then
         echo "[BURST-PARITY FAIL] fix-burst-${newest_burst}: tally mismatch between CHANGELOG and evidence-report"
         echo "  CHANGELOG tally:         $cl_tally"
@@ -135,22 +150,45 @@ do_parity_check() {
 
     local id_count
     id_count=$(printf '%s\n' "$cl_ids" | wc -l | tr -d ' ')
-    echo "[BURST-PARITY PASS] fix-burst-${newest_burst}: ${id_count} finding IDs matched; tally verified."
+
+    # ── Runtime-computed tally label ─────────────────────────────────────────────
+    # Emit the actual compared tally (e.g. "1H+1M") rather than an unconditional
+    # "tally verified".  Uses cl_counts (which equals er_counts at this point).
+    local tally_label
+    if [ -n "$cl_counts" ]; then
+        tally_label=$(printf '%s\n' "$cl_counts" \
+            | sed 's/ CRIT$/C/;s/ HIGH$/H/;s/ MED$/M/;s/ LOW$/L/;s/ OBS$/OBS/;s/ PROCESS-GAP$/PG/' \
+            | paste -sd'+' - || echo "?")
+    else
+        tally_label="(no count tokens)"
+    fi
+
+    echo "[BURST-PARITY PASS] fix-burst-${newest_burst}: ${id_count} finding IDs matched; tally: ${tally_label}."
     return 0
 }
 
 # ── Self-probe ───────────────────────────────────────────────────────────────
 #
-# Creates a deliberately-divergent pair of synthetic CHANGELOG + evidence-report
-# and asserts that do_parity_check detects the mismatch (exits non-zero).
-# This pins the regex logic against future breakage.
+# Probe 1 — ID-mismatch probe.
+#   CHANGELOG: HIGH-001 + MED-001.  Evidence-report: HIGH-001 + LOW-001.
+#   Diverges on ID set.  Asserts do_parity_check exits non-zero.
+#
+# Probe 2 — Tally-divergent probe.
+#   CHANGELOG: HIGH-001 + MED-001.  Evidence-report: HIGH-001 + MED-001.
+#   IDENTICAL ID sets, but CHANGELOG tally = 1 HIGH + 1 MED whereas ER
+#   tally = 2 HIGH + 0 MED.  This is the only construction that exercises the
+#   tally comparison path (probe 1 short-circuits at the ID check).
+#   Asserts do_parity_check exits non-zero.
 run_self_probes() {
-    local tmpdir
-    tmpdir="$(mktemp -d)"
+    local all_passed=0
+
+    # ── Probe 1: ID-mismatch ──────────────────────────────────────────────────
+    local tmpdir1
+    tmpdir1="$(mktemp -d)"
 
     # Synthetic CHANGELOG: fix-burst-99 with HIGH-001 and MED-001.
-    local fake_cl="$tmpdir/CHANGELOG.md"
-    cat > "$fake_cl" <<'PROBE_HEREDOC'
+    local fake_cl1="$tmpdir1/CHANGELOG.md"
+    cat > "$fake_cl1" <<'PROBE_HEREDOC'
 ## fix-burst-99 (pass-97 findings)
 
 **Pass-97 finding tally: 1 HIGH + 1 MED**
@@ -166,8 +204,8 @@ PROBE_HEREDOC
 
     # Synthetic evidence-report: fix-burst-99 re-verification with HIGH-001 and
     # LOW-001.  Deliberately divergent: CHANGELOG says MED-001, ER says LOW-001.
-    local fake_er="$tmpdir/evidence-report.md"
-    cat > "$fake_er" <<'PROBE_HEREDOC'
+    local fake_er1="$tmpdir1/evidence-report.md"
+    cat > "$fake_er1" <<'PROBE_HEREDOC'
 ## fix-burst-99 re-verification
 
 **Adversary pass 97 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH + 1 LOW.
@@ -178,15 +216,66 @@ PROBE_HEREDOC
 | F-P97-LOW-001 | LOW | test class | test artifact |
 PROBE_HEREDOC
 
-    # Run the check against the synthetic pair; expect a non-zero exit (FAIL).
-    local probe_exit=0
-    do_parity_check "$fake_cl" "$fake_er" >/dev/null 2>&1 || probe_exit=$?
-    rm -rf "$tmpdir"
+    local probe1_exit=0
+    do_parity_check "$fake_cl1" "$fake_er1" >/dev/null 2>&1 || probe1_exit=$?
+    rm -rf "$tmpdir1"
 
-    if [ "$probe_exit" -ne 0 ]; then
-        echo "[SELF-PROBE PASS] burst-parity deliberately-divergent pair correctly detected mismatch"
+    if [ "$probe1_exit" -ne 0 ]; then
+        echo "[SELF-PROBE PASS] probe-1 (ID-mismatch): divergent ID pair correctly detected mismatch"
     else
-        echo "[SELF-PROBE FAIL] burst-parity self-probe: divergent pair was not detected"
+        echo "[SELF-PROBE FAIL] probe-1 (ID-mismatch): divergent ID pair was not detected"
+        all_passed=1
+    fi
+
+    # ── Probe 2: tally-divergent, ID-matching ─────────────────────────────────
+    # This probe exercises the tally comparison path that probe 1 never reaches
+    # (probe 1 short-circuits at the ID check).
+    local tmpdir2
+    tmpdir2="$(mktemp -d)"
+
+    # Synthetic CHANGELOG: fix-burst-98 with HIGH-001 and MED-001.
+    # Tally: 1 HIGH + 1 MED.
+    local fake_cl2="$tmpdir2/CHANGELOG.md"
+    cat > "$fake_cl2" <<'PROBE_HEREDOC'
+## fix-burst-98 (pass-96 findings)
+
+**Pass-98 finding tally: 1 HIGH + 1 MED**
+
+### HIGH-001: A high severity finding
+
+Description of the high finding.
+
+### MED-001: A medium severity finding
+
+Description of the medium finding.
+PROBE_HEREDOC
+
+    # Synthetic evidence-report: IDENTICAL finding IDs (HIGH-001 + MED-001),
+    # but DIVERGENT tally: 2 HIGH + 0 MED.
+    local fake_er2="$tmpdir2/evidence-report.md"
+    cat > "$fake_er2" <<'PROBE_HEREDOC'
+## fix-burst-98 re-verification
+
+**Adversary pass 98 result:** CLEAN(strict)=no — 2 HIGH + 0 MED.
+
+| Finding | Severity | Detection class | Load-bearing artifact |
+|---------|----------|-----------------|-----------------------|
+| F-P98-HIGH-001 | HIGH | test class | test artifact |
+| F-P98-MED-001 | MED | test class | test artifact |
+PROBE_HEREDOC
+
+    local probe2_exit=0
+    do_parity_check "$fake_cl2" "$fake_er2" >/dev/null 2>&1 || probe2_exit=$?
+    rm -rf "$tmpdir2"
+
+    if [ "$probe2_exit" -ne 0 ]; then
+        echo "[SELF-PROBE PASS] probe-2 (tally-divergent): identical IDs with divergent tallies correctly detected mismatch"
+    else
+        echo "[SELF-PROBE FAIL] probe-2 (tally-divergent): tally mismatch was not detected (tally comparison path untested)"
+        all_passed=1
+    fi
+
+    if [ "$all_passed" -ne 0 ]; then
         exit 1
     fi
 }

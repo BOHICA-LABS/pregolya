@@ -204,27 +204,63 @@ mod tests {
         );
     }
 
-    /// DI-009 (BC-2.14.004 {PC-001}/{INV-001}) — build_client returns Ok
+    /// DI-009 (BC-2.14.004 {PC-001}/{INV-001}) + error-shape (BC-2.14.004 {EC-006})
     ///
-    /// S-1.02 scope: `build_client()` must return `Ok(reqwest::Client)` when called
-    /// with valid workspace configuration. This test verifies DI-009: the builder
-    /// succeeds and returns a usable client handle.
+    /// Two assertions:
     ///
-    /// E-PROV-002 error-shape verification (reqwest timeout fires → PregolyaError
-    /// category:TIMEOUT, code:"E-PROV-002") is owned by S-2.07, which implements the
-    /// provider error-mapping layer against a mock server.
+    /// 1. DI-009: `build_client()` must return `Ok(reqwest::Client)` with a
+    ///    positive-timeout client. S-1.02 scope: the builder succeeds and returns a
+    ///    usable client handle. E-PROV-002 end-to-end timeout-fires verification is
+    ///    owned by S-2.07 (provider error-mapping layer against a mock server).
     ///
-    /// GREEN: `build_client()` is implemented — returns `Ok(reqwest::Client)` with a
-    /// positive-timeout client.
+    /// 2. Error-shape (SID-1): when `build_client()` fails (e.g. TLS misconfiguration),
+    ///    the resulting `PregolyaError` must carry `Category::Transport`,
+    ///    code `"E-CORE-012"`, and `RetryHint::Never` (BC-2.14.004 {EC-006}).
+    ///    Exercised here via `map_build_failure` to avoid requiring a broken TLS stack.
+    ///
+    /// GREEN: `build_client()` is implemented and `map_build_failure` produces the
+    /// correct E-CORE-012 / Transport / Never shape.
     #[test]
     fn test_BC_2_14_004_timeout_error_shape() {
-        // DI-009: build_client() must succeed (returns Ok with a positive-timeout client).
-        // The timeout value is verified by the xtask gate (check-client-timeout).
+        // Part 1 — DI-009: build_client() must succeed (returns Ok with a
+        // positive-timeout client). The timeout value is verified by the xtask gate
+        // (check-client-timeout).
         let result = build_client();
         assert!(
             result.is_ok(),
             "BC-2.14.004 DI-009: build_client() must return Ok(reqwest::Client); \
              got: {result:?}"
+        );
+
+        // Part 2 — Error-shape (BC-2.14.004 {EC-006}, SID-1): when the builder fails,
+        // the error must carry Category::Transport, code "E-CORE-012", RetryHint::Never,
+        // and a message starting with "HttpClientBuildFailed:". Exercised via
+        // map_build_failure (production code path) without requiring a broken TLS stack.
+        let err = map_build_failure("simulated timeout-related build failure");
+        assert_eq!(
+            err.code(),
+            "E-CORE-012",
+            "BC-2.14.004 {{EC-006}}: timeout-path build failure must use code 'E-CORE-012'; \
+             got: {:?}",
+            err.code()
+        );
+        assert!(
+            matches!(err.category, Category::Transport),
+            "BC-2.14.004 {{EC-006}}: timeout-path build failure must carry \
+             Category::Transport; got: {:?}",
+            err.category
+        );
+        assert!(
+            matches!(err.retry_hint, RetryHint::Never),
+            "BC-2.14.004 {{EC-006}}: timeout-path build failure must carry \
+             RetryHint::Never; got: {:?}",
+            err.retry_hint
+        );
+        assert!(
+            err.message.starts_with("HttpClientBuildFailed:"),
+            "BC-2.14.004 {{EC-006}}: timeout-path build failure message must start with \
+             'HttpClientBuildFailed:'; got: {:?}",
+            err.message
         );
     }
 

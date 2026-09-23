@@ -35,15 +35,26 @@ pub(crate) fn taxonomy_path_with_factory_dir(factory_dir: Option<&str>) -> PathB
     PathBuf::from("../../.factory/specs/prd-supplements/error-taxonomy.md")
 }
 
-/// Extracts all `E-<COMPONENT>-<NNN>` codes from the content, mapping each code
-/// to the list of line numbers (1-indexed) where it appears.
+/// Extracts all `E-<COMPONENT>-<NNN>` codes from the content, mapping each
+/// case-folded code (uppercase key) to the list of `(line_number, raw_spelling)`
+/// pairs where it appears.
+///
+/// The key is `code.to_ascii_uppercase()` so that `E-CORE-012` and `E-core-012`
+/// map to the same key, enabling case-insensitive collision detection
+/// (BC-2.14.001 EC-007 uses `eq_ignore_ascii_case` at runtime). The raw spelling
+/// is preserved in the value tuple so collision messages can display both forms
+/// (e.g. "E-CORE-012" and "E-core-012").
 ///
 /// Extracted for testability and called by both `run()` and tests.
-pub(crate) fn collect_code_locations(content: &str) -> HashMap<String, Vec<usize>> {
-    let mut code_locations: HashMap<String, Vec<usize>> = HashMap::new();
+pub(crate) fn collect_code_locations(content: &str) -> HashMap<String, Vec<(usize, String)>> {
+    let mut code_locations: HashMap<String, Vec<(usize, String)>> = HashMap::new();
     for (line_idx, line) in content.lines().enumerate() {
         if let Some(code) = extract_error_code(line) {
-            code_locations.entry(code).or_default().push(line_idx + 1);
+            let key = code.to_ascii_uppercase();
+            code_locations
+                .entry(key)
+                .or_default()
+                .push((line_idx + 1, code));
         }
     }
     code_locations
@@ -58,7 +69,7 @@ pub(crate) fn collect_code_locations(content: &str) -> HashMap<String, Vec<usize
 ///
 /// Extracted for testability — the `std::process::exit(1)` side-effect lives in `run()`.
 pub(crate) fn registry_verdict(
-    code_locations: &HashMap<String, Vec<usize>>,
+    code_locations: &HashMap<String, Vec<(usize, String)>>,
 ) -> Result<String, String> {
     let total = code_locations.len();
     if total == 0 {
@@ -67,17 +78,22 @@ pub(crate) fn registry_verdict(
                 .to_string(),
         );
     }
-    let mut collisions: Vec<(&String, &Vec<usize>)> = code_locations
+    let mut collisions: Vec<(&String, &Vec<(usize, String)>)> = code_locations
         .iter()
-        .filter(|(_, lines)| lines.len() > 1)
+        .filter(|(_, entries)| entries.len() > 1)
         .collect();
     // Sort for deterministic output
     collisions.sort_by_key(|(code, _)| code.as_str());
     if !collisions.is_empty() {
         let detail = collisions
             .iter()
-            .map(|(code, lines)| {
-                format!("{} appears {} times (rows: {:?})", code, lines.len(), lines)
+            .map(|(key, entries)| {
+                let rows: Vec<usize> = entries.iter().map(|(ln, _)| *ln).collect();
+                let spellings: Vec<&str> = entries.iter().map(|(_, raw)| raw.as_str()).collect();
+                format!(
+                    "{key} appears {} times (rows: {rows:?}, spellings: {spellings:?})",
+                    entries.len()
+                )
             })
             .collect::<Vec<_>>()
             .join("; ");
@@ -219,13 +235,14 @@ mod tests {
         assert!(!is_valid_error_code("E-CORE-1000")); // 4-digit suffix
     }
 
-    /// Coupling test: `is_valid_error_code` must agree with the production runtime
-    /// validation predicate in `PregolyaError::new` (pregolya-core/src/error.rs) on a
-    /// shared fixture table.
+    /// Pins the xtask `is_valid_error_code` grammar against the fixture table below.
     ///
-    /// If the xtask gate and the runtime diverge, this test catches it before CI catches
-    /// it in production. The fixture rows cover the complete set of cases described in
-    /// finding F-P51-MED-003.
+    /// NOTE: xtask does not depend on pregolya-core, so this test cannot detect drift
+    /// between `is_valid_component_segment_xtask` and the production
+    /// `is_valid_component_segment` in pregolya-core. The two are manually kept in sync;
+    /// this test pins the xtask side only.
+    ///
+    /// The fixture rows cover the complete set of cases described in finding F-P51-MED-003.
     #[test]
     fn test_is_valid_error_code_coupling() {
         let cases: &[(&str, bool)] = &[
@@ -349,7 +366,7 @@ mod tests {
     /// (TD-VSDD-059 paper-fix prevention for F-P5-M03).
     #[test]
     fn test_registry_verdict_zero_codes_returns_err() {
-        let empty: HashMap<String, Vec<usize>> = HashMap::new();
+        let empty: HashMap<String, Vec<(usize, String)>> = HashMap::new();
         let result = registry_verdict(&empty);
         assert!(
             result.is_err(),
@@ -364,9 +381,18 @@ mod tests {
     /// verifying collision detection independently of the `collect_code_locations` parser.
     #[test]
     fn test_registry_verdict_collision_returns_err() {
-        let mut map: HashMap<String, Vec<usize>> = HashMap::new();
-        map.insert("E-CORE-001".to_string(), vec![1, 2]);
-        map.insert("E-CORE-002".to_string(), vec![3]);
+        let mut map: HashMap<String, Vec<(usize, String)>> = HashMap::new();
+        map.insert(
+            "E-CORE-001".to_string(),
+            vec![
+                (1usize, "E-CORE-001".to_string()),
+                (2usize, "E-CORE-001".to_string()),
+            ],
+        );
+        map.insert(
+            "E-CORE-002".to_string(),
+            vec![(3usize, "E-CORE-002".to_string())],
+        );
         let result = registry_verdict(&map);
         assert!(
             result.is_err(),
@@ -376,6 +402,38 @@ mod tests {
         assert!(
             err_msg.contains("E-CORE-001"),
             "Err message must identify the colliding code E-CORE-001; got: {err_msg}"
+        );
+    }
+
+    /// Load-bearing test for case-insensitive collision detection in `collect_code_locations`.
+    ///
+    /// `E-CORE-012` and `E-core-012` are the same code at runtime
+    /// (BC-2.14.001 EC-007 uses `eq_ignore_ascii_case`). The registry gate must
+    /// treat them as a collision even though their ASCII spellings differ.
+    #[test]
+    fn test_collision_detection_case_insensitive() {
+        let content = "| E-CORE-012 | VAL | broken | BC-2.01.001 | `msg` |\n\
+                       | E-core-012 | IO | transient | BC-2.01.001 | `dup` |\n";
+        let code_locations = collect_code_locations(content);
+        let result = registry_verdict(&code_locations);
+        assert!(
+            result.is_err(),
+            "E-CORE-012 and E-core-012 must be detected as a collision \
+             (case-insensitive); got: {result:?}"
+        );
+        let err_msg = result.unwrap_err();
+        assert!(
+            err_msg.contains("1 collision"),
+            "Err message must report exactly 1 collision; got: {err_msg}"
+        );
+        assert!(
+            err_msg.contains("E-CORE-012"),
+            "Err message must identify the colliding code key; got: {err_msg}"
+        );
+        assert!(
+            err_msg.contains("E-core-012"),
+            "Err message must show the raw spelling 'E-core-012' from the spellings list; \
+             got: {err_msg}"
         );
     }
 }

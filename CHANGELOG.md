@@ -16,6 +16,50 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-54 (pass-52 findings)
+
+**Pass-52 finding tally: 1 HIGH + 3 MED + 2 LOW**
+
+### HIGH-001: AC-015 and AC-019 vacuous attributions — third recurrence of incomplete sibling sweep
+
+**What was wrong:** Two §AC Coverage Map entries remained after fix-bursts 52 and 53 each corrected named siblings but not the full set. AC-015 ("ClientBuilder failure maps to E-CORE-012") was attributed to the AC-005 timeout scanner (zero information about E-CORE-012 mapping). AC-019 ("E-CORE-012 test is non-ignored + production path") cited `test_BC_2_14_004_build_failure_maps_to_e_core_012` — the AC-015 test — and never named its own load-bearing artifact. The adversary noted three consecutive sweeps failed to complete the §AC Coverage Map; the fix-burst must enumerate and sweep all entries in the affected section.
+
+**What was fixed:** AC-015 → `test_BC_2_14_004_build_failure_maps_to_e_core_012` (asserts code, category, retry_hint, message prefix); AC-005 gate demoted to non-load-bearing. AC-019 → `test_BC_2_14_004_build_failure_production_path_invariant` (asserts `map_build_failure` is in production scope; SID-1 gate). §AC Coverage Map fully verified: AC-001/AC-003/AC-004/AC-006/AC-015/AC-018/AC-019 all now cite discriminating tests; no remaining vacuous gate-PASS attributions.
+
+### MED-001: test_BC_2_14_004_timeout_error_shape body only asserted is_ok(), contradicting name
+
+**What was wrong:** The test name implied an error-shape assertion; the body only called `assert!(result.is_ok())`. The AC-006 attribution from fix-burst-53 consequently described it as asserting "error shape for the ClientBuilder failure path" — inaccurate. Both the test and the attribution were wrong.
+
+**What was fixed:** Test body extended with a `map_build_failure("simulated...") ` call that asserts `code == "E-CORE-012"`, `category == Category::Transport`, `retry_hint == RetryHint::Never`, and `message.starts_with("HttpClientBuildFailed:")`. The name is now accurate. AC-006 description corrected.
+
+### MED-002: burst-parity tally comparison path unpinned by any self-probe
+
+**What was wrong:** The existing self-probe diverged on BOTH ID set AND tally; `do_parity_check` exited at the ID mismatch, so the tally path was never exercised. The PASS line also printed `; tally verified` unconditionally regardless of whether a comparison ran — a reproduction of the F-P51-HIGH-001 false-green pattern one level higher.
+
+**What was fixed:** Second self-probe added: identical ID sets + divergent tallies (CHANGELOG `1 HIGH + 1 MED`, ER `2 HIGH + 0 MED`) — the only construction that reaches the tally comparison. Both probes output `[SELF-PROBE PASS]`. Empty tally now fail-closed. PASS line now runtime-computed showing the actual compared tally (e.g. `tally: 1H+1L+1OBS+3M`).
+
+### MED-003: xtask collision detection case-sensitive; E-CORE-012 ≠ E-core-012
+
+**What was wrong:** `collect_code_locations` keyed its HashMap on the raw code string. `E-CORE-012` and `E-core-012` mapped to different keys; no collision was reported. At runtime, BC-2.14.001 EC-007 uses `eq_ignore_ascii_case`, so they are the same logical code. This was a newly introduced exposure from the F-P51-MED-003 grammar fix (which made lowercase rows extractable for the first time).
+
+**What was fixed:** HashMap keyed on `code.to_ascii_uppercase()`; raw spellings retained in values so collision messages display both forms. `test_collision_detection_case_insensitive` added (asserts `E-CORE-012` + `E-core-012` → Err).
+
+### MED-004: test_is_valid_error_code_coupling doc comment overclaimed coupling guarantee
+
+**What was wrong:** Doc comment claimed "shared fixture table" and that the test "catches drift before CI" between xtask and production predicates. Xtask has no dependency on pregolya-core; the test pins the xtask grammar only.
+
+**What was fixed:** Doc comment corrected to state the test pins the xtask side only; explicit NOTE added that mirror drift with `is_valid_component_segment` in pregolya-core is unguarded.
+
+### LOW-001: burst-parity fails open on heading-format drift
+
+**What was fixed:** Case-insensitive `fix-burst` token presence check added. If `fix-burst` tokens exist in CHANGELOG but canonical `^## fix-burst-N` pattern matches zero headings → `[BURST-PARITY FAIL] heading-format drift detected`. Only skips on truly no `fix-burst` token (new story branch).
+
+### LOW-002: CHANGELOG fix-burst-53 test count baseline wrong
+
+**What was fixed:** "up from 251" corrected to "up from 253 — `test_is_valid_error_code_coupling` added".
+
+**Test count:** 346 tests pass (workspace nextest), 7 skipped; xtask 255, pregolya-core 92.
+
 ## fix-burst-53 (pass-51 findings)
 
 **Pass-51 finding tally: 1 HIGH + 3 MED + 1 LOW + 1 OBS**
@@ -54,7 +98,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 **Disposition:** DISCARDED — the code IS correct on all three points; this was a paraphrase error in the adversary dispatch brief, not a product defect. Future dispatch briefs will cite: `debug_assert!` is EXEMPT from `check-no-panic` (compiles out in release; BC-2.14.003 {INV-003}; pinned by `test_BC_2_14_003_debug_assert_not_flagged`).
 
-**Test count:** 345 tests pass (cargo nextest), 7 skipped — no behavior changed in pregolya-core. xtask: 254 tests pass (up from 251 due to `test_is_valid_error_code_coupling` + 2 updated existing tests).
+**Test count:** 345 tests pass (cargo nextest), 7 skipped — no behavior changed in pregolya-core. xtask: 254 tests pass (up from 253 — `test_is_valid_error_code_coupling` added).
 
 ## fix-burst-52 (pass-50 findings)
 

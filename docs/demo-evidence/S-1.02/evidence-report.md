@@ -52,7 +52,7 @@ Recording: `AC-005-check-client-timeout-pass.{webm,gif}` — re-recorded 2026-09
 Shows: `cargo xtask check-client-timeout` — output: `check-client-timeout PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations`
 
 ### AC-006 — build_client returns Ok (BC-2.14.004 PC-005)
-Covered by: `test_BC_2_14_004_build_client_returns_ok` and `test_BC_2_14_004_timeout_error_shape` in `crates/pregolya-core/src/http.rs` (both non-`#[ignore]`). These are the primary load-bearing artifacts: `test_BC_2_14_004_build_client_returns_ok` actually invokes `build_client()` and asserts the `Ok` return, while `test_BC_2_14_004_timeout_error_shape` asserts the error shape for the ClientBuilder failure path. The AC-005 gate PASS proves only that no production call site is structurally missing `.timeout()`; it is a static lint that never invokes `build_client()` and therefore carries no information about the function's `Ok` return value.
+Covered by: `test_BC_2_14_004_build_client_returns_ok` in `crates/pregolya-core/src/http.rs` (non-`#[ignore]`). This is the primary load-bearing artifact: it actually invokes `build_client()` and asserts the `Ok` return. `test_BC_2_14_004_timeout_error_shape` secondarily asserts `build_client()` returns `Ok` with a valid positive-timeout client (DI-009); body extended in fix-burst-54 to also assert E-CORE-012 error shape via `map_build_failure` (code, category, retry_hint, message prefix); traces to BC-2.14.004 {EC-006} / DI-009. The AC-005 gate PASS proves only that no production call site is structurally missing `.timeout()`; it is a static lint that never invokes `build_client()` and therefore carries no information about the function's `Ok` return value.
 
 ### AC-007 — newtype not type-alias (BC-2.14.005 PC-001/PC-004)
 Compile-time static assertion — no runtime demo required (structural property enforced at compile time by `static_assertions::assert_not_impl_any!`).
@@ -84,7 +84,7 @@ Recording: `AC-008-AC-011-AC-016-credential-validation-redaction.{webm,gif}`
 Shows: `test_BC_2_14_006_error_code_and_format_table` PASS.
 
 ### AC-015 — ClientBuilder failure maps to E-CORE-012 (BC-2.14.004 EC-006)
-Covered by: AC-005 recording (gate verifies implementation compiles and production code passes); underlying test `test_BC_2_14_004_build_failure_maps_to_e_core_012` is in the full test suite visible in the AC-008/AC-011/AC-016 nextest run.
+Covered by: `test_BC_2_14_004_build_failure_maps_to_e_core_012` in `crates/pregolya-core/src/http.rs` (non-`#[ignore]`). This is the primary load-bearing artifact: it asserts code, category, retry_hint, and message prefix for the E-CORE-012 error, discriminating the full mapping contract. The AC-005 gate PASS (check-client-timeout exits 0) provides non-load-bearing secondary confirmation that production call sites compile cleanly; it is a static timeout-presence lint and proves nothing about the E-CORE-012 error mapping.
 
 ### AC-016 — whitespace-only key rejected (BC-2.14.006 EC-006)
 Recording: `AC-008-AC-011-AC-016-credential-validation-redaction.{webm,gif}`
@@ -123,7 +123,7 @@ Demonstrates: verifies all 148 `E-<COMPONENT>-<NNN>` codes declared in `error-ta
 Covered by: AC-002 recording — gate exits 0 despite programmer-error-guard asserts in `PregolyaError::new` etc., proving the EC-006 narrow exception is honoured.
 
 ### AC-019 — E-CORE-012 test is non-ignored + production path (BC-2.14.004 EC-006)
-Covered by: the nextest pass in AC-008/AC-011/AC-016 recording (test_BC_2_14_004_build_failure_maps_to_e_core_012 is visible in the full suite output).
+Covered by: `test_BC_2_14_004_build_failure_production_path_invariant` in `crates/pregolya-core/src/http.rs` (non-`#[ignore]`; doc comment: "AC-019 (traces to BC-2.14.004 {EC-006} / SID-1)"). This is the primary load-bearing artifact: it asserts the invariant that `map_build_failure` is accessible in the production code path, not only in `#[cfg(test)]` scope, satisfying SID-1 (no deferred-to-integration-test rationalization).
 
 ---
 
@@ -221,6 +221,30 @@ Clause (a): no `crates/` production files added or deleted — the multibyte tes
 Gate outputs remain valid because the syn rewrite finds the same 0 violations on the workspace: no `crates/` code uses `reqwest::Client::new()` without `.timeout()`, and the pre-push hook confirmed all xtask gates PASSED (check-client-timeout, check-no-panic, check-error-code-registry, deny-bare-api-key, deny-anyhow, deny-description-cache-key). Counts: `check-client-timeout PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations` (unchanged). All other gate counts unchanged from prior attestation. Implementer run (fix-burst-26): 300 tests pass, 7 skipped. KL-4 tests now assert detection (was: known-limitation zero-finding, is: positive finding assertion). All other gate tests pass unchanged.
 
 The fix-burst-26 evidence-report docs commit (this commit) is docs-only and does NOT trigger clause (d).
+
+## fix-burst-54 re-verification
+
+**Adversary pass 52 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH + 3 MED + 2 LOW.
+
+| Finding | Severity | Detection class | Load-bearing artifact |
+|---------|----------|-----------------|-----------------------|
+| F-P52-HIGH-001 | HIGH | §AC Coverage Map AC-015 vacuous (timeout scanner cited for E-CORE-012 mapping); AC-019 mis-anchored to AC-015 test | AC-015 → `test_BC_2_14_004_build_failure_maps_to_e_core_012`; AC-019 → `test_BC_2_14_004_build_failure_production_path_invariant` |
+| F-P52-MED-001 | MED | `test_BC_2_14_004_timeout_error_shape` body only asserted `is_ok()` while name promised error shape; AC-006 citation description wrong | Test body extended: now asserts E-CORE-012 `code`, `Category::Transport`, `RetryHint::Never`, `message` prefix via `map_build_failure`; AC-006 description corrected |
+| F-P52-MED-002 | MED | Burst-parity tally path unpinned; self-probe never reached it; PASS line unconditional "tally verified" | Second self-probe (identical IDs, divergent tally); fail-closed empty tally; runtime PASS line (`tally: 1H+3M+1L+1OBS`); both `[SELF-PROBE PASS]` |
+| F-P52-MED-003 | MED | Collision HashMap case-sensitive; `E-CORE-012` ≠ `E-core-012` as keys despite being the same runtime code | HashMap keyed on `code.to_ascii_uppercase()`; `test_collision_detection_case_insensitive` added |
+| F-P52-MED-004 | MED | `test_is_valid_error_code_coupling` doc claimed "coupling guarantee" it doesn't provide | Doc corrected: pins xtask grammar only; mirror drift with production predicate unguarded |
+| F-P52-LOW-001 | LOW | Burst-parity fails open on `^## fix-burst-N` zero match (heading-format drift → silent skip) | Case-insensitive token presence check; exits 1 with `[BURST-PARITY FAIL] heading-format drift` on token-present/heading-absent |
+| F-P52-LOW-002 | LOW | CHANGELOG fix-burst-53 test count baseline "up from 251" (should be 253) | Corrected to "up from 253 — `test_is_valid_error_code_coupling` added" |
+
+**Test count:** 346 tests pass (workspace nextest), 7 skipped; xtask 255 (+1 `test_collision_detection_case_insensitive`), pregolya-core 92 (test body extended, no count change).
+
+**Gate output:**
+- Lefthook pre-push: `just check` PASSES; `check-burst-records-parity` → `[BURST-PARITY PASS] fix-burst-54: 7 finding IDs matched; tally: 1H+2L+3M.`; `burst-parity-self-probe` → both `[SELF-PROBE PASS]`
+- Factory-dispatcher chain: `records-lint.sh` exits 0
+
+**Known limitations:** none — all pass-52 findings closed by fix-burst-54.
+
+---
 
 ## fix-burst-53 re-verification
 
