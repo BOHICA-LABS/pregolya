@@ -122,9 +122,9 @@
 #        Genuine skip (no assertion): §Convergence Status section absent or
 #        containing no `**D-NNN` bold entry (pre-convergence state — check emits
 #        a SKIPPED label, not FAIL).
-#        Self-probes: six probes exercise this check (A: checkpoint-stale,
+#        Self-probes: seven probes exercise this check (A: checkpoint-stale,
 #        B: convergence-stale, C: clean-pass, D: checkpoint-absent, E: convergence-absent,
-#        F: frozen-head-not-in-complete).
+#        F: frozen-head-not-in-complete, G: frozen-head-live-mismatch).
 #        Routing: state-manager (propagate newest D-NNN to §Session Resume
 #                 Checkpoint and §Convergence Status).
 #
@@ -691,12 +691,14 @@ EOF
   # ── L13 self-probes: STATE.md D-NNN parity ─────────────────────────────────
   # Inline helper mirrors check_l13 logic: reads a synthetic STATE.md file,
   # echoes 1 on parity violation, 0 on clean pass or skip.
-  # Five probes:
-  #   A — checkpoint stale (§Current Phase Steps max D-999, checkpoint D-998) → CAUGHT
-  #   B — convergence stale (§Current Phase Steps/checkpoint D-202, convergence D-201) → CAUGHT
-  #   C — all three surfaces agree D-101 → NOT caught
-  #   D — valid §Current Phase Steps rows but no §Session Resume Checkpoint → CAUGHT
-  #   E — valid §Current Phase Steps and checkpoint, §Convergence Status absent → NOT caught (2/2)
+  # Seven probes (A–G):
+  #   A — checkpoint-stale: checkpoint D-NNN older than newest COMPLETE → CAUGHT
+  #   B — convergence-stale: convergence D-NNN older than newest COMPLETE → CAUGHT
+  #   C — clean-pass: all surfaces match newest COMPLETE → NOT CAUGHT (PASS)
+  #   D — checkpoint-absent: §Session Resume Checkpoint section missing → CAUGHT
+  #   E — convergence-absent: §Convergence Status absent → NOT CAUGHT (PASS, 2/2)
+  #   F — frozen-head-not-in-complete: frozen HEAD SHA absent from COMPLETE rows → CAUGHT
+  #   G — frozen-head-live-mismatch: checkpoint frozen HEAD ≠ live branch HEAD → CAUGHT
 
   _L13_CHECK() {
     local state_file="$1"
@@ -746,7 +748,7 @@ EOF
     local frozen_head_sha=""
     frozen_head_sha=$(echo "$cp_section" \
       | grep -oE 'frozen HEAD [0-9a-f]{7,40}' \
-      | grep -oE '[0-9a-f]{7,40}' | head -1 || true)
+      | grep -oE '[0-9a-f]{7,40}' | tail -1 || true)
     if [ -n "$frozen_head_sha" ]; then
       local frozen_in_complete
       frozen_in_complete=$(grep -E '^\| D-[0-9]+/[0-9]{4}-[0-9]{2}-[0-9]{2}' "$state_file" 2>/dev/null \
@@ -754,6 +756,22 @@ EOF
         | grep -F "$frozen_head_sha" || true)
       if [ -z "$frozen_in_complete" ]; then
         echo 1; return
+      fi
+      # Live branch HEAD check: verify frozen HEAD matches the actual live branch tip.
+      # Detects stale checkpoints where both checkpoint and a COMPLETE row contain the
+      # same old SHA, but the branch has since advanced (F-P46-HIGH-001).
+      # Extract from cp_section (not state_file) to stay scoped to current-state context;
+      # skip lines that flag the branch as DELETED/REMOVED/MERGED (inactive branches).
+      # Use --verify so git emits nothing to stdout when the ref does not exist.
+      local feature_branch live_branch_head
+      feature_branch=$(echo "$cp_section" \
+        | grep -v 'DELETED\|REMOVED\|MERGED' \
+        | grep -oE 'feature/[A-Za-z0-9._-]+' | head -1 || true)
+      if [ -n "$feature_branch" ]; then
+        live_branch_head=$(git -C "${FACTORY_DIR}/.." rev-parse --verify "refs/heads/${feature_branch}" 2>/dev/null || true)
+        if [ -n "$live_branch_head" ] && [ "$frozen_head_sha" != "$live_branch_head" ]; then
+          echo 1; return
+        fi
       fi
     fi
     echo 0
@@ -906,7 +924,74 @@ EOF
   PROBE_EXIT=$(_L13_CHECK "$PROBE_L13F")
   probe_must_fail "L13-probe-F" "frozen HEAD deadbeef1234567 in §Session Resume Checkpoint not found in any COMPLETE §Current Phase Steps row"
 
+  # Also verify the real check_l13 catches the same violation (F-P46-MED-002).
+  # Swap-and-restore pattern: temporarily replace STATE.md with the probe file.
+  _L13F_BAK="${PROBE_TMP}/STATE.md.bakF"
+  cp "${FACTORY_DIR}/STATE.md" "$_L13F_BAK" 2>/dev/null || true
+  cp "$PROBE_L13F" "${FACTORY_DIR}/STATE.md"
+  _L13F_REAL_OUT="$(check_l13 2>&1 || true)"
+  if [ -f "$_L13F_BAK" ]; then
+    cp "$_L13F_BAK" "${FACTORY_DIR}/STATE.md"
+  else
+    rm -f "${FACTORY_DIR}/STATE.md"
+  fi
+  unset _L13F_BAK
+  if ! echo "$_L13F_REAL_OUT" | grep -q "\[FAIL\]"; then
+    echo "[SELF-PROBE FAIL] L13-probe-F-real: real check_l13 did NOT fail on synthetic STATE.md with deadbeef1234567 absent from COMPLETE rows — Step 3.5 in shipped function is not load-bearing"
+    exit 2
+  fi
+  unset _L13F_REAL_OUT
+
   rm -f "$PROBE_L13F"
+
+  # Probe G: frozen HEAD in checkpoint AND in a COMPLETE row, but does NOT match
+  # live branch HEAD → CAUGHT. Exercises the live-HEAD mismatch check (F-P46-HIGH-001).
+  # The all-zeros SHA cannot match any real git HEAD, so the check fires as long as
+  # feature/S-1.02 exists as a live branch and its HEAD != 0000...0001.
+  PROBE_L13G="$PROBE_TMP/l13-live-head.md"
+  cat > "$PROBE_L13G" <<'EOF'
+## Current Phase Steps
+
+| D-201/2026-09-23 — latest decision with zeroed SHA. | orchestrator | COMPLETE | STATE.md D-201 frozen HEAD 0000000000000000000000000000000000000001. |
+
+## Convergence Status
+
+**D-201 (burst-N done)**: trajectory.
+
+## Session Resume Checkpoint
+
+<!-- D-200 checkpoint archived. D-201 checkpoint is current. Keep ONLY the latest checkpoint here. -->
+
+3-CLEAN streak 0/3 on frozen HEAD 0000000000000000000000000000000000000001.
+
+### DEVELOP STATE
+- feature/S-1.02: at 0000000000000000000000000000000000000001.
+
+### RESUME NEXT-ACTIONS (S-1.02 — post-D-201 state)
+EOF
+
+  # Inline mirror: frozen HEAD is in COMPLETE row (check passes) but live HEAD differs → return 1
+  PROBE_EXIT=$(_L13_CHECK "$PROBE_L13G")
+  probe_must_fail "L13-probe-G" "frozen HEAD 000...1 present in COMPLETE row but does not match live feature/S-1.02 HEAD"
+
+  # Real check_l13 must also fail on the same synthetic input (swap-and-restore pattern).
+  _L13G_BAK="${PROBE_TMP}/STATE.md.bakG"
+  cp "${FACTORY_DIR}/STATE.md" "$_L13G_BAK" 2>/dev/null || true
+  cp "$PROBE_L13G" "${FACTORY_DIR}/STATE.md"
+  _L13G_REAL_OUT="$(check_l13 2>&1 || true)"
+  if [ -f "$_L13G_BAK" ]; then
+    cp "$_L13G_BAK" "${FACTORY_DIR}/STATE.md"
+  else
+    rm -f "${FACTORY_DIR}/STATE.md"
+  fi
+  unset _L13G_BAK
+  if ! echo "$_L13G_REAL_OUT" | grep -q "\[FAIL\]"; then
+    echo "[SELF-PROBE FAIL] L13-probe-G-real: real check_l13 did NOT emit FAIL on synthetic STATE.md with frozen HEAD 000...1 not matching live branch HEAD — live-HEAD check in shipped function is not load-bearing"
+    exit 2
+  fi
+  unset _L13G_REAL_OUT
+
+  rm -f "$PROBE_L13G"
 
   unset -f _L13_CHECK
 
@@ -1494,7 +1579,7 @@ check_l13() {
   if [ -n "$CHECKPOINT_SECTION" ]; then
     FROZEN_HEAD_SHA=$(echo "$CHECKPOINT_SECTION" \
       | grep -oE 'frozen HEAD [0-9a-f]{7,40}' \
-      | grep -oE '[0-9a-f]{7,40}' | head -1 || true)
+      | grep -oE '[0-9a-f]{7,40}' | tail -1 || true)
   fi
 
   if [ -n "$FROZEN_HEAD_SHA" ]; then
@@ -1505,6 +1590,24 @@ check_l13() {
     if [ -z "$FROZEN_HEAD_IN_COMPLETE" ]; then
       emit FAIL "L13: frozen HEAD ${FROZEN_HEAD_SHA} (from §Session Resume Checkpoint) not found in any COMPLETE §Current Phase Steps row — burst closure incomplete; update STATE.md to record the fix-burst COMPLETE with this SHA before running the adversary pass"
       return
+    fi
+    # Live branch HEAD check: verify frozen HEAD matches the actual live branch tip.
+    # Detects stale checkpoints where both checkpoint and a COMPLETE row contain the
+    # same old SHA, but the branch has since advanced (F-P46-HIGH-001).
+    # Extract from CHECKPOINT_SECTION (not full STATE.md) to stay scoped to
+    # current-state context; skip lines that flag the branch as
+    # DELETED/REMOVED/MERGED (inactive branches).
+    # Use --verify so git emits nothing to stdout when the ref does not exist.
+    local FEATURE_BRANCH LIVE_BRANCH_HEAD
+    FEATURE_BRANCH=$(echo "$CHECKPOINT_SECTION" \
+      | grep -v 'DELETED\|REMOVED\|MERGED' \
+      | grep -oE 'feature/[A-Za-z0-9._-]+' | head -1 || true)
+    if [ -n "$FEATURE_BRANCH" ]; then
+      LIVE_BRANCH_HEAD=$(git -C "${FACTORY_DIR}/.." rev-parse --verify "refs/heads/${FEATURE_BRANCH}" 2>/dev/null || true)
+      if [ -n "$LIVE_BRANCH_HEAD" ] && [ "$FROZEN_HEAD_SHA" != "$LIVE_BRANCH_HEAD" ]; then
+        emit FAIL "L13: checkpoint frozen HEAD ${FROZEN_HEAD_SHA} does not match live ${FEATURE_BRANCH} HEAD ${LIVE_BRANCH_HEAD} — STATE.md checkpoint is stale; update STATE.md before running adversary pass"
+        return
+      fi
     fi
   fi
 
