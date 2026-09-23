@@ -802,13 +802,50 @@ Fix-burst-47 closed all 5 findings from adversary pass-45 (3 MED + 2 LOW). Test 
 | MED-002 (AllowList::is_allowed entry-side normalization unpinned) | New test `test_allowlist_is_allowed_entry_side_normalization`: reverting entry-side `let normalized_entry = e.path.replace('\\', "/")` in `AllowList::is_allowed` causes assertion failure; test is LOAD-BEARING | pass |
 | MED-003 (L13 false-green via IN FLIGHT newest D-NNN row / frozen-HEAD SHA currency) | New `L13-probe-F` in `records-lint.sh`: synthetic STATE.md with §Session Resume Checkpoint frozen HEAD SHA absent from all COMPLETE rows → `probe_must_fail "L13-probe-F"` asserts FAIL; `records-lint.sh` exits 0 on current STATE.md; `check_l13` function-header comment updated to document both "3/3 surfaces in sync" and "2/2 surfaces asserted (convergence SKIPPED)" PASS templates (LOW-001 bundled into this fix) | pass |
 | LOW-001 (check_l13 function-header comment incomplete) | Records fix bundled with MED-003: function-header banner updated to document both PASS templates | pass |
-| LOW-002 (AC-008 phantom tuple-struct construction form) | Records fix: AC-008 construction form corrected from non-compiling `OpenAiApiKey("sk-real".to_string())` to `OpenAiApiKey::from_raw_for_tests("sk-real")`; story spec version bumped to v1.22 | pass |
+| LOW-002 (AC-008 parenthetical correction) | AC-008 parenthetical corrected: `#[non_exhaustive]` restricts only external-crate construction; private field accessible in-crate; `from_raw_for_tests()` is `#[cfg(test)]`-gated validation-bypass helper — not because tuple form is unavailable; story spec version bumped to v1.22 | pass |
 
 **Clause (d) analysis:** fix-burst-47 modifies `xtask/src/tests.rs` (new test `test_allowlist_is_allowed_entry_side_normalization`). The new test exercises an existing production code path (`AllowList::is_allowed` entry-side normalization) — scanner logic in `AllowList::is_allowed` was not changed. Clause (d) does NOT fire for a test-only addition that exercises no new detection behavior. Gate output counts remain valid and unchanged.
 
 **Gate output:** unchanged (25 analyzed / 16 exempt / 0 violations per gate; 14/17 fixture-mode; 148 codes / 0 collisions).
 
 **KL table:** 10 rows, unchanged from fix-burst-46. No new KL entries.
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED** in fix-burst-26 | Parenthesized/braced base subexpression — eliminated by syn AST visitor |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+---
+
+## fix-burst-48 re-verification
+
+**Adversary pass 46 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH + 4 MED + 1 OBS.
+
+Fix-burst-48 closed all 5 non-OBS findings from adversary pass-46 (1 HIGH + 4 MED). Test counts unchanged: **253 run: 253 passed, 5 skipped** (xtask per-crate: `cargo nextest run -p xtask`). Full workspace: **345 run: 345 passed, 7 skipped** (`cargo nextest run --workspace`). No Rust code changes — records-only fixes plus `records-lint.sh` L13 live-HEAD check + probe G.
+
+**Detection-class attestation:**
+
+| Finding | Load-bearing artifact | Status |
+|---------|----------------------|--------|
+| HIGH-001 (L13 vacuous live-HEAD check) | `check_l13` Step 3.5 updated: live branch HEAD check via `git rev-parse --verify refs/heads/<branch>`; `probe_must_fail "L13-probe-G"` (new probe, exercises real `check_l13` via swap-and-restore: synthetic frozen HEAD with all-zeros SHA that exists in a COMPLETE row but != live feature/S-1.02 HEAD → FAIL); `records-lint.sh` exits 0 | pass |
+| MED-001 (STATE.md stale) | Self-resolved: state-manager commit 2d71869 records D-415 COMPLETE with 489584d + D-416 IN FLIGHT; no code action | pass |
+| MED-002 (probes exercised mirror not shipped) | Bundled: probe F extended to invoke real `check_l13` via swap-and-restore; listed with HIGH-001 | pass |
+| MED-003 (banner "Five probes") | Bundled: `run_self_probes` L13 banner updated to "Seven probes (A–G)"; listed with HIGH-001 | pass |
+| MED-004 (false Rust semantics in 3 artifacts) | Story spec AC-008 parenthetical corrected (v1.23); CHANGELOG fix-burst-47 LOW-002 paragraph corrected; evidence-report fix-burst-47 re-verification LOW-002 row corrected. Accurate claim: tests use `from_raw_for_tests()` because it is the explicit `#[cfg(test)]`-gated validation-bypass helper, not because the tuple-struct form is unavailable from within the crate | pass |
+
+**Clause (d) analysis:** fix-burst-48 modifies `.factory/hooks/records-lint.sh` (live-HEAD check added to `check_l13` and `_L13_CHECK`; probe G added; probe F extended; banner updated). No `xtask/src/**/*.rs` scanner logic changed. Clause (d) does NOT fire. Gate output counts remain valid and unchanged.
+
+**Gate output:** unchanged (25 analyzed / 16 exempt / 0 violations per gate; 14/17 fixture-mode; 148 codes / 0 collisions).
+
+**KL table:** 10 rows, unchanged from fix-burst-47. No new KL entries.
 
 | ID | Gate | Status | Description |
 |----|------|--------|-------------|

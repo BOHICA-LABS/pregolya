@@ -16,6 +16,48 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-48 (pass-46 findings)
+
+### records-lint.sh L13 live-HEAD check, probe G, probe F extension, banner correction, false Rust semantics correction
+
+**Pass-46 finding tally: 1 HIGH + 4 MED + 1 OBS.**
+
+**HIGH-001 (F-P46-HIGH-001) — L13 Step 3.5 vacuous; false-green when checkpoint and COMPLETE row share stale SHA:**
+What was wrong: `check_l13` Step 3.5 verified the checkpoint's frozen HEAD SHA appeared in any `| COMPLETE |` row, but when both the checkpoint and a COMPLETE row referenced the same stale SHA, the check passed (e.g., be1af38 in D-413 COMPLETE + checkpoint also citing be1af38). The check never compared against the live feature branch HEAD.
+What was fixed: added live branch HEAD resolution (`git rev-parse --verify refs/heads/<branch>` where `<branch>` is extracted from §Session Resume Checkpoint §DEVELOP STATE); now fails when checkpoint frozen HEAD != live branch HEAD. Changed `head -1` to `tail -1` for extraction to take the most recent `frozen HEAD <sha>` match. Same fix applied to `_L13_CHECK` mirror. New self-probe `L13-probe-G` (must_fail): synthetic STATE.md with all-zeros frozen HEAD that exists in a COMPLETE row but != live branch HEAD. Probe F extended to also invoke real `check_l13` via swap-and-restore (addresses MED-002). Banner in `run_self_probes` updated to "Seven probes (A–G)".
+
+**MED-001 (F-P46-MED-001) — STATE.md cited be1af38 throughout; no D-415/D-416:**
+Self-resolved: state-manager committed D-414 COMPLETE + D-415 COMPLETE (fix-burst-47, pushed at 489584d816281cfc371a66c7174ab0641ea8621b) + D-416 IN FLIGHT (adversary pass-46 dispatched) in a single factory-artifacts commit (2d71869). No code action required.
+
+**MED-002 (F-P46-MED-002) — L13 probes A–F exercised _L13_CHECK mirror, not shipped check_l13:**
+Bundled with HIGH-001 fix above (probe F extension with swap-and-restore).
+
+**MED-003 (F-P46-MED-003) — run_self_probes L13 block banner said "Five probes:":**
+Bundled with HIGH-001 fix above (banner updated to "Seven probes (A–G)" with full enumeration).
+
+**MED-004 (F-P46-MED-004) — 3 artifact sites propagated false Rust semantics ("`#[non_exhaustive]` + private field" claim):**
+What was wrong: fix-burst-47 LOW-002 closure stated that direct tuple-struct construction of `OpenAiApiKey`/`AnthropicApiKey` was unavailable due to `#[non_exhaustive]` + private field. This is false: `#[non_exhaustive]` only restricts construction outside the defining crate; the private field is accessible within the crate's module tree (tests are in `#[cfg(test)] mod tests` with `use super::*`).
+What was fixed: story spec AC-008 parenthetical corrected (v1.23); CHANGELOG fix-burst-47 LOW-002 paragraph corrected; evidence-report fix-burst-47 re-verification LOW-002 row corrected. Accurate claim: tests use `from_raw_for_tests()` because it is the explicit `#[cfg(test)]`-gated validation-bypass helper, not because the tuple form is unavailable.
+
+**Test count (fix-burst-48):** 253 run: 253 passed, 5 skipped (xtask per-crate: `cargo nextest run -p xtask`). Full workspace: 345 run: 345 passed, 7 skipped (`cargo nextest run --workspace`). Test counts unchanged (no Rust code changes in fix-burst-48).
+
+### Known limitations after fix-burst-48
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED** in fix-burst-26 | Parenthesized/braced base subexpression — eliminated by syn AST visitor |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+Test count: 253 run: 253 passed, 5 skipped (xtask per-crate); 345 run: 345 passed, 7 skipped (workspace). Gate output unchanged: 25 analyzed / 16 exempt / 0 violations per scanning gate; fixture-mode 14/17; 148 codes / 0 collisions.
+
 ## fix-burst-47 (pass-45 findings)
 
 ### Evidence-report attestation corrections, AllowList entry-side normalization pin, L13 frozen-HEAD SHA currency, story-spec AC-008 construction form
@@ -34,8 +76,8 @@ When the most recent D-NNN row in §Current Phase Steps carries status IN FLIGHT
 **LOW-001 (F-P45-LOW-001) — `check_l13` function-header comment documented only the "3/3 surfaces in sync" PASS template; the convergence-SKIPPED "2/2 surfaces asserted" template was undocumented:**
 Function-header banner updated to enumerate both PASS templates explicitly. Bundled with MED-003 fix as a single records change. No new test required (comment-only correction).
 
-**LOW-002 (F-P45-LOW-002) — AC-008 in story spec cited non-compiling tuple-struct construction form `OpenAiApiKey("sk-real".to_string())`:**
-`OpenAiApiKey` is `#[non_exhaustive]` with a private inner field — the tuple-struct constructor is inaccessible. The correct form for test use is `OpenAiApiKey::from_raw_for_tests("sk-real")`. Fixed by story-writer: AC-008 Verified-by updated to use `from_raw_for_tests("sk-real")` form; story spec version bumped to v1.22.
+**LOW-002 (F-P45-LOW-002) — AC-008 in story spec cited non-idiomatic tuple-struct construction form `OpenAiApiKey("sk-real".to_string())`:**
+`#[non_exhaustive]` restricts construction only outside the defining crate; the private inner field is accessible within the crate's own module tree (including `#[cfg(test)] mod tests` with `use super::*`). The tests use `from_raw_for_tests()` because it is the explicit `#[cfg(test)]`-gated validation-bypass helper — not because the tuple form is unavailable. Fixed by story-writer: AC-008 Verified-by updated to use `from_raw_for_tests("sk-real")` form; story spec version bumped to v1.22.
 
 **Test count (fix-burst-47):** 253 run: 253 passed, 5 skipped (xtask per-crate: `cargo nextest run -p xtask`). Full workspace: 345 run: 345 passed, 7 skipped (`cargo nextest run --workspace`; includes pregolya-core and other workspace crate tests; basis: full workspace per push hook convention established in fix-burst-45). Net change from fix-burst-46: +1 xtask test (`test_allowlist_is_allowed_entry_side_normalization`).
 
