@@ -159,7 +159,7 @@ input-hash: "34034c0"
 | ID | Title | Behavioral Contracts | Subsystem | Target Crate | Pri | Pts | depends_on | Status |
 |----|-------|---------------------|-----------|-------------|-----|-----|------------|--------|
 | S-1.01 | PregolyaError 2D Struct and RFC-7807 Emission | BC-2.14.001, BC-2.14.002 | SS-14 | pregolya-core | P0 | 5 | [] | draft |
-| S-1.02 | Error Policy Enforcement — Result, Timeout, Credential, Validation | BC-2.14.003, BC-2.14.004, BC-2.14.005, BC-2.14.006 | SS-14 | pregolya-core | P0 | 5 | [S-1.01] | draft |
+| S-1.02 | Error Policy Enforcement — Result, Timeout, Credential, Validation | BC-2.14.001, BC-2.14.003, BC-2.14.004, BC-2.14.005, BC-2.14.006 | SS-14 | pregolya-core | P0 | 5 | [S-1.01] | draft |
 | S-1.03 | Message and ContentBlock Type System | BC-2.01.001, BC-2.01.002 | SS-01 | pregolya-core | P0 | 5 | [S-1.01] | draft |
 | S-1.04 | Runnable Trait Invocation and Pipe Composition | BC-2.01.003, BC-2.01.004 | SS-01 | pregolya-core | P0 | 5 | [S-1.03, S-1.02] | draft |
 | S-1.05 | LCEL Composition Primitives — RunnableParallel, RunnablePassthrough, RunnableAssign | BC-2.01.005, BC-2.01.006, BC-2.01.007, BC-2.01.008 | SS-01 | pregolya-core | P1 | 8 | [S-1.04] | draft |
