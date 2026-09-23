@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.001
-version: "1.26"
+version: "1.27"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -41,6 +41,7 @@ changelog:
   - "1.24 (S-1.01-adv-pass-13/MED-002/2026-09-20): EC-006 emission-time clause added — `to_problem()` re-validates the E- prefix at emission time (BC-2.14.002 EC-002 path 3); reachable via in-crate struct-literal construction ({PC-008} clause 1) where new() format check was bypassed. EC-007 Cross-refs updated from 'both sanctioned' to 'all three sanctioned' to_problem() panic paths."
   - "1.25 (S-1.02-adv-pass-2/CRITICAL-F-A/2026-09-22, product-owner): BC↔BC contradiction with BC-2.14.003 {PC-005}/{PC-006} resolved by Option-A adjudication (fail-fast governs). This BC's always-on assert! semantics (EC-002/EC-006/EC-007) are preserved unchanged. BC-2.14.003 §EC-006 (programmer-error-guard-assertion policy) explicitly encompasses the PregolyaError::new() precondition guards as the canonical example. No behavioral change to this BC; cross-reference added to Related BCs."
   - "1.26 (adversary-pass-3-H02/2026-09-22): VP-BC214001-01 closed — cargo xtask check-error-code-registry implemented and wired to CI lint-extra in S-1.02."
+  - "1.27 (S-1.02-adv-pass-12/F-P12-M07/2026-09-22, product-owner): EC-007 §Scope corrected — false claim that S-1.02 enforces code↔category cross-validation removed. S-1.02 gate enforces only: (1) taxonomy non-vacuity, (2) code uniqueness. It does NOT cross-validate Rust source callsite code values against the category column. Normative code↔category requirement preserved; full cross-validation deferred to S-1.30. VP-BC214001-01 description updated to state both actual checks explicitly and disclaim category cross-validation."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
@@ -213,12 +214,19 @@ emit-time via `component_lowercase`); BC-2.14.002 {INV-001} (monitoring keys on 
 BC-2.14.002 EC-002 (emission-path panic enumeration — documents all three sanctioned to_problem() panic
 paths including this EC-007 emit-time binding assert).
 
-**Scope:** EC-007 binds `code`↔COMPONENT only. Consistency of `code` against the category column
-of the error taxonomy (each `E-<COMPONENT>-NNN` code maps to a single category) is normative but
-NOT enforced at construction or emission time in S-1.01; it is enforced by the code-registry CI
-gate in story S-1.02 (VP-BC214001-01). The compensating control for RFC-7807 consumers is
-BC-2.14.002 {INV-001}: clients MUST key monitoring and routing on `type_uri`, never `title` or
-HTTP status.
+**Scope:** EC-007 binds `code`↔COMPONENT only. Consistency of `code` against the `category` column
+of the error taxonomy (each `E-<COMPONENT>-NNN` code maps to exactly one declared category) is
+normative but NOT enforced at construction time, at emission time, or by the S-1.02 CI gate.
+The S-1.02 gate (`cargo xtask check-error-code-registry`, VP-BC214001-01) enforces only:
+(1) taxonomy non-vacuity — the taxonomy document contains at least one code entry, and
+(2) code uniqueness — no code string appears on more than one taxonomy row.
+It does NOT cross-validate any Rust source callsite's `code` value against the `category` column.
+A caller could construct a `PregolyaError` with `code: "E-CORE-001"` paired with
+`category: Category::Auth` when the taxonomy declares `E-CORE-001` under category `VAL`,
+and all S-1.02 CI gates would pass. The full code↔category cross-validation is deferred to
+story S-1.30 (Error code/category taxonomy cross-validation CI gate). The compensating control
+for RFC-7807 consumers in the interim is BC-2.14.002 {INV-001}: clients MUST key monitoring
+and routing on `type_uri`, never `title` or HTTP status.
 
 ## Canonical Test Vectors
 
@@ -234,7 +242,7 @@ HTTP status.
 
 | VP ID | Description | Method | Phase |
 |-------|-------------|--------|-------|
-| VP-BC214001-01 | Every `E-<COMPONENT>-<NNN>` code in error-taxonomy.md is unique (no collision) | `cargo xtask check-error-code-registry` — parses error-taxonomy.md, asserts uniqueness; wired in ci.yml lint-extra with factory-artifacts checkout; delivered in S-1.02 | S-1.02 (code-registry CI gate) |
+| VP-BC214001-01 | `cargo xtask check-error-code-registry` passes two checks: (1) taxonomy non-vacuity — error-taxonomy.md contains at least one code entry; (2) every `E-<COMPONENT>-<NNN>` code in error-taxonomy.md is unique (no collision). Does NOT cross-validate Rust source callsite `code` values against the `category` column; that cross-validation is deferred to S-1.30. | `cargo xtask check-error-code-registry` — parses error-taxonomy.md, asserts non-vacuity and uniqueness; wired in ci.yml lint-extra with factory-artifacts checkout; delivered in S-1.02 | S-1.02 (code-registry CI gate) |
 | VP-BC214001-02 | `PregolyaError` satisfies `Send + Sync + 'static` | `static_assertions::assert_impl_all!` | Wave 0 CI |
 
 ## Related BCs

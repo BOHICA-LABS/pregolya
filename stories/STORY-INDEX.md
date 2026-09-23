@@ -1,11 +1,12 @@
 ---
 document_type: story-index
 level: L3
-version: "2.06"
+version: "2.07"
 status: active
 producer: state-manager
 timestamp: 2026-09-22T00:00:00Z
 changelog:
+  - "2.07 (S-1.02-fix-burst-14/D-376/2026-09-22, state-manager): Added S-1.30 forward-reference placeholder row to Wave-1 xtask story inventory (EC-007 cross-validation deferral, BC-2.14.001 §EC-007; depends_on [S-1.02]; P1; planned). Census: stories 53→54 (+1 Wave-1). BC 149 / VP 43 / EC 148 / TV 845 / pts 377 / ADR 31 / SS 24 / crates 22 UNCHANGED."
   - "2.06 (S-1.02-adv-pass-15/F-01-F-02-sweep/D-374/2026-09-22, state-manager): S-1.02 story spec v1.6→v1.7 — F-01 (MED) AC-014 body corrected: removed false claim of 'five different invalid inputs across three message types'; actual test exercises empty-string input across OpenAiApiKey and AnthropicApiKey (two credential newtypes), asserting code E-CORE-005, Category::Val, and canonical message prefix 'Validation failed for'. F-02 (LOW) AC-012 body corrected: 'property test'→'table-driven test' (fixed input array, not randomized). Full sweep additional corrections: AC-001 body corrected from 'compile-fail test' to 'unit test' with accurate description of Ok/Err paths; AC-011 body corrected from out-of-scope Message::human('') to OpenAiApiKey::new('') with actual error message. bcs frontmatter array, BC-body table, Token Budget, and all verified-by pointers unchanged. Census UNCHANGED: BC 149 / VP 43 / EC 148 / TV 845 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22."
   - "2.05 (S-1.02-adv-pass-8/F-03-records/D-373/2026-09-22, state-manager): S-1.02 story spec v1.5→v1.6 — F-03 (LOW records, AC-017 prose accuracy): AC-017 prose corrected for spec-body accuracy drift (pass-8/F-03 per BC-2.14.003 EC-007): reworded to state the two POL-31-mandated fixtures (bare assert! without # Panics doc or BC-ID message, and _ => unreachable!() wildcard arm) are REQUIRED minimums that must be detected; additional regression fixtures may reside alongside them under xtask/tests/fixtures/violations/ without prescribing an exact count. Verified-by test symbol (test_BC_2_14_003_check_no_panic_ec_007_flags_and_exemptions) unchanged. No other AC, BC-body table, or frontmatter field changed. Census UNCHANGED: BC 149 / VP 43 / EC 148 / TV 845 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22."
   - "2.04 (S-1.02-adv-pass-4/F-04-F-05-F-06/D-372/2026-09-22, state-manager): S-1.02 story spec v1.4→v1.5 — F-04 (HIGH) Verified-by test symbol pointers corrected on 10 ACs (AC-003 test_BC_2_14_003_debug_assert_not_flagged; AC-007 static_assertions mechanism; AC-008 two redacted-sentinel tests; AC-010 unit tests cited; AC-011 test_BC_2_14_006_openai_empty_key_returns_err; AC-012 test_BC_2_14_006_no_silent_default_on_invalid_inputs; AC-013 static_assertions mechanism; AC-014 test_BC_2_14_006_error_code_and_format_table; AC-015+019 test_BC_2_14_004_build_failure_maps_to_e_core_012; AC-016 test_BC_2_14_006_openai_whitespace_only_key_returns_err). F-05 (MED) AC-010 structural detection prose corrected from literal-prefix scanning to sentinel-named public structs auto-deriving Debug/Serialize or implementing Deref<Target=str>. F-06 (MED) AC-006 rescoped to DI-009 compliance only — S-1.02 verifies timeout is correctly configured; E-PROV-002 adapter-level error shape deferred to S-2.07 BC-2.14.004 {PC-005}. S-2.07 story spec v1.4→v1.5 — AC-028 unary-timeout E-PROV-002 deferral anchor added (BC-2.14.004 {PC-005} cross-story forward reference; Wave-2 provider-crate story). Census UNCHANGED: BC 149 / VP 43 / EC 148 / TV 845 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22."
@@ -125,8 +126,8 @@ input-hash: "34034c0"
 
 # STORY-INDEX: pregolya Phase 2 Story Inventory
 
-> **53 stories total — 29 Wave 1 / 12 Wave 2 / 10 Wave 3 / 1 Wave 6 / 1 Maint (S-MAINT-001 housekeeping, out-of-wave)**
-> **Product-story census: 52 (29 Wave 1 / 12 Wave 2 / 10 Wave 3 / 1 Wave 6). S-MAINT-001 is maintenance, not a product feature.**
+> **54 stories total — 30 Wave 1 / 12 Wave 2 / 10 Wave 3 / 1 Wave 6 / 1 Maint (S-MAINT-001 housekeeping, out-of-wave)**
+> **Product-story census: 53 (30 Wave 1 / 12 Wave 2 / 10 Wave 3 / 1 Wave 6). S-MAINT-001 is maintenance, not a product feature.**
 > **BC coverage: 149 BCs — 52 P0 / 94 P1 / 3 P2 — all covered**
 > **Story files:** Individual STORY-NNN specs live in `.factory/stories/stories/`
 
@@ -134,9 +135,9 @@ input-hash: "34034c0"
 
 | Metric | Count |
 |--------|-------|
-| Total Story Files | 53 |
-| Product Stories | 52 |
-| Wave 1 stories | 29 |
+| Total Story Files | 54 |
+| Product Stories | 53 |
+| Wave 1 stories | 30 |
 | Wave 2 stories | 12 |
 | Wave 3 stories | 10 |
 | Wave 6 stories | 1 |
@@ -227,6 +228,12 @@ input-hash: "34034c0"
 |----|-------|---------------------|-----------|-------------|-----|-----|------------|--------|
 | S-1.29 | GuardrailJournal Persistence — Durable Journaling of Guardrail Evaluation Results | BC-2.11.007 | SS-04, SS-11, SS-12 | pregolya-graph | P0 | 5 | [S-1.19, S-1.26] | draft |
 
+### Wave 1 — xtask (Error Taxonomy Cross-Validation CI Gate, forward-reference)
+
+| ID | Title | Behavioral Contracts | Subsystem | Target Crate | Pri | Pts | depends_on | Status |
+|----|-------|---------------------|-----------|-------------|-----|-----|------------|--------|
+| S-1.30 | Error code/category taxonomy cross-validation CI gate | BC-2.14.001 | SS-14 | xtask | P1 | TBD | [S-1.02] | planned |
+
 ---
 
 ### Wave 2 — pregolya-core D21 additions (LC Serialization and Retrieval)
@@ -302,7 +309,7 @@ input-hash: "34034c0"
 
 ### Maintenance — EPIC-MAINT (out-of-wave)
 
-> Product-story census is **52** (total story files: **53**; product-stories excludes S-MAINT-001 maintenance story; buildable/wave-scheduled: **42**, excludes the 10 Wave-3 roadmap S-console-01..S-console-10 stories and S-MAINT-001). S-MAINT-001 is a housekeeping story outside the wave schedule; it does not block Phase-3.
+> Product-story census is **53** (total story files: **54**; product-stories excludes S-MAINT-001 maintenance story; buildable/wave-scheduled: **42**, excludes the 10 Wave-3 roadmap S-console-01..S-console-10 stories and S-MAINT-001; S-1.30 is planned/TBD-pts and not yet counted in buildable). S-MAINT-001 is a housekeeping story outside the wave schedule; it does not block Phase-3.
 
 | ID | Title | Behavioral Contracts | Subsystem | Target Crate | Pri | Pts | depends_on | Status |
 |----|-------|---------------------|-----------|-------------|-----|-----|------------|--------|
