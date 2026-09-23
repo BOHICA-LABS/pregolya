@@ -16,6 +16,27 @@ pre-push:
         command -v tokei >/dev/null 2>&1 || { echo "ERROR: tokei not found. Run 'just setup' to install required tools."; exit 1; }
     check:
       run: just check
+    # Fix 5 (F-P48-PROCESS-GAP-001): burst-parity check — verify the newest
+    # fix-burst-N section in CHANGELOG.md has a matching re-verification section
+    # in evidence-report.md. Implemented here (not in records-lint.sh) because
+    # CHANGELOG.md and evidence-report.md live on the feature branch, not in .factory/.
+    check-burst-records-parity:
+      run: |
+        NEWEST_BURST=$(grep -oE '^## fix-burst-[0-9]+' CHANGELOG.md 2>/dev/null | head -1 | grep -oE '[0-9]+' || true)
+        if [ -z "$NEWEST_BURST" ]; then
+          echo "[BURST-PARITY] No fix-burst sections found in CHANGELOG.md — skipping check."
+          exit 0
+        fi
+        EVIDENCE_REPORT="docs/demo-evidence/S-1.02/evidence-report.md"
+        if [ ! -f "$EVIDENCE_REPORT" ]; then
+          echo "[BURST-PARITY] evidence-report.md not found at ${EVIDENCE_REPORT} — skipping check."
+          exit 0
+        fi
+        if ! grep -q "^## fix-burst-${NEWEST_BURST} re-verification" "$EVIDENCE_REPORT"; then
+          echo "[BURST-PARITY FAIL] CHANGELOG.md has '## fix-burst-${NEWEST_BURST}' but evidence-report.md is missing '## fix-burst-${NEWEST_BURST} re-verification'."
+          exit 1
+        fi
+        echo "[BURST-PARITY PASS] fix-burst-${NEWEST_BURST}: matched in CHANGELOG.md and evidence-report.md."
 
 pre-tag:
   commands:

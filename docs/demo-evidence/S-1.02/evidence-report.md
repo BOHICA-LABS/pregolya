@@ -222,14 +222,43 @@ Gate outputs remain valid because the syn rewrite finds the same 0 violations on
 
 The fix-burst-26 evidence-report docs commit (this commit) is docs-only and does NOT trigger clause (d).
 
+## fix-burst-50 re-verification
+
+**Adversary pass 48 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH + 4 MED + 5 LOW + 3 OBS + 1 PROCESS-GAP.
+
+| Finding | Severity | Detection class | Load-bearing artifact |
+|---------|----------|-----------------|-----------------------|
+| F-P48-HIGH-001 | HIGH | Records fidelity (phantom symbol + inverted description in D-419) | STATE.md D-419: phantom symbol `_check_l13_impl` replaced with behavioral anchor describing `check_l13 [state_md_path]` optional positional parameter; "self-contained swap-and-restore" corrected to "swap-and-restore eliminated by parameterization"; D-419 MED-001 attribution fixed; missing MED-002/MED-003 closures added |
+| F-P48-MED-001 | MED | Records accuracy (`probe_must_fail` citation stale post-fix-burst-49) | CHANGELOG fix-burst-49 section and evidence-report fix-burst-49 re-verification: `probe_must_fail "L13-probe-G"` references corrected to inline grep guard description; no `probe_must_fail` call exists in any L13 probe post-parameterization |
+| F-P48-MED-002 | MED | Records accuracy (CHANGELOG fix-burst-49 extraction-scope statement) | CHANGELOG fix-burst-49 section: extraction scope statement corrected to accurately describe `check_l13 [state_md_path]` parameterized invocation pattern; prior statement described a nonexistent internal helper |
+| F-P48-MED-003 | MED | Records-vs-code fidelity (UI pass fixture names contradict bodies) | UI fixture files renamed `_match_with_dots_passes.rs` → `_expose_secret_passes.rs`; `PASS_FIXTURES` constant updated in `non_exhaustive_external_gate::ui()`; story spec v1.26 `PASS_FIXTURES` table rows updated to `_expose_secret_passes` |
+| F-P48-MED-004 | MED | Records accuracy (D-419/D-420 MED-001 attribution contradiction) | STATE.md D-419/D-420 MED-001 entries reconciled; D-419 now correctly records all per-finding closures; D-420 description disambiguated |
+| F-P48-LOW-001 | LOW | Records accuracy | CHANGELOG fix-burst-49 section: transient disposable branch name literal replaced with `<branch>` placeholder per TD-VSDD-091 behavioral-anchor convention |
+| F-P48-LOW-002 | LOW | records-lint.sh probe G cleanup race | `_PROBE_G_CLEANUP_REF` EXIT trap sentinel added; PID-unique disposable ref deleted on both success and error exit paths via `git update-ref -d "$_PROBE_G_CLEANUP_REF"` |
+| F-P48-LOW-003 | LOW | records-lint.sh probe G false-green gap (no positive assertion) | Probe G now asserts `grep -q "does not match live"` on `check_l13` output (primary) plus absence of `[PASS]` token (secondary); both must hold; inline exit guard fails on false-green |
+| F-P48-LOW-004 | LOW | Records accuracy (field-visibility scope description) | evidence-report fix-burst-49 re-verification MED-002 row: field-visibility scope description corrected to "accessible within the defining module and its descendants" (from overstated "accessible within the crate") |
+| F-P48-LOW-005 | LOW | Records accuracy | CHANGELOG fix-burst-49 section: `probe_must_fail` invocation description corrected to inline grep guard terminology consistent with shipped `records-lint.sh` |
+| F-P48-OBS-001 | OBS | records-lint.sh `check_l8` MAX_D awk extraction fragility | `MAX_D` extraction now pipes through `awk -F'|' '{print $2}'` before `grep -oE '^[[:space:]]*D-[0-9]+'`; prevents matching `D-NNN` tokens in later table columns from inflating the max decision ID |
+| F-P48-OBS-002 | OBS | records-lint.sh `check_l10`/`check_l11` false-positive on hooks files | `:!hooks/**` exclusion added to git diff path-specs in `check_l10` and `check_l11`; prevents hooks directory self-referential patterns from triggering the L9 volatile-pin ban |
+| F-P48-OBS-003 | OBS | evidence-report historical section annotations | fix-burst-48 HIGH-001 and MED-002 rows annotated as superseded by fix-burst-49 closures; fix-burst-47 and earlier historical probe citations annotated as historical with supersession chain |
+| F-P48-PROCESS-GAP-001 | PROCESS-GAP | Burst-parity check unenforced at push time | `check-burst-records-parity` bash command added to `lefthook.yml` pre-push section; asserts newest `## fix-burst-N` heading in CHANGELOG.md has a matching `## fix-burst-N re-verification` heading in evidence-report.md before any push proceeds |
+
+**Test count:** 300 tests pass (cargo nextest), 7 skipped. All xtask gates PASSED (check-client-timeout, check-no-panic, check-error-code-registry, deny-bare-api-key, deny-anyhow, deny-description-cache-key).
+
+**Gate output:** All pre-push hooks PASSED. `records-lint.sh` exits 0. `check-burst-records-parity` hook verified: CHANGELOG `## fix-burst-50` section present with matching `## fix-burst-50 re-verification` in evidence-report.
+
+**Known limitations:** none — all pass-48 findings closed by fix-burst-50.
+
+---
+
 ## fix-burst-49 re-verification
 
 **Adversary pass 47 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH + 4 MED + 5 LOW.
 
 | Finding | Severity | Detection class | Load-bearing artifact |
 |---------|----------|-----------------|-----------------------|
-| F-P47-HIGH-001 | HIGH | Structural regression (probe coupled to transient branch) | `run_self_probes` probe G now creates PID-unique `refs/heads/feature/records-lint-selfprobe-g-$$`; synthetic STATE.md references that branch with mismatched frozen HEAD `000...001`; `check_l13 "$PROBE_L13G"` resolves disposable ref to real HEAD (≠ `000...001`) → FAIL → `probe_must_fail` passes; disposable ref deleted in both success and error paths; no `feature/S-1.02` reference anywhere in probe |
-| F-P47-MED-001 | MED | Silent-skip detection gap | `check_l13` PASS line now emits `LIVE_HEAD_COVERAGE` suffix: `[live-HEAD: checked(feature/S-1.02=matched)]` when branch resolved and SHA matched, `[live-HEAD: skipped(branch-not-found)]` when unresolvable, `[live-HEAD: skipped(no-frozen-sha-in-checkpoint)]` when no frozen SHA; observable difference between executed and skipped paths |
+| F-P47-HIGH-001 | HIGH | Structural regression (probe coupled to transient branch) | `run_self_probes` probe G now creates PID-unique `refs/heads/feature/records-lint-selfprobe-g-$$`; synthetic STATE.md references that branch with mismatched frozen HEAD `000...001`; `check_l13 "$PROBE_L13G"` resolves disposable ref to real HEAD (≠ `000...001`) → `check_l13` output contains no `[PASS]` token → inline negative guard exits 2 on false-green; throwaway ref deleted on both success and error paths; no `feature/S-1.02` reference anywhere in probe |
+| F-P47-MED-001 | MED | Silent-skip detection gap | `check_l13` PASS line now emits `LIVE_HEAD_COVERAGE` suffix: `[live-HEAD: checked(<branch>=matched)]` (where `<branch>` is the feature branch name, runtime-derived from `§Session Resume Checkpoint`) when branch resolved and SHA matched, `[live-HEAD: skipped(branch-not-found)]` when unresolvable, `[live-HEAD: skipped(no-frozen-sha-in-checkpoint)]` when no frozen SHA; observable difference between executed and skipped paths |
 | F-P47-MED-002 | MED | TD-VSDD-059 paper-fix (non-discriminating fixtures) | Fail fixtures renamed to `open_ai_api_key_external_field_access_blocked.rs` / `anthropic_api_key_external_field_access_blocked.rs`; `.stderr` files updated; `FAIL_FIXTURES` in `non_exhaustive_external_gate::ui()` updated; pass fixtures now call `expose_secret()` (discriminating: fails if `expose_secret` removed or made private); gate doc comment corrected to state E0532 mechanism; story spec v1.25 §File Structure Requirements rows updated |
 | F-P47-MED-003 | MED | TD-VSDD-091 volatile-SHA citation | evidence-report fix-burst-48 MED-001 Load-bearing-artifact cell: SHA tokens `2d71869` and `489584d` removed; replaced with behavioral anchors describing the state-manager burst content |
 | F-P47-MED-004 | MED | Structural defect (destructive backup in trap-deleted PROBE_TMP) | `check_l13` now accepts optional first arg `check_l13 [state_md_path]` defaulting to `${FACTORY_DIR}/STATE.md`; all 7 probes (A–G) call `check_l13 "$PROBE_L13X"` directly with synthetic file; `_L13_CHECK` mirror retired entirely (0 remaining calls); all 3 swap-and-restore windows eliminated; canonical STATE.md never overwritten by probes |
@@ -238,6 +267,14 @@ The fix-burst-26 evidence-report docs commit (this commit) is docs-only and does
 | F-P47-LOW-003 | LOW | Rust semantics accuracy | CHANGELOG fix-burst-48 MED-004 and evidence-report fix-burst-47 re-verification LOW-002 row: "accessible within the crate" / "accessible within the crate's module tree" corrected to "accessible within the defining module and its descendants" |
 | F-P47-LOW-004 | LOW | Records omission (missing §File Structure Requirements rows) | Story spec v1.24: `open_ai_api_key_match_with_dots_passes.rs` (CREATE), `anthropic_api_key_match_with_dots_passes.rs` (CREATE), `non_exhaustive_external_gate.rs` (MODIFY) rows added; v1.25: fail fixture rows updated to `_external_field_access_blocked` names, pass fixture descriptions corrected |
 | F-P47-LOW-005 | LOW | Records ordering (non-monotonic) | evidence-report.md: all 22 `## fix-burst-N re-verification` sections reordered to strict descending order (48→27) |
+
+**Test count (fix-burst-49):** 253 run: 253 passed, 5 skipped (xtask); 345 run: 345 passed, 7 skipped (workspace). No Rust logic changes; trybuild fixture rename maintains 8 compile_fail + 7 pass = 15 fixtures.
+
+**Gate output:** unchanged — 25 analyzed / 16 exempt / 0 violations per scanning gate; fixture-mode 14/17; 148 codes / 0 collisions. (No xtask gate logic changed in fix-burst-49.)
+
+**Known limitations:** unchanged from fix-burst-48 — see fix-burst-48 re-verification KL table for active limitations.
+
+---
 
 ## fix-burst-48 re-verification
 
@@ -249,13 +286,15 @@ Fix-burst-48 closed all 5 non-OBS findings from adversary pass-46 (1 HIGH + 4 ME
 
 | Finding | Load-bearing artifact | Status |
 |---------|----------------------|--------|
-| HIGH-001 (L13 vacuous live-HEAD check) | `check_l13` Step 3.5 updated: live branch HEAD check via `git rev-parse --verify refs/heads/<branch>`; `probe_must_fail "L13-probe-G"` (asserts on `_L13_CHECK` mirror: synthetic frozen HEAD `000...001` != live branch HEAD → FAIL); `L13-probe-G-real` inline guard: swap-and-restore invokes real `check_l13` against same synthetic file and asserts FAIL output; `records-lint.sh` exits 0 | pass |
+| HIGH-001 (L13 vacuous live-HEAD check) | *[Superseded by fix-burst-49: `_L13_CHECK`/`L13-probe-G-real`/swap-and-restore eliminated; probe G now calls parameterized `check_l13 "$PROBE_L13G"` with synthetic file]* `check_l13` Step 3.5 updated: live branch HEAD check via `git rev-parse --verify refs/heads/<branch>`; `probe_must_fail "L13-probe-G"` (asserts on `_L13_CHECK` mirror: synthetic frozen HEAD `000...001` != live branch HEAD → FAIL); `L13-probe-G-real` inline guard: swap-and-restore invokes real `check_l13` against same synthetic file and asserts FAIL output; `records-lint.sh` exits 0 | pass |
 | MED-001 (STATE.md stale) | Self-resolved: state-manager burst that recorded D-415 COMPLETE (fix-burst-47 done) and D-416 IN FLIGHT (adversary pass-46 dispatched); no code action required in the feature branch | pass |
-| MED-002 (probes exercised mirror not shipped) | Bundled: probe F extended to invoke real `check_l13` via swap-and-restore; listed with HIGH-001 | pass |
+| MED-002 (probes exercised mirror not shipped) | *[Superseded by fix-burst-49: `_L13_CHECK`/`L13-probe-G-real`/swap-and-restore eliminated; probe G now calls parameterized `check_l13 "$PROBE_L13G"` with synthetic file]* Bundled: probe F extended to invoke real `check_l13` via swap-and-restore; listed with HIGH-001 | pass |
 | MED-003 (banner "Five probes") | Bundled: `run_self_probes` L13 banner updated to "Seven probes (A–G)"; listed with HIGH-001 | pass |
 | MED-004 (false Rust semantics in 3 artifacts) | Story spec AC-008 parenthetical corrected (v1.23); CHANGELOG fix-burst-47 LOW-002 paragraph corrected; evidence-report fix-burst-47 re-verification LOW-002 row corrected. Accurate claim: tests use `from_raw_for_tests()` because it is the explicit `#[cfg(test)]`-gated validation-bypass helper, not because the tuple-struct form is unavailable from within the crate | pass |
 
 **Clause (d) analysis:** fix-burst-48 modifies `.factory/hooks/records-lint.sh` (live-HEAD check added to `check_l13` and `_L13_CHECK`; probe G added; probe F extended; banner updated). No `xtask/src/**/*.rs` scanner logic changed. Clause (d) does NOT fire. Gate output counts remain valid and unchanged.
+
+*Note: fix-burst-49 retired `_L13_CHECK` entirely; the live-HEAD suffix `${LIVE_HEAD_COVERAGE}` is now appended directly in `check_l13`.*
 
 **Gate output:** unchanged (25 analyzed / 16 exempt / 0 violations per gate; 14/17 fixture-mode; 148 codes / 0 collisions).
 
@@ -288,7 +327,7 @@ Fix-burst-47 closed all 5 findings from adversary pass-45 (3 MED + 2 LOW). Test 
 |---------|----------------------|--------------|
 | MED-001 (evidence-report MED-004 probe direction inverted) | Record correction: fix-burst-46 MED-004 row updated from `probe_must_fail "L13-probe-E"` to `probe_must_not_fail "L13-probe-E"`; no code change required — record-only | pass |
 | MED-002 (AllowList::is_allowed entry-side normalization unpinned) | New test `test_allowlist_is_allowed_entry_side_normalization`: reverting entry-side `let normalized_entry = e.path.replace('\\', "/")` in `AllowList::is_allowed` causes assertion failure; test is LOAD-BEARING | pass |
-| MED-003 (L13 false-green via IN FLIGHT newest D-NNN row / frozen-HEAD SHA currency) | New `L13-probe-F` in `records-lint.sh`: synthetic STATE.md with §Session Resume Checkpoint frozen HEAD SHA absent from all COMPLETE rows → `probe_must_fail "L13-probe-F"` asserts FAIL; `records-lint.sh` exits 0 on current STATE.md; `check_l13` function-header comment updated to document both "3/3 surfaces in sync" and "2/2 surfaces asserted (convergence SKIPPED)" PASS templates (LOW-001 bundled into this fix) | pass |
+| MED-003 (L13 false-green via IN FLIGHT newest D-NNN row / frozen-HEAD SHA currency) | New `L13-probe-F` in `records-lint.sh`: synthetic STATE.md with §Session Resume Checkpoint frozen HEAD SHA absent from all COMPLETE rows → `probe_must_fail "L13-probe-F"` asserts FAIL *(historical: probe_must_fail form retired in fix-burst-49 structural refactor; probe F now calls parameterized check_l13 directly)*; `records-lint.sh` exits 0 on current STATE.md; `check_l13` function-header comment updated to document both "3/3 surfaces in sync" and "2/2 surfaces asserted (convergence SKIPPED)" PASS templates (LOW-001 bundled into this fix) | pass |
 | LOW-001 (check_l13 function-header comment incomplete) | Records fix bundled with MED-003: function-header banner updated to document both PASS templates | pass |
 | LOW-002 (AC-008 parenthetical correction) | AC-008 parenthetical corrected: `#[non_exhaustive]` restricts only external-crate construction; private field accessible within the defining module and its descendants; `from_raw_for_tests()` is `#[cfg(test)]`-gated validation-bypass helper — not because tuple form is unavailable; story spec version bumped to v1.22 | pass |
 
@@ -331,7 +370,7 @@ All pass-44 findings closed. See CHANGELOG fix-burst-46 for details.
 | MED-001 (fix-burst-45 test count basis) | Count corrected to "343 run: 343 passed, 7 skipped" with explicit workspace basis | pass |
 | MED-002 (§Convergence Status duplication) | STATE.md §Convergence Status: duplicate paragraph removed, inline heading fragment removed; `records-lint.sh` exits 0 | pass |
 | MED-003 (two normalization sites unpinned) | `test_is_size_gate_excluded_windows_paths` (3 positive backslash, 2 negative): reverting `replace('\\', "/")` in `is_size_gate_excluded` causes failures; `test_allowlist_exact_match` backslash assertion: reverting path-side normalization (`let normalized_path = path.replace('\\', "/")`) in `AllowList::is_allowed` causes failure; entry-side normalization (`let normalized_entry = e.path.replace('\\', "/")`) not yet pinned in fix-burst-46 — load-bearing test added in fix-burst-47 | pass |
-| MED-004 (L13 "3/3" hardcoded) | `check_l13` runtime denominator + `probe_must_not_fail "L13-probe-E"` (convergence-absent path); `records-lint.sh` exits 0 | pass |
+| MED-004 (L13 "3/3" hardcoded) | `check_l13` runtime denominator + `probe_must_not_fail "L13-probe-E"` (convergence-absent path) *(historical: probe_must_not_fail form retired in fix-burst-49 structural refactor; probe E now calls parameterized check_l13 directly)*; `records-lint.sh` exits 0 | pass |
 | MED-005 (STATE.md checkpoint stale) | D-412 COMPLETE + D-413 IN FLIGHT recorded; checkpoint re-stamped to D-412; `records-lint.sh` L13 3/3 in sync | pass |
 | MED-006 (AC-009 phantom cite + AnthropicApiKey omission) | AC-009 Verified-by cites both `assert_not_impl_any!(OpenAiApiKey: AsRef<str>)` and `assert_not_impl_any!(AnthropicApiKey: AsRef<str>)`; phantom compile-fail removed; `.as_str()` removed | pass |
 

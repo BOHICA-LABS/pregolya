@@ -16,6 +16,54 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-50 (pass-48 findings)
+
+### STATE.md D-419 phantom symbol / inverted mechanism; records accuracy corrections; fixture rename; structural completeness
+
+**Pass-48 finding tally: 0 CRIT + 1 HIGH + 4 MED + 5 LOW.**
+
+**HIGH-001 (F-P48-HIGH-001) — STATE.md D-419 phantom symbol `_L13G_OUT` and inverted mechanism description:**
+What was wrong: D-419 in STATE.md referenced `_L13G_OUT` as if it were a function or tool, and the mechanism description had the probe G false-green check inverted (described success-path behavior as the blocking assertion form).
+What was fixed: state-manager corrected D-419 to accurately describe probe G's inline negative guard: the variable `_L13G_OUT` is a shell variable capturing `check_l13` output; the inline negative guard (`if echo "$_L13G_OUT" | grep -q "\[PASS\]"`) exits 2 when no FAIL text is present. Phantom symbol removed; mechanism description corrected.
+
+**MED-001 (F-P48-MED-001) — CHANGELOG and evidence-report `probe_must_fail` citations in fix-burst-49 records incorrectly describe retired mechanism:**
+What was wrong: CHANGELOG `## fix-burst-49` HIGH-001 paragraph last sentence said "→ `check_l13` correctly FAILs → `probe_must_fail` passes." Evidence-report `## fix-burst-49 re-verification` F-P47-HIGH-001 row Load-bearing-artifact said "→ FAIL → `probe_must_fail` passes." Fix-burst-49 structural refactor retired `probe_must_fail`; probe G now uses an inline negative guard that exits 2 when no FAIL text is present.
+What was fixed: CHANGELOG HIGH-001 last sentence corrected to describe the inline negative guard mechanism. Evidence-report F-P47-HIGH-001 Load-bearing-artifact updated to match current probe G behavior.
+
+**MED-002 (F-P48-MED-002) — evidence-report fix-burst-48 attestation rows describe artifacts eliminated by fix-burst-49 structural refactor without superseded-by annotation:**
+What was wrong: HIGH-001 row cited `probe_must_fail "L13-probe-G"` and `L13-probe-G-real` swap-and-restore. MED-002 row cited "probe F extended to invoke real `check_l13` via swap-and-restore." Clause (d) paragraph mentioned `_L13_CHECK`. All these were eliminated by fix-burst-49 (`check_l13` parameterized, `_L13_CHECK` retired, swap-and-restore eliminated), but no annotation marked the rows as superseded.
+What was fixed: Superseded-by annotation prepended to HIGH-001 and MED-002 Load-bearing-artifact cells. Note added after Clause (d) paragraph stating `_L13_CHECK` was retired in fix-burst-49.
+
+**MED-003 (F-P48-MED-003) — pass fixture filenames `_match_with_dots_passes` inconsistent with E0532-oriented naming established for fail fixtures in fix-burst-49:**
+What was wrong: After fix-burst-49 renamed fail fixtures to `_external_field_access_blocked`, the corresponding pass fixtures still had filenames with `_match_with_dots_passes` suffix, inconsistent with the E0532-oriented naming convention.
+What was fixed: test-writer renamed pass fixtures from `open_ai_api_key_match_with_dots_passes.rs` / `anthropic_api_key_match_with_dots_passes.rs` to `open_ai_api_key_expose_secret_passes.rs` / `anthropic_api_key_expose_secret_passes.rs`. story-writer updated §File Structure Requirements rows in story spec.
+
+**MED-004 (F-P48-MED-004) — STATE.md D-419 enumeration incomplete; D-419/D-420 MED-001 contradiction:**
+What was wrong: D-419 listed only partial pass-47 closure records (fewer than all 10 closures). D-419 and D-420 had contradictory descriptions for MED-001.
+What was fixed: state-manager completed the D-419 enumeration to include all 10 pass-47 closures and resolved the D-419/D-420 MED-001 contradiction.
+
+**LOW-001 (F-P48-LOW-001) — CHANGELOG and evidence-report fix-burst-49 live-HEAD example text cites transient branch name `feature/S-1.02`:**
+What was wrong: `[live-HEAD: checked(feature/S-1.02=matched)]` was written as a static example value. The branch name `feature/S-1.02` is runtime-derived from `§Session Resume Checkpoint` and will differ in any future story.
+What was fixed: Replaced `feature/S-1.02` with `<branch>` placeholder in both CHANGELOG MED-001 paragraph and evidence-report F-P47-MED-001 row. Added parenthetical clarifying `<branch>` is runtime-derived from `§Session Resume Checkpoint`.
+
+**LOW-002 (F-P48-LOW-002) — Probe G EXIT trap does not delete throwaway ref on abort:**
+What was wrong: The EXIT trap in probe G's shell function did not include cleanup of the PID-unique disposable ref (`refs/heads/feature/records-lint-selfprobe-g-$$`), so an interrupt or unexpected abort could leave the ref dangling.
+What was fixed: devops-engineer extended the EXIT trap to delete the throwaway ref on any abort path.
+
+**LOW-003 (F-P48-LOW-003) — Probe G assertion checks absence of `[PASS]` instead of presence of `[FAIL]` text:**
+What was wrong: The inline negative guard (`if echo "$_L13G_OUT" | grep -q "\[PASS\]"`) asserts absence of `[PASS]` token. This passes vacuously if `check_l13` emits no output at all — an error exit or empty output would satisfy the guard without confirming FAIL behavior.
+What was fixed: devops-engineer changed probe G's assertion from absence-of-PASS to presence-of-FAIL text.
+
+**LOW-004 (F-P48-LOW-004) — Story spec §File Structure Requirements: 3 rows use crate-relative paths instead of repo-relative `crates/` paths:**
+What was wrong: Three rows in §File Structure Requirements cited paths relative to the crate root instead of the repo-relative `crates/pregolya-core/src/…` form used by all other rows.
+What was fixed: story-writer normalized the 3 rows to repo-relative `crates/` paths in story spec.
+
+**LOW-005 (F-P48-LOW-005) — evidence-report fix-burst-49 re-verification section missing test count, gate output, KL note, and separator:**
+What was wrong: The fix-burst-49 re-verification section contained only the pass-47 tally line and the 10-row attestation table, without the standard test count restatement, gate output line, known limitations cross-reference, or trailing separator.
+What was fixed: technical-writer added test count, gate output, known limitations note, and trailing separator to the fix-burst-49 re-verification section.
+
+**Test count (fix-burst-50):** No Rust logic changes. Pass fixture rename (`_match_with_dots_passes` → `_expose_secret_passes`) maintains same trybuild fixture counts: 8 compile_fail + 7 pass = 15 total.
+
 ## fix-burst-49 (pass-47 findings)
 
 ### records-lint.sh structural refactor, credential fixture rename, records accuracy
@@ -24,11 +72,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 **HIGH-001 (F-P47-HIGH-001) — `L13-probe-G` coupled to live `feature/S-1.02` branch; records-lint.sh will hard-`exit 2` and block every `.factory/` commit once that branch is deleted:**
 What was wrong: Probe G's synthetic STATE.md hardcoded `feature/S-1.02` in its §DEVELOP STATE. After PR merge and branch deletion, `git rev-parse --verify refs/heads/feature/S-1.02` returns empty; `_L13_CHECK` exits 0 (skip path); `probe_must_fail` fires `exit 2`, permanently blocking all factory-artifacts commits.
-What was fixed: Probe G now creates a PID-unique disposable ref (`refs/heads/feature/records-lint-selfprobe-g-$$`) and references it in the synthetic STATE.md. The synthetic STATE.md contains an all-zeros frozen HEAD that does not match the live disposable ref's real SHA → `check_l13` correctly FAILs → `probe_must_fail` passes. The disposable ref is deleted in both success and error paths. No reference to `feature/S-1.02` anywhere in the probe.
+What was fixed: Probe G now creates a PID-unique disposable ref (`refs/heads/feature/records-lint-selfprobe-g-$$`) and references it in the synthetic STATE.md. The synthetic STATE.md contains an all-zeros frozen HEAD that does not match the live disposable ref's real SHA → `check_l13` correctly FAILs (output contains no `[PASS]` token) → the inline negative guard (`if echo "$_L13G_OUT" | grep -q "\[PASS\]"`) exits 2 on false-green, throwaway ref deleted on both paths. No reference to `feature/S-1.02` anywhere in the probe.
 
 **MED-001 (F-P47-MED-001) — Step 3.5 PASS line had no positive-coverage signal for live-HEAD check:**
 What was wrong: The PASS line only reported "3/3 surfaces in sync"; whether the live-HEAD assertion actually executed or was silently skipped was indistinguishable from the output.
-What was fixed: `check_l13` now tracks `LIVE_HEAD_COVERAGE` through all code paths: `[live-HEAD: checked(feature/S-1.02=matched)]` (branch resolved, SHA matched), `[live-HEAD: skipped(branch-not-found)]` (branch not resolvable), or `[live-HEAD: skipped(no-frozen-sha-in-checkpoint)]`. Both `emit PASS` sites append this suffix. Script-header and function-header comments updated to document both new FAIL conditions.
+What was fixed: `check_l13` now tracks `LIVE_HEAD_COVERAGE` through all code paths: `[live-HEAD: checked(<branch>=matched)]` (branch resolved, SHA matched; where `<branch>` is the feature branch name, runtime-derived from `§Session Resume Checkpoint`), `[live-HEAD: skipped(branch-not-found)]` (branch not resolvable), or `[live-HEAD: skipped(no-frozen-sha-in-checkpoint)]`. Both `emit PASS` sites append this suffix. Script-header and function-header comments updated to document both new FAIL conditions.
 
 **MED-002 (F-P47-MED-002) — credential trybuild fail fixtures tested E0532 (field privacy) but were named and described as `#[non_exhaustive]` match-without-dots gates; pass fixtures were non-discriminating (opaque function call):**
 What was wrong: `open_ai_api_key_match_without_dots_fails.rs` and `anthropic_api_key_match_without_dots_fails.rs` named "match_without_dots" implying failure was about `..` wildcard. The actual error is E0532 (private field blocks ALL pattern destructuring including `(..)`). Pass fixtures called an opaque function — not discriminating on field privacy or `#[non_exhaustive]`.

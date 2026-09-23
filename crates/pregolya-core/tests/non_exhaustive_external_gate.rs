@@ -323,8 +323,8 @@ fn ui() {
         "tests/ui/component_match_with_wildcard_passes.rs",
         "tests/ui/category_match_with_wildcard_passes.rs",
         "tests/ui/retry_hint_match_with_wildcard_passes.rs",
-        "tests/ui/open_ai_api_key_match_with_dots_passes.rs",
-        "tests/ui/anthropic_api_key_match_with_dots_passes.rs",
+        "tests/ui/open_ai_api_key_expose_secret_passes.rs",
+        "tests/ui/anthropic_api_key_expose_secret_passes.rs",
     ];
 
     // Array type annotation [&str; EXPECTED_NON_EXHAUSTIVE_COUNT] is the compile-time enforcement mechanism;
