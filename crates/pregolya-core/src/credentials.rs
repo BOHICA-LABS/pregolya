@@ -341,7 +341,7 @@ mod tests {
         );
     }
 
-    /// AC-010 (traces to BC-2.14.005 {PC-005}, TV-004)
+    /// AC-009 (traces to BC-2.14.005 {PC-005}, TV-004)
     ///
     /// `expose_secret()` is the ONLY intentional path to the inner key value.
     /// It returns the exact string passed to `new()`.
@@ -358,7 +358,7 @@ mod tests {
         );
     }
 
-    /// AC-010 (traces to BC-2.14.005 {PC-005}, TV-004)
+    /// AC-009 (traces to BC-2.14.005 {PC-005}, TV-004)
     ///
     /// `AnthropicApiKey::expose_secret()` returns the exact inner value.
     ///

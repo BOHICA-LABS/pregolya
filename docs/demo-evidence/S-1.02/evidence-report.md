@@ -25,7 +25,7 @@ status: complete
 | AC-005 | BC-2.14.004 PC-003 | `cargo xtask check-client-timeout` exits 0 — no missing `.timeout()` | [AC-005-check-client-timeout-pass.webm](AC-005-check-client-timeout-pass.webm) | [AC-005-check-client-timeout-pass.gif](AC-005-check-client-timeout-pass.gif) | [tape](AC-005-check-client-timeout-pass.tape) | recorded (refreshed 2026-09-22) |
 | AC-010 | BC-2.14.005 PC-006 | `cargo xtask deny-bare-api-key` exits 0 — structural credential scan passes | [AC-010-deny-bare-api-key-pass.webm](AC-010-deny-bare-api-key-pass.webm) | [AC-010-deny-bare-api-key-pass.gif](AC-010-deny-bare-api-key-pass.gif) | [tape](AC-010-deny-bare-api-key-pass.tape) | recorded (refreshed 2026-09-22) |
 | AC-020 | BC-2.14.001 EC-004 / VP-BC214001-01 | `cargo xtask check-error-code-registry` exits 0 — 148 error codes validated, 0 collisions | text evidence (gate stdout) | — | — | captured 2026-09-22 (post-fix-burst-5) |
-| AC-017 | BC-2.14.003 EC-007 | `cargo xtask check-no-panic --fixture-mode` FLAGS 13 violation classes: bare `assert!` (incl. short BC-ID + BC-ID in condition), `_ => unreachable!()` patterns (incl. underscore-binding), `.unwrap()` in macros, `todo!()/unimplemented!()` — 13/16 fixture files flagged | [AC-017-check-no-panic-flags-violations.webm](AC-017-check-no-panic-flags-violations.webm) | [AC-017-check-no-panic-flags-violations.gif](AC-017-check-no-panic-flags-violations.gif) | [tape](AC-017-check-no-panic-flags-violations.tape) | recorded (re-recorded 2026-09-22 frozen HEAD 1ab2d10) |
+| AC-017 | BC-2.14.003 EC-007 | `cargo xtask check-no-panic --fixture-mode` FLAGS violations in 13 of 16 fixture files spanning four violation classes: bare `assert!` (incl. short BC-ID + BC-ID in condition), `_ => unreachable!()` patterns (incl. underscore-binding), `.unwrap()` in macros, `todo!()` (unimplemented!() covered by inline unit test only) — 13/16 fixture files flagged | [AC-017-check-no-panic-flags-violations.webm](AC-017-check-no-panic-flags-violations.webm) | [AC-017-check-no-panic-flags-violations.gif](AC-017-check-no-panic-flags-violations.gif) | [tape](AC-017-check-no-panic-flags-violations.tape) | recorded (re-recorded 2026-09-22 frozen HEAD 1ab2d10) |
 | AC-008 | BC-2.14.005 PC-002 | `Debug` emits exactly `"<redacted>"` — key material never appears in format output | [AC-008-AC-011-AC-016-credential-validation-redaction.webm](AC-008-AC-011-AC-016-credential-validation-redaction.webm) | [AC-008-AC-011-AC-016-credential-validation-redaction.gif](AC-008-AC-011-AC-016-credential-validation-redaction.gif) | [tape](AC-008-AC-011-AC-016-credential-validation-redaction.tape) | recorded |
 | AC-011 | BC-2.14.006 PC-001 | `OpenAiApiKey::new("")` → `Err(E-CORE-005 / VAL / Never)` | same recording as AC-008 | — | — | recorded |
 | AC-016 | BC-2.14.006 EC-006 | `new("   ")` whitespace-only rejected with same `E-CORE-005` error | same recording as AC-008 | — | — | recorded |
@@ -108,7 +108,7 @@ Detected violation classes (13 fixture files):
 10. `violation_assert_bc_id_short.rs` — bare `assert!()` with short BC-ID (MED-2 fix-burst-3)
 11. `violation_assert_bc_id_in_condition.rs` — bare `assert!()` with BC-ID in condition position (MED-2 fix-burst-3)
 12. `violation_unwrap_in_format_macro.rs` — `.unwrap()` inside macro arguments (MED-4 fix-burst-3)
-13. `violation_todo_stub.rs` — `todo!()/unimplemented!()` in production path (F-P9-M02 fix-burst-9)
+13. `violation_todo_stub.rs` — `todo!()` in production path (unimplemented!() covered by inline unit test only)
 
 Error path: demonstrates the gate detects all POL-31-mandated violation types; fix-burst 9 expanded coverage from 12 to 13 fixture files.
 
@@ -157,6 +157,14 @@ Covered by: the nextest pass in AC-008/AC-011/AC-016 recording (test_BC_2_14_004
 ### AC-008 / AC-011 / AC-016: credential validation + redacted Debug
 ![AC-008/AC-011/AC-016 credential tests](docs/demo-evidence/S-1.02/AC-008-AC-011-AC-016-credential-validation-redaction.gif)
 ```
+
+---
+
+## Recording Provenance
+
+Gate output was **recorded** at `1ab2d10` (frozen HEAD at time of recording). All recordings remain **valid** at frozen review HEAD `36cb4da`.
+
+Rationale: fix-burst 13 changes affect only `xtask/src/tests.rs` assertion values and `check_no_panic.rs` doc comments. Neither file participates in the `crates/`-rooted scan path executed by the gates. Fixture count (16 total, 13 flagged) and `CREDENTIAL_FIXTURE_COUNT` are unchanged at both SHAs. The SHA `1ab2d10` in individual AC sections accurately reflects when recordings were made; re-verification at `36cb4da` confirms the evidence is current.
 
 ---
 

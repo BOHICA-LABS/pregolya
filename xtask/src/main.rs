@@ -477,10 +477,10 @@ fn check_file_size() {
         exit(1);
     }
 
-    assert!(
-        files_measured > 0,
-        "check-file-size: scanned 0 files — gate is vacuously true; check that crates/ exists and contains Rust source files"
-    );
+    if let Err(msg) = check_post_exemption_vacuity("check-file-size", files_measured) {
+        eprintln!("{msg}");
+        exit(1);
+    }
     println!(
         "check-file-size PASSED ({} warnings, {files_measured} files measured, {files_skipped} allowlisted).",
         warnings.len()

@@ -355,8 +355,8 @@ fn scan_flat_for_timeout_violations(flat: &[FlatToken], path: &str, findings: &m
         // The B-5 test: OpenAiClient::new() should NOT be flagged (name differs)
         // The S-3 test: mcp_sdk::Client::new() should NOT be flagged (preceded by mcp_sdk::)
         //
-        // KNOWN-LIMITATION: Pattern 2 (bare Client::new()) only detects inline-qualified calls
-        // (e.g., reqwest::Client::new() or some::Client::new()). If a module uses
+        // Pattern 2 matches `Client::new()` with or without qualification; bare unqualified
+        // calls are flagged conservatively (KNOWN-LIMITATION 1). If a module uses
         // `use reqwest::Client;` and then calls `Client::new()`, Pattern 2 cannot distinguish
         // it from a non-reqwest Client::new(). False positives are possible for crates that
         // `use` other Client types with the same name. Conservative behavior: flag and require

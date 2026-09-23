@@ -60,7 +60,7 @@ pub fn build_client() -> Result<reqwest::Client, PregolyaError> {
 ///
 /// This is the shared production mapping function for HTTP client build failures.
 /// Called by `build_client()` via `map_err` and used in tests to assert the error shape
-/// without requiring a live broken TLS stack (BC-2.14.004 F-C, SID-1/POL-34).
+/// without requiring a live broken TLS stack (BC-2.14.004 {EC-006}, SID-1).
 ///
 /// The `reason` string is sanitized before inclusion in the error message —
 /// URL-embedded credentials (e.g. proxy `://user:password@host`) are redacted to
@@ -212,7 +212,7 @@ mod tests {
         );
     }
 
-    /// DI-009 (BC-2.14.004 {PC-001}/{INV-004}) — build_client returns Ok
+    /// DI-009 (BC-2.14.004 {PC-001}/{INV-001}) — build_client returns Ok
     ///
     /// S-1.02 scope: `build_client()` must return `Ok(reqwest::Client)` when called
     /// with valid workspace configuration. This test verifies DI-009: the builder
@@ -345,18 +345,18 @@ mod tests {
         );
     }
 
-    // ─── AC-019 / BC-2.14.004 F-C (SID-1 / POL-34) ────────────────────────────
+    // ─── AC-019 / BC-2.14.004 {EC-006} (SID-1) ─────────────────────────────────
 
-    /// AC-019 (traces to BC-2.14.004 F-C / SID-1 / POL-34)
+    /// AC-019 (traces to BC-2.14.004 {EC-006} / SID-1)
     ///
     /// The production invariant: `map_build_failure` must exist as a `pub(crate)` function
     /// and must produce the E-CORE-012 shape. This test calls `map_build_failure` directly
     /// with a synthetic reason string, verifying it is accessible from the test module
     /// (i.e., it is production-scope, not buried in `#[cfg(test)]`).
     ///
-    /// If `map_build_failure` were moved into `#[cfg(test)]`, the call from
-    /// `make_build_error_for_test` would break at compile time — this test exercises
-    /// the production fn in a way that would not compile if it were test-only.
+    /// This test directly calls `map_build_failure`, which is defined in production code.
+    /// If `map_build_failure` were moved into `#[cfg(test)]`, this call would fail to
+    /// compile — making the test a load-bearing production-scope invariant.
     ///
     /// GREEN: `map_build_failure` is `pub(crate)` outside any `#[cfg(test)]` block.
     #[test]
@@ -367,19 +367,19 @@ mod tests {
         assert_eq!(
             e.code(),
             "E-CORE-012",
-            "BC-2.14.004 F-C (SID-1): direct call to map_build_failure must yield \
+            "BC-2.14.004 {{EC-006}} (SID-1): direct call to map_build_failure must yield \
              E-CORE-012 code; got: {:?}",
             e.code()
         );
         assert!(
             matches!(e.category, Category::Transport),
-            "BC-2.14.004 F-C: map_build_failure must yield Category::Transport; got: {:?}",
+            "BC-2.14.004 {{EC-006}}: map_build_failure must yield Category::Transport; got: {:?}",
             e.category
         );
         assert!(
             e.message
                 .starts_with("HttpClientBuildFailed: failed to build HTTP client:"),
-            "BC-2.14.004 F-C: message must begin with canonical prefix; got: {:?}",
+            "BC-2.14.004 {{EC-006}}: message must begin with canonical prefix; got: {:?}",
             e.message
         );
     }
