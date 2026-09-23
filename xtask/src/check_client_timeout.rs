@@ -1,16 +1,18 @@
-//! CI lint gate: reject `reqwest::Client::new()` and `ClientBuilder` without
-//! `.timeout()` in library source files.
+//! CI lint gate: reject `reqwest::Client::new()`, `Client::default()`, and
+//! `ClientBuilder` without `.timeout()` in library source files.
 //!
 //! Implements `cargo xtask check-client-timeout` (BC-2.14.004 {PC-003},
 //! VP-DI009-01).
 //!
 //! # Scanning rules
 //!
-//! - Scans `crates/**/*.rs` for `reqwest::Client::new()` (fully qualified) and
-//!   `Client::new()` (unqualified) in non-test source.
-//! - Also scans for `ClientBuilder` chains that call `.build()` without a
-//!   preceding `.timeout(d)` call where `d > Duration::ZERO`
-//!   (BC-2.14.004 {PC-001}, {INV-004}).
+//! - Scans `crates/**/*.rs` for `reqwest::Client::new()`, `Client::new()`,
+//!   `reqwest::Client::default()`, and `Client::default()` (both fully qualified
+//!   and unqualified forms, including UFCS `<reqwest::Client as Default>::default()`)
+//!   in non-test source.
+//! - Also scans for `ClientBuilder` chains (including `ClientBuilder::default()`)
+//!   that call `.build()` without a preceding `.timeout(d)` call where
+//!   `d > Duration::ZERO` (BC-2.14.004 {PC-001}, {INV-004}).
 //! - `.timeout(Duration::ZERO)` is treated as a missing timeout and flagged —
 //!   a zero duration is not a valid request timeout.
 //! - `reqwest::blocking::Client/ClientBuilder` patterns are detected via the
@@ -23,6 +25,11 @@
 //! - Exits non-zero when any violation is found; exits 0 on a clean scan.
 //! - Uses `syn` AST-based scanning (`syn::visit::Visit`) for accurate detection
 //!   that correctly handles parenthesized and braced base subexpressions.
+//! - Macro invocations opaque to the syn visitor (e.g. `thread_local!{}`,
+//!   `lazy_static!{}`) are scanned by re-parsing their token stream via four
+//!   progressive strategies: direct `syn::parse2::<syn::File>`, wrapped-function
+//!   parse, expression parse, and initializer-expression extraction for
+//!   `lazy_static!`-style `static ref NAME: TYPE = EXPR;` bodies.
 //!
 //! # Known Limitations
 //!
@@ -30,8 +37,8 @@
 //! `ClientBuilder::new()`, and `Client::builder()` without a visible reqwest
 //! qualifier are flagged conservatively. If the type was `use`-imported from a
 //! non-reqwest crate (e.g., `use mcp_sdk::Client`), the gate will flag it. The
-//! workaround is to use the fully-qualified form or to add the file to the
-//! lint-exempt allowlist.
+//! workaround is to use the fully-qualified form `reqwest::Client::new()` rather
+//! than a bare imported name.
 //!
 //! **KNOWN-LIMITATION 2 — split-statement builder chains:** If a `ClientBuilder`
 //! is stored in a `let` binding and `.build()` is called on that binding in a
@@ -42,15 +49,22 @@
 //! a named constant (e.g., `const NO_TIMEOUT: Duration = Duration::ZERO;
 //! .timeout(NO_TIMEOUT)`), the gate will not detect it as zero-valued. The gate
 //! only inspects the syntactic form of the timeout argument.
+//!
+//! **KNOWN-LIMITATION 4 — opaque macro bodies:** Macro bodies that fail all four
+//! syn parse strategies (not valid as Rust item sequence, wrapped-fn, expression,
+//! or initializer-expression extraction) cannot be analyzed — these bodies are
+//! skipped rather than flagged conservatively.
 
 use std::process::exit;
 use syn::visit::Visit;
 
 /// Entry point for `cargo xtask check-client-timeout`.
 ///
-/// Scans `crates/**/*.rs` using syn AST-based analysis to detect `Client::new()`
-/// and `ClientBuilder` chains missing `.timeout(...)`. Exits non-zero on any
-/// violation (BC-2.14.004 {PC-003}).
+/// Scans `crates/**/*.rs` using syn AST-based analysis to detect `Client::new()`,
+/// `Client::default()`, UFCS `<reqwest::Client as Default>::default()`, and
+/// `ClientBuilder` chains (including `ClientBuilder::default()`) missing
+/// `.timeout(...)`. Macro invocations are scanned via recursive syn re-parsing
+/// (see module-level doc). Exits non-zero on any violation (BC-2.14.004 {PC-003}).
 pub fn run() {
     let output = std::process::Command::new("find")
         .args(["crates/", "-name", "*.rs", "-not", "-path", "*/target/*"])
@@ -125,8 +139,10 @@ pub fn run() {
     );
 }
 
-/// Scans a single Rust source file (as a string) for `Client::new()` or
+/// Scans a single Rust source file (as a string) for `Client::new()`,
+/// `Client::default()`, UFCS `<reqwest::Client as Default>::default()`, or
 /// `ClientBuilder` chains that call `.build()` without a preceding `.timeout(d)`.
+/// Also scans macro bodies via recursive syn re-parsing strategies.
 ///
 /// Returns a `Vec<String>` of human-readable violation messages. Returns an
 /// empty `Vec` when the source is clean.
@@ -369,10 +385,46 @@ fn analyze_build_chain(expr: &syn::Expr) -> Option<ChainResult> {
                 .map(|s| s.ident.to_string())
                 .collect();
             let seg_refs: Vec<&str> = seg_strings.iter().map(|s| s.as_str()).collect();
-            if classify_builder_constructor(&seg_refs) == QualifierKind::NonReqwest {
+
+            // Standard path form: reqwest::ClientBuilder::new() / Client::builder() / etc.
+            if classify_builder_constructor(&seg_refs) != QualifierKind::NonReqwest {
+                let line = p
+                    .path
+                    .segments
+                    .first()
+                    .map(|s| s.ident.span().start().line)
+                    .unwrap_or(0);
+                return Some(ChainResult {
+                    has_valid_timeout: false,
+                    line,
+                    constructor_name: seg_strings.join("::"),
+                });
+            }
+
+            // UFCS form: `<reqwest::ClientBuilder as Default>::default()`.
+            // The path is `Default::default`; the qself type carries `reqwest::ClientBuilder`.
+            let last_seg = seg_strings.last().map(|s| s.as_str()).unwrap_or("");
+            if last_seg != "default" {
                 return None;
             }
-            let line = p
+            let qself = p.qself.as_ref()?;
+            let syn::Type::Path(tp) = &*qself.ty else {
+                return None;
+            };
+            let qself_segs: Vec<String> = tp
+                .path
+                .segments
+                .iter()
+                .map(|s| s.ident.to_string())
+                .collect();
+            // Append "default" to the qself type and reuse classify_builder_constructor.
+            let mut lookup = qself_segs.clone();
+            lookup.push("default".to_string());
+            let lookup_refs: Vec<&str> = lookup.iter().map(|s| s.as_str()).collect();
+            if classify_builder_constructor(&lookup_refs) == QualifierKind::NonReqwest {
+                return None;
+            }
+            let line = tp
                 .path
                 .segments
                 .first()
@@ -381,7 +433,7 @@ fn analyze_build_chain(expr: &syn::Expr) -> Option<ChainResult> {
             Some(ChainResult {
                 has_valid_timeout: false,
                 line,
-                constructor_name: seg_strings.join("::"),
+                constructor_name: format!("<{}>::default", qself_segs.join("::")),
             })
         }
         // Unwrap parenthesized expressions: (reqwest::ClientBuilder::new()).build()
@@ -399,192 +451,143 @@ fn analyze_build_chain(expr: &syn::Expr) -> Option<ChainResult> {
     }
 }
 
-// ── Macro token-stream scanner ────────────────────────────────────────────────
+// ── Macro body AST scanner ─────────────────────────────────────────────────────
 
-/// Flat-token scan of a macro invocation's token stream for timeout violations.
+/// Re-parse a macro invocation's token stream via four progressive strategies,
+/// delegating to the same `TimeoutChecker` visitor used for top-level source.
 ///
 /// Called from [`TimeoutChecker::visit_expr_macro`], [`TimeoutChecker::visit_stmt_macro`],
 /// and [`TimeoutChecker::visit_item_macro`] for macro bodies that are opaque to the syn
 /// AST visitor (e.g. `thread_local!{}`, `lazy_static!{}`).
 ///
-/// Only fully-qualified forms whose path head is `reqwest` are detected.
-/// Bare/use-imported forms cannot be distinguished from non-reqwest types in a flat
-/// token scan and are outside this scanner's reach (KNOWN-LIMITATION 1 applies here
-/// too — the fully-qualified form is the detection trigger).
+/// # Strategies (in order)
 ///
-/// # Detected patterns
+/// 1. **Direct file parse:** `syn::parse2::<syn::File>(tokens)` — succeeds for bodies
+///    containing valid Rust items (e.g. `thread_local!{}` with `static NAME: T = expr;`).
+/// 2. **Wrapped-fn parse:** Wraps tokens in `fn __macro_fragment__() { … }` and parses
+///    as `syn::File` — succeeds for statement/expression bodies not valid as top-level items.
+/// 3. **Expression parse:** `syn::parse2::<syn::Expr>(tokens)` — succeeds for bare
+///    expression bodies.
+/// 4. **Initializer extraction:** Splits at top-level `;`, extracts the expression after
+///    the first standalone `=` per statement — handles `lazy_static!`-style
+///    `static ref NAME: TYPE = EXPR;` bodies whose `static ref` prefix is not valid Rust.
 ///
-/// - **Pattern A (unconditional):** `reqwest :: Client :: (new|default|builder)` and
-///   `reqwest :: blocking :: Client :: (new|default|builder)` are flagged without
-///   further chain tracing — in a macro body we cannot safely trace the builder chain.
+/// If all strategies fail, returns an empty `Vec` (KNOWN-LIMITATION 4 — KL-macro).
+fn scan_macro_body_as_ast(tokens: proc_macro2::TokenStream, path: &str) -> Vec<String> {
+    let mut sub = TimeoutChecker {
+        path,
+        findings: Vec::new(),
+        in_test_context: false,
+    };
+
+    // Strategy 1: direct item sequence parse.
+    if let Ok(file) = syn::parse2::<syn::File>(tokens.clone()) {
+        syn::visit::visit_file(&mut sub, &file);
+        return sub.findings;
+    }
+
+    // Strategy 2: wrap in a dummy fn body and parse as syn::File.
+    // Preserves original token spans by embedding the token stream directly
+    // (no string round-trip), so finding line numbers remain accurate.
+    {
+        use proc_macro2::{Delimiter, Group, Ident, Span, TokenTree};
+        let paren = TokenTree::Group(Group::new(
+            Delimiter::Parenthesis,
+            proc_macro2::TokenStream::new(),
+        ));
+        let body = TokenTree::Group(Group::new(Delimiter::Brace, tokens.clone()));
+        let mut wrapped = proc_macro2::TokenStream::new();
+        wrapped.extend([
+            TokenTree::Ident(Ident::new("fn", Span::call_site())),
+            TokenTree::Ident(Ident::new("__macro_fragment__", Span::call_site())),
+            paren,
+            body,
+        ]);
+        if let Ok(file) = syn::parse2::<syn::File>(wrapped) {
+            syn::visit::visit_file(&mut sub, &file);
+            return sub.findings;
+        }
+    }
+
+    // Strategy 3: bare expression parse.
+    if let Ok(expr) = syn::parse2::<syn::Expr>(tokens.clone()) {
+        syn::visit::visit_expr(&mut sub, &expr);
+        return sub.findings;
+    }
+
+    // Strategy 4: initializer extraction for lazy_static-style bodies.
+    // Splits at top-level `;`, extracts EXPR after the first standalone `=` per
+    // statement. Handles `static ref NAME: TYPE = EXPR;` where `static ref` is
+    // not accepted by syn but the initializer expression is valid Rust.
+    let extracted = extract_initializer_exprs_from_tokens(tokens);
+    if !extracted.is_empty() {
+        for expr in &extracted {
+            syn::visit::visit_expr(&mut sub, expr);
+        }
+        return sub.findings;
+    }
+
+    // KL-macro: body failed all parse strategies — skip rather than false-positive.
+    Vec::new()
+}
+
+/// Split a token stream at top-level `;` separators and extract the expression
+/// that follows the first standalone `=` in each statement.
 ///
-/// - **Pattern B (chain scan):** `reqwest :: ClientBuilder :: (new|default)` and
-///   `reqwest :: blocking :: ClientBuilder :: (new|default)` trigger a forward scan of
-///   the remaining flat tokens. A finding is emitted when `.build()` appears before
-///   `.timeout(...)` in the flat sequence.
-fn scan_macro_tokens_for_timeout_violations(
-    tokens: &proc_macro2::TokenStream,
-    path: &str,
-) -> Vec<String> {
-    fn flatten_into(stream: proc_macro2::TokenStream, out: &mut Vec<proc_macro2::TokenTree>) {
-        for tt in stream {
-            match tt {
-                proc_macro2::TokenTree::Group(g) => flatten_into(g.stream(), out),
-                other => out.push(other),
+/// Used as Strategy 4 in [`scan_macro_body_as_ast`] for `lazy_static!`-style
+/// bodies with `static ref NAME: TYPE = EXPR;` syntax not accepted by syn.
+fn extract_initializer_exprs_from_tokens(tokens: proc_macro2::TokenStream) -> Vec<syn::Expr> {
+    let mut results = Vec::new();
+    let mut stmt: Vec<proc_macro2::TokenTree> = Vec::new();
+
+    for tt in tokens {
+        match &tt {
+            proc_macro2::TokenTree::Punct(p) if p.as_char() == ';' => {
+                if let Some(expr) = extract_initializer_expr_from_stmt(&stmt) {
+                    results.push(expr);
+                }
+                stmt.clear();
             }
+            _ => stmt.push(tt),
         }
     }
-
-    /// Returns `true` when `flat[i]` and `flat[i+1]` form a `::` separator.
-    fn is_sep(flat: &[proc_macro2::TokenTree], i: usize) -> bool {
-        match (flat.get(i), flat.get(i + 1)) {
-            (Some(proc_macro2::TokenTree::Punct(p1)), Some(proc_macro2::TokenTree::Punct(p2))) => {
-                p1.as_char() == ':'
-                    && p1.spacing() == proc_macro2::Spacing::Joint
-                    && p2.as_char() == ':'
-            }
-            _ => false,
-        }
+    // Handle trailing statement without `;`.
+    if !stmt.is_empty()
+        && let Some(expr) = extract_initializer_expr_from_stmt(&stmt)
+    {
+        results.push(expr);
     }
+    results
+}
 
-    /// Returns the ident string at `flat[i]`, or `None`.
-    fn ident_str(flat: &[proc_macro2::TokenTree], i: usize) -> Option<String> {
-        if let Some(proc_macro2::TokenTree::Ident(id)) = flat.get(i) {
-            Some(id.to_string())
+/// Extract the `syn::Expr` after the first standalone `=` in a statement token list.
+///
+/// "Standalone" means the `=` has `Spacing::Alone` and is not preceded by another
+/// `Punct` with `Spacing::Joint` (which would indicate `==`, `+=`, `=>`, etc.).
+fn extract_initializer_expr_from_stmt(stmt: &[proc_macro2::TokenTree]) -> Option<syn::Expr> {
+    let mut after: Vec<proc_macro2::TokenTree> = Vec::new();
+    let mut found = false;
+    let mut prev_joint = false;
+
+    for t in stmt {
+        if found {
+            after.push(t.clone());
+        } else if let proc_macro2::TokenTree::Punct(p) = t {
+            if p.as_char() == '=' && p.spacing() == proc_macro2::Spacing::Alone && !prev_joint {
+                found = true;
+            }
+            prev_joint = p.spacing() == proc_macro2::Spacing::Joint;
         } else {
-            None
+            prev_joint = false;
         }
     }
 
-    /// Returns `true` when `.build()` appears before `.timeout(...)` scanning
-    /// forward from `start` in the flat token list.
-    fn build_before_timeout(flat: &[proc_macro2::TokenTree], start: usize) -> bool {
-        let mut k = start;
-        while k < flat.len() {
-            if let (proc_macro2::TokenTree::Punct(p), Some(proc_macro2::TokenTree::Ident(id))) =
-                (&flat[k], flat.get(k + 1))
-                && p.as_char() == '.'
-            {
-                match id.to_string().as_str() {
-                    "build" => return true,
-                    "timeout" => return false,
-                    _ => {}
-                }
-            }
-            k += 1;
-        }
-        false // No .build() found — no violation.
+    if found && !after.is_empty() {
+        let ts: proc_macro2::TokenStream = after.into_iter().collect();
+        syn::parse2::<syn::Expr>(ts).ok()
+    } else {
+        None
     }
-
-    let mut flat: Vec<proc_macro2::TokenTree> = Vec::new();
-    flatten_into(tokens.clone(), &mut flat);
-    let n = flat.len();
-    let mut findings = Vec::new();
-    let mut i = 0;
-
-    while i < n {
-        // Look for `reqwest` as path head.
-        if ident_str(&flat, i).as_deref() != Some("reqwest") {
-            i += 1;
-            continue;
-        }
-        let line = if let proc_macro2::TokenTree::Ident(id) = &flat[i] {
-            id.span().start().line
-        } else {
-            0
-        };
-        let mut j = i + 1;
-
-        // Require `::` after `reqwest`.
-        if !is_sep(&flat, j) {
-            i += 1;
-            continue;
-        }
-        j += 2;
-
-        let seg1 = match ident_str(&flat, j) {
-            Some(s) => s,
-            None => {
-                i += 1;
-                continue;
-            }
-        };
-        j += 1;
-
-        // Parse: reqwest :: [blocking ::] TypeName :: method
-        let (type_seg, method_seg, full_path_str, after_path) = if seg1 == "blocking" {
-            if !is_sep(&flat, j) {
-                i += 1;
-                continue;
-            }
-            j += 2;
-            let ts = match ident_str(&flat, j) {
-                Some(s) => s,
-                None => {
-                    i += 1;
-                    continue;
-                }
-            };
-            j += 1;
-            if !is_sep(&flat, j) {
-                i += 1;
-                continue;
-            }
-            j += 2;
-            let ms = match ident_str(&flat, j) {
-                Some(s) => s,
-                None => {
-                    i += 1;
-                    continue;
-                }
-            };
-            j += 1;
-            let fp = format!("reqwest::blocking::{}::{}", ts, ms);
-            (ts, ms, fp, j)
-        } else {
-            // seg1 is the TypeName.
-            if !is_sep(&flat, j) {
-                i += 1;
-                continue;
-            }
-            j += 2;
-            let ms = match ident_str(&flat, j) {
-                Some(s) => s,
-                None => {
-                    i += 1;
-                    continue;
-                }
-            };
-            j += 1;
-            let fp = format!("reqwest::{}::{}", seg1, ms);
-            (seg1, ms, fp, j)
-        };
-
-        match (type_seg.as_str(), method_seg.as_str()) {
-            // Pattern A: direct construction — always flag in macro context (chain
-            // tracing is not possible across opaque token streams).
-            ("Client", "new") | ("Client", "default") | ("Client", "builder") => {
-                findings.push(format!(
-                    "{}:{}: {}() without .timeout() — use build_client() (BC-2.14.004)",
-                    path, line, full_path_str
-                ));
-            }
-            // Pattern B: builder chain — scan forward for .build() before .timeout().
-            ("ClientBuilder", "new") | ("ClientBuilder", "default")
-                if build_before_timeout(&flat, after_path) =>
-            {
-                findings.push(format!(
-                    "{}:{}: {}() without .timeout() (BC-2.14.004)",
-                    path, line, full_path_str
-                ));
-            }
-            _ => {}
-        }
-
-        i += 1;
-    }
-
-    findings
 }
 
 // ── Syn AST visitor ───────────────────────────────────────────────────────────
@@ -746,16 +749,14 @@ impl<'ast> Visit<'ast> for TimeoutChecker<'_> {
         syn::visit::visit_expr_method_call(self, node);
     }
 
-    // Macro invocations are opaque to the syn AST visitor. Scan their token streams
-    // for reqwest client constructions that `visit_expr_call` / `visit_expr_method_call`
-    // would not see (e.g. `reqwest::Client::new()` inside `thread_local!{}`).
+    // Macro invocations are opaque to the syn AST visitor. Re-parse their token
+    // streams via `scan_macro_body_as_ast` which uses the same `TimeoutChecker`
+    // visitor to detect violations (e.g. `reqwest::Client::new()` inside
+    // `thread_local!{}` or `lazy_static!{}`).
     fn visit_expr_macro(&mut self, node: &'ast syn::ExprMacro) {
         if !self.in_test_context {
             self.findings
-                .extend(scan_macro_tokens_for_timeout_violations(
-                    &node.mac.tokens,
-                    self.path,
-                ));
+                .extend(scan_macro_body_as_ast(node.mac.tokens.clone(), self.path));
         }
         syn::visit::visit_expr_macro(self, node);
     }
@@ -763,10 +764,7 @@ impl<'ast> Visit<'ast> for TimeoutChecker<'_> {
     fn visit_stmt_macro(&mut self, node: &'ast syn::StmtMacro) {
         if !self.in_test_context {
             self.findings
-                .extend(scan_macro_tokens_for_timeout_violations(
-                    &node.mac.tokens,
-                    self.path,
-                ));
+                .extend(scan_macro_body_as_ast(node.mac.tokens.clone(), self.path));
         }
         syn::visit::visit_stmt_macro(self, node);
     }
@@ -778,12 +776,23 @@ impl<'ast> Visit<'ast> for TimeoutChecker<'_> {
         }
         if !self.in_test_context {
             self.findings
-                .extend(scan_macro_tokens_for_timeout_violations(
-                    &node.mac.tokens,
-                    self.path,
-                ));
+                .extend(scan_macro_body_as_ast(node.mac.tokens.clone(), self.path));
         }
         syn::visit::visit_item_macro(self, node);
+    }
+
+    // Skip `#[cfg(test)]`-attributed and `#[test]`-attributed trait default methods.
+    // Matches the same guard pattern as `visit_item_fn` and `visit_impl_item_fn`.
+    fn visit_trait_item_fn(&mut self, node: &'ast syn::TraitItemFn) {
+        if has_cfg_test_attr(&node.attrs)
+            || node
+                .attrs
+                .iter()
+                .any(|a| a.path().segments.last().is_some_and(|s| s.ident == "test"))
+        {
+            return;
+        }
+        syn::visit::visit_trait_item_fn(self, node);
     }
 }
 
@@ -1978,6 +1987,134 @@ pub fn build_client() -> reqwest::Client {
             !findings.is_empty(),
             "last .timeout(Duration::ZERO) must revoke a prior valid .timeout(); \
              chain must be flagged; got: {findings:?}"
+        );
+    }
+
+    // ── F-P26-HIGH-001 + F-P26-MED-001: recursive macro AST scanner ──────────
+
+    /// F-P26-HIGH-001 — `reqwest::Client::builder().timeout(...).build()` inside
+    /// `lazy_static!{}` must NOT be flagged.
+    ///
+    /// The old flat-token scanner treated `Client::builder` as Pattern A
+    /// (unconditional violation) regardless of chain timeout. The recursive AST
+    /// scanner correctly traces the builder chain and suppresses the finding when
+    /// `.timeout()` is present.
+    #[test]
+    fn test_timeout_checker_macro_client_builder_with_timeout_in_lazy_static() {
+        let src = r#"
+            lazy_static::lazy_static! {
+                static ref C: reqwest::Client =
+                    reqwest::Client::builder()
+                        .timeout(std::time::Duration::from_secs(30))
+                        .build()
+                        .unwrap();
+            }
+        "#;
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert!(
+            findings.is_empty(),
+            "reqwest::Client::builder().timeout(...).build() in lazy_static must NOT be flagged \
+             (F-P26-HIGH-001 — was false positive in flat scanner); got: {findings:?}"
+        );
+    }
+
+    /// F-P26-MED-001 — `reqwest::ClientBuilder::new().default_headers(h.from(cfg.timeout())).build()`
+    /// inside `lazy_static!{}` MUST be flagged as a missing timeout.
+    ///
+    /// The old flat-token scanner saw `.timeout(...)` (from `cfg.timeout()` nested inside
+    /// the argument) before `.build()` in the flat stream and suppressed the finding
+    /// (depth-blind false negative). The recursive AST scanner traces the chain at the
+    /// correct depth and correctly flags the violation.
+    #[test]
+    fn test_timeout_checker_macro_nested_config_timeout_suppressed_violation() {
+        let src = r#"
+            lazy_static::lazy_static! {
+                static ref C: reqwest::Client =
+                    reqwest::ClientBuilder::new()
+                        .default_headers(h.from(cfg.timeout()))
+                        .build()
+                        .unwrap();
+            }
+        "#;
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "reqwest::ClientBuilder::new().default_headers(cfg.timeout()).build() in lazy_static \
+             MUST be flagged (F-P26-MED-001 — was depth-blind false negative in flat scanner); \
+             got: {findings:?}"
+        );
+    }
+
+    // ── F-P26-MED-004: UFCS ClientBuilder default detection ──────────────────
+
+    /// F-P26-MED-004 — `<reqwest::ClientBuilder as Default>::default().build()` without
+    /// `.timeout()` must be flagged.
+    ///
+    /// `analyze_build_chain`'s `Expr::Call` branch now handles the UFCS form by
+    /// checking the qself type when `classify_builder_constructor` returns `NonReqwest`
+    /// for the plain path segments `["Default", "default"]`.
+    #[test]
+    fn test_timeout_checker_detects_clientbuilder_ufcs_default_no_timeout() {
+        let src = r#"
+            fn f() {
+                let _c = <reqwest::ClientBuilder as Default>::default()
+                    .build()
+                    .unwrap();
+            }
+        "#;
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "<reqwest::ClientBuilder as Default>::default().build() without .timeout() must be \
+             flagged (F-P26-MED-004); got: {findings:?}"
+        );
+    }
+
+    /// F-P26-MED-004 negative — `<reqwest::ClientBuilder as Default>::default().timeout(...).build()`
+    /// must NOT be flagged.
+    ///
+    /// The recursive chain walk finds `.timeout(30s)` before the UFCS builder entry,
+    /// so `has_valid_timeout` is true and no finding is emitted.
+    #[test]
+    fn test_timeout_checker_detects_clientbuilder_ufcs_default_with_timeout() {
+        let src = r#"
+            fn f() {
+                let _c = <reqwest::ClientBuilder as Default>::default()
+                    .timeout(std::time::Duration::from_secs(30))
+                    .build()
+                    .unwrap();
+            }
+        "#;
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert!(
+            findings.is_empty(),
+            "<reqwest::ClientBuilder as Default>::default().timeout(...).build() must NOT be \
+             flagged (F-P26-MED-004); got: {findings:?}"
+        );
+    }
+
+    // ── F-P26-LOW-001: visit_trait_item_fn cfg(test) guard ───────────────────
+
+    /// F-P26-LOW-001 — `#[cfg(test)]`-attributed trait default methods must not be
+    /// scanned for timeout violations.
+    ///
+    /// `TimeoutChecker` now overrides `visit_trait_item_fn` with the same cfg(test)
+    /// guard as `visit_item_fn` and `visit_impl_item_fn`.
+    #[test]
+    fn test_timeout_checker_ignores_cfg_test_trait_default_method() {
+        let src = r#"
+            trait T {
+                #[cfg(test)]
+                fn default_impl() {
+                    let _ = reqwest::Client::new();
+                }
+            }
+        "#;
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert!(
+            findings.is_empty(),
+            "#[cfg(test)] trait default method body must not be scanned (F-P26-LOW-001); \
+             got: {findings:?}"
         );
     }
 }
