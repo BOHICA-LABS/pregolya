@@ -434,6 +434,7 @@ Total: 238 xtask tests pass, 5 skipped.
 | NP-KL-1 | `check-no-panic` | Active | Exemption-blind flat-token macro scan (conservative FP direction) |
 | NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32) | Turbofish comma miscounting — angle-bracket depth tracking + turbofish-vs-comparison disambiguation; `test_no_panic_exemption2_angle_depth_multi_arg_turbofish_false_negative_guard` is the mechanism pin |
 | BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` false negative |
+| NP-KL-3 | `check-no-panic` | **DOCUMENTED in fix-burst-33** | Path-call form `Result::unwrap(r)` — see fix-burst-33 |
 
 **Docs-only note:** The docs commit for this fix-burst-32 CHANGELOG and evidence-report update is docs-only — no `xtask/src/**/*.rs` behavioral changes. Clause (d) does not fire for the docs commit.
 
@@ -459,6 +460,61 @@ Total: 238 xtask tests pass, 5 skipped.
 | `check-no-panic --fixture-mode xtask/tests/fixtures/violations` | `fixture-mode: 14/17 fixture files had findings` |
 
 All 8 registered xtask gates pass. Counts are identical to those from fix-burst-22 onward, confirming no `crates/`-rooted production files changed through fix-burst-33.
+
+---
+
+## fix-burst-33 re-verification
+
+**Adversary pass 31 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 0 HIGH + 2 MED + 1 LOW + 1 OBS findings.
+
+**Implementation commits:** implementer `3b1ecff` (MED-001 last-path-segment guard addition to three function visitors + MED-002 `NP-KL-3` minted in module doc), test-writer `3eb68be` (load-bearing tests for MED-001 and MED-002), demo-recorder `63eee0a` (gate output re-attestation for LOW-001).
+
+**Clause (d) analysis:** Fix-burst-33 modifies `xtask/src/check_no_panic.rs` (three function visitors gained last-path-segment `test` guard; `NP-KL-3` minted in module doc) and adds tests to `xtask/src/tests.rs`. Clause (d) fires for `check_no_panic.rs` scanner logic changes — per-detection-class test attestation required.
+
+**Per-detection-class test attestation (commits `3b1ecff`, `3eb68be`):**
+
+| Detection class | Representative tests | Pass |
+|----------------|----------------------|------|
+| MED-001 `#[test]`-family guard — `visit_item_fn` / `visit_impl_item_fn` / `visit_trait_item_fn` | `test_no_panic_tokio_test_attr_fn_exempt` — EXEMPT (load-bearing: fails without guard) | pass |
+| MED-002 NP-KL-3 path-call form pin | `test_no_panic_np_kl3_path_call_form_known_gap` — 0 findings (known gap, `ExprCall` path-call form not detected without type inference) | pass |
+
+Total: 240 xtask tests pass, 5 skipped.
+
+**Gate output (at HEAD `3eb68be`, 2026-09-23):**
+
+| Gate | Stdout output |
+|------|--------------|
+| `check-no-panic` | `check-no-panic PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
+| `check-client-timeout` | `check-client-timeout PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
+| `deny-bare-api-key` | `deny-bare-api-key PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
+| `check-error-code-registry` | `error-code-registry PASSED: 148 codes validated, 0 collisions.` |
+| `deny-anyhow-in-lib` | `deny-anyhow-in-lib PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
+| `deny-description-cache-key` | `deny-description-cache-key PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
+| `check-file-size` | `check-file-size PASSED (2 warnings, 45 files measured, 2 allowlisted).` |
+| `check-no-panic --fixture-mode xtask/tests/fixtures/violations` | `fixture-mode: 14/17 fixture files had findings` |
+
+**Clause-(d) coverage summary:**
+- MED-001: load-bearing test `test_no_panic_tokio_test_attr_fn_exempt` (fails without the last-path-segment guard in all three function visitors)
+- MED-002: pinning test `test_no_panic_np_kl3_path_call_form_known_gap` pins zero-finding behavior for known-gap path-call form; any "fix" introducing false positives will break this test
+- LOW-001: gate output re-attestation commit `63eee0a` — all 8 gates re-run at HEAD `3eb68be`; clause (d) satisfied
+- OBS-001: process gap only — no artifact change needed
+
+**Updated known limitations:**
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED in fix-burst-26** | Parenthesized/braced base subexpression — eliminated by syn AST visitor; see `test_timeout_scanner_parenthesized_base_subexpr_handled_by_syn` and `test_timeout_scanner_braced_base_subexpr_handled_by_syn` |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Nested macro invocations — `panic!` inside `macro_rules!` body inside another macro |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Turbofish comma miscounting — angle-bracket depth tracking + turbofish-vs-comparison disambiguation; `test_no_panic_exemption2_angle_depth_multi_arg_turbofish_false_negative_guard` is the mechanism pin |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | Indirect API key usage through variable aliasing |
+
+**Docs-only note:** This fix-burst-33 CHANGELOG and evidence-report docs commit is docs-only — no `xtask/src/**/*.rs` scanner logic changes beyond those already in commits `3b1ecff` and `3eb68be`. Clause (d) does not fire for the docs commit itself.
 
 ---
 

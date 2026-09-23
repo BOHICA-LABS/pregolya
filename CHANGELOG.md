@@ -16,6 +16,43 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-33 (pass-31 findings)
+
+### xtask check_no_panic — `#[test]`-family attribute exemption sibling-sweep, path-call form known gap, gate output re-attestation
+
+**MED-001 (F-P31-MED-001) — `PanicVisitor` missing `#[test]`-family attribute exemption — sibling-sweep miss vs `TimeoutChecker`:** `TimeoutChecker` gained last-path-segment `test` guard in fix-burst-27; `PanicVisitor`'s three function visitors (`visit_item_fn`, `visit_impl_item_fn`, `visit_trait_item_fn`) still lacked this guard, missing `#[tokio::test]`, `#[async_std::test]`, `#[rstest]`, and similar framework test attributes. Fixed: all three function visitors gained the last-path-segment `test` guard (implementer commit `3b1ecff`). Load-bearing test: `test_no_panic_tokio_test_attr_fn_exempt` (test-writer commit `3eb68be`) — this test FAILS if the guard is deleted. Routes: implementer + test-writer.
+
+**MED-002 (F-P31-MED-002) — `PanicVisitor` does not detect path-call form of `unwrap`/`expect` (`Result::unwrap(r)`, `Option::expect(o,"m")`):** These parse as `syn::ExprCall` rather than `syn::ExprMethodCall`; without type inference they cannot be distinguished from user-defined `SomeType::unwrap(key)`. Addressed via option (b): `NP-KL-3` minted in module doc (implementer commit `3b1ecff`). Pinning test: `test_no_panic_np_kl3_path_call_form_known_gap` pins zero-finding behavior; any incorrect "fix" adding false positives will break this test.
+
+**LOW-001 (F-P31-LOW-001) — evidence-report Recording Provenance clause (d) not satisfied — fix-burst-30/31/32 had behavioral scanner changes (guard additions) but never re-recorded gate output counts:** Demo-recorder re-ran all 8 gates at HEAD `3eb68be` and recorded actual output (commit `63eee0a`):
+- `check-no-panic`: 25 analyzed, 16 exempt, 0 unreadable, 0 violations
+- `check-client-timeout`: 25 analyzed, 16 exempt, 0 unreadable, 0 violations
+- `deny-bare-api-key`: 25 analyzed, 16 exempt, 0 unreadable, 0 violations
+- `check-error-code-registry`: 148 codes validated, 0 collisions
+- `deny-anyhow-in-lib`: 25 analyzed, 16 exempt, 0 unreadable, 0 violations
+- `deny-description-cache-key`: 25 analyzed, 16 exempt, 0 unreadable, 0 violations
+- `check-file-size`: PASSED (2 warnings, 45 files measured, 2 allowlisted)
+- `check-no-panic --fixture-mode`: 14/17
+
+**OBS-001 (F-P31-OBS-001) — Dispatch prompt's KL list was mislabelled vs actual code/CHANGELOG/evidence-report:** Process gap only — no artifact change needed. Corrected in future dispatches by sourcing KL list from evidence-report.
+
+### Known limitations after fix-burst-33
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED** in fix-burst-26 | Parenthesized/braced base subexpression — eliminated by syn AST visitor |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Nested macro invocations — `panic!` inside `macro_rules!` body inside another macro |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | Indirect API key usage through variable aliasing |
+
+Test count: 240 xtask tests pass, 5 skipped.
+
 ## fix-burst-32 (pass-30 findings)
 
 ### xtask check_no_panic / check_client_timeout — BC-2.14.003 sibling-sweep, angle-depth mechanism pin, evidence-report table gap
@@ -39,6 +76,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 | NP-KL-1 | `check-no-panic` | Active | Exemption-blind flat-token macro scan (conservative FP direction) |
 | NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Turbofish comma miscounting — angle-bracket depth tracking + turbofish-vs-comparison disambiguation both implemented; `test_no_panic_exemption2_angle_depth_multi_arg_turbofish_false_negative_guard` is the mechanism pin |
 | BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` false negative |
+| NP-KL-3 | `check-no-panic` | **DOCUMENTED in fix-burst-33** | Path-call form `Result::unwrap(r)` — see fix-burst-33 |
 
 Test count: 238 xtask tests pass, 5 skipped.
 
