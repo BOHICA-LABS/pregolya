@@ -122,8 +122,8 @@
 #        Genuine skip (no assertion): §Convergence Status section absent or
 #        containing no `**D-NNN` bold entry (pre-convergence state — check emits
 #        a SKIPPED label, not FAIL).
-#        Self-probes: four probes exercise this check (A: checkpoint-stale,
-#        B: convergence-stale, C: clean-pass, D: checkpoint-absent).
+#        Self-probes: five probes exercise this check (A: checkpoint-stale,
+#        B: convergence-stale, C: clean-pass, D: checkpoint-absent, E: convergence-absent).
 #        Routing: state-manager (propagate newest D-NNN to §Session Resume
 #                 Checkpoint and §Convergence Status).
 #
@@ -690,11 +690,12 @@ EOF
   # ── L13 self-probes: STATE.md D-NNN parity ─────────────────────────────────
   # Inline helper mirrors check_l13 logic: reads a synthetic STATE.md file,
   # echoes 1 on parity violation, 0 on clean pass or skip.
-  # Four probes:
+  # Five probes:
   #   A — checkpoint stale (§Current Phase Steps max D-999, checkpoint D-998) → CAUGHT
   #   B — convergence stale (§Current Phase Steps/checkpoint D-202, convergence D-201) → CAUGHT
   #   C — all three surfaces agree D-101 → NOT caught
   #   D — valid §Current Phase Steps rows but no §Session Resume Checkpoint → CAUGHT
+  #   E — valid §Current Phase Steps and checkpoint, §Convergence Status absent → NOT caught (2/2)
 
   _L13_CHECK() {
     local state_file="$1"
@@ -820,6 +821,47 @@ EOF
 
   PROBE_EXIT=$(_L13_CHECK "$PROBE_L13D")
   probe_must_fail "L13-probe-D" "valid §Current Phase Steps rows but no §Session Resume Checkpoint — FAIL (vacuity guard)"
+
+  # Probe E: §Convergence Status absent — convergence-absent path → PASS (not FAIL)
+  # Also verifies Part 1 fix: PASS message emits "SKIPPED" and "2/2" (not "3/3 in sync").
+  PROBE_L13E="$PROBE_TMP/l13-conv-absent.md"
+  cat > "$PROBE_L13E" <<'EOF'
+## Current Phase Steps
+
+| D-201/2026-01-01 — latest decision. | orchestrator | COMPLETE | STATE.md D-201. |
+
+## Session Resume Checkpoint
+
+<!-- D-200 checkpoint archived. D-201 checkpoint is current. Keep ONLY the latest checkpoint here. -->
+
+### RESUME NEXT-ACTIONS (S-1.02 — post-D-201 state)
+EOF
+
+  PROBE_EXIT=$(_L13_CHECK "$PROBE_L13E")
+  probe_must_not_fail "L13-probe-E" "§Convergence Status absent: convergence-absent path emits PASS with 2/2 (not FAIL)"
+
+  # Verify PASS message format: must contain "SKIPPED" (convergence label) and "2/2" (denominator).
+  # Temporarily swap STATE.md with probe file; restore unconditionally after output capture.
+  _L13E_BAK="$PROBE_TMP/STATE.md.probe-e-bak"
+  cp "${FACTORY_DIR}/STATE.md" "$_L13E_BAK" 2>/dev/null || true
+  cp "$PROBE_L13E" "${FACTORY_DIR}/STATE.md"
+  _L13E_OUT="$(check_l13 2>&1 || true)"
+  # Restore STATE.md unconditionally (backup takes priority; remove probe copy if no backup)
+  if [ -f "$_L13E_BAK" ]; then
+    cp "$_L13E_BAK" "${FACTORY_DIR}/STATE.md"
+  else
+    rm -f "${FACTORY_DIR}/STATE.md"
+  fi
+  unset _L13E_BAK
+  if ! echo "$_L13E_OUT" | grep -q "SKIPPED"; then
+    echo "[SELF-PROBE FAIL] L13-probe-E message: check_l13 PASS output missing 'SKIPPED' — dynamic denominator fix not applied to convergence-absent path"
+    exit 2
+  fi
+  if ! echo "$_L13E_OUT" | grep -q "2/2"; then
+    echo "[SELF-PROBE FAIL] L13-probe-E message: check_l13 PASS output missing '2/2' — dynamic denominator fix not applied to convergence-absent path"
+    exit 2
+  fi
+  unset _L13E_OUT
 
   unset -f _L13_CHECK
 
@@ -1422,7 +1464,11 @@ check_l13() {
   fi
 
   if [ "$PASS_CHECKPOINT" = true ] && [ "$PASS_CONVERGENCE" = true ]; then
-    emit PASS "L13: STATE.md D-NNN parity: newest=${MAX_D}, checkpoint=${CHECKPOINT_LABEL}, convergence=${CONVERGENCE_LABEL} — 3/3 surfaces in sync"
+    if [ "$CONVERGENCE_SKIPPED" = true ]; then
+      emit PASS "L13: STATE.md D-NNN parity: newest=${MAX_D}, checkpoint=${CHECKPOINT_LABEL}, convergence=${CONVERGENCE_LABEL} — 2/2 surfaces asserted (convergence SKIPPED)"
+    else
+      emit PASS "L13: STATE.md D-NNN parity: newest=${MAX_D}, checkpoint=${CHECKPOINT_LABEL}, convergence=${CONVERGENCE_LABEL} — 3/3 surfaces in sync"
+    fi
   else
     if [ "$PASS_CHECKPOINT" = false ]; then
       emit FAIL "L13: STATE.md D-NNN parity — newest §Current Phase Steps entry is ${MAX_D} but §Session Resume Checkpoint references ${CHECKPOINT_LABEL}. Run state-manager to propagate."
