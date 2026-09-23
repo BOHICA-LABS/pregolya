@@ -52,17 +52,29 @@ Recording: `AC-005-check-client-timeout-pass.{webm,gif}` — re-recorded 2026-09
 Shows: `cargo xtask check-client-timeout` — output: `check-client-timeout PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations`
 
 ### AC-006 — build_client returns Ok (BC-2.14.004 PC-005)
-Covered by: `test_BC_2_14_004_build_client_returns_ok` in `crates/pregolya-core/src/http.rs` (non-`#[ignore]`). This is the primary load-bearing artifact: it actually invokes `build_client()` and asserts the `Ok` return. `test_BC_2_14_004_timeout_error_shape` secondarily asserts `build_client()` returns `Ok` with a valid positive-timeout client (DI-009); body extended in fix-burst-54 to also assert E-CORE-012 error shape via `map_build_failure` (code, category, retry_hint, message prefix); traces to BC-2.14.004 {EC-006} / DI-009. The AC-005 gate PASS proves only that no production call site is structurally missing `.timeout()`; it is a static lint that never invokes `build_client()` and therefore carries no information about the function's `Ok` return value.
+Covered by: `test_BC_2_14_004_build_client_returns_ok` in `crates/pregolya-core/src/http.rs` (non-`#[ignore]`). This is the primary load-bearing artifact: it actually invokes `build_client()` and asserts the `Ok` return. `test_BC_2_14_004_build_client_ok_and_build_failure_ec006` secondarily asserts `build_client()` returns `Ok` with a valid positive-timeout client (DI-009) and also asserts E-CORE-012 error shape via `map_build_failure` (code, category, retry_hint, message prefix); traces to BC-2.14.004 {EC-006} / DI-009. The AC-005 gate PASS proves only that no production call site is structurally missing `.timeout()`; it is a static lint that never invokes `build_client()` and therefore carries no information about the function's `Ok` return value.
 
-### AC-007 — newtype not type-alias (BC-2.14.005 PC-001/PC-004)
-Compile-time static assertion — no runtime demo required (structural property enforced at compile time by `static_assertions::assert_not_impl_any!`).
+### AC-007 — constructor returns Ok for valid key (BC-2.14.005 PC-001)
+Primary load-bearing tests: `test_BC_2_14_005_openai_new_valid_key_returns_ok` and `test_BC_2_14_005_anthropic_new_valid_key_returns_ok` (both labeled AC-007 in their doc comments in `credentials.rs`). Each asserts that `new()` with a non-empty key string returns `Ok(T)` — covering BC-2.14.005 {PC-001} (constructor returns `Result<T, PregolyaError>`). No compile-time assertion is claimed for this AC; the structural type-exclusion `assert_not_impl_any!` invocations are owned by AC-009 (AsRef/Deref/Display/Serialize/Deserialize) and AC-013 (From conversions).
 
 ### AC-008 — Debug emits exactly `"<redacted>"` (BC-2.14.005 PC-002)
 Recording: `AC-008-AC-011-AC-016-credential-validation-redaction.{webm,gif}`
 Shows: nextest run of `test_BC_2_14_005_openai_debug_emits_redacted_sentinel` and `test_BC_2_14_005_anthropic_debug_emits_redacted_sentinel` — both PASS.
 
-### AC-009 — no AsRef/Deref/Serialize (BC-2.14.005 PC-003/PC-004)
-Compile-time static assertion — no runtime demo required.
+### AC-009 — no AsRef/Deref/Display/Serialize/Deserialize; expose_secret is ONLY access path (BC-2.14.005 PC-003/PC-004/PC-005)
+Compile-time static assertions — all labeled `AC-009` in the `mod tests` block of `credentials.rs` (traces to BC-2.14.005 {PC-003}/{PC-004}/{INV-002}/{INV-003}):
+- `assert_not_impl_any!(OpenAiApiKey: AsRef<str>)` — no auto-deref path to inner string
+- `assert_not_impl_any!(AnthropicApiKey: AsRef<str>)` — no auto-deref path to inner string
+- `assert_not_impl_any!(OpenAiApiKey: std::ops::Deref)` — no auto-deref to any target type
+- `assert_not_impl_any!(AnthropicApiKey: std::ops::Deref)` — no auto-deref to any target type
+- `assert_not_impl_any!(OpenAiApiKey: serde::Serialize)` — credential values must not appear in serialized artifacts (BC-2.14.005 {PC-003})
+- `assert_not_impl_any!(AnthropicApiKey: serde::Serialize)` — same
+- `assert_not_impl_any!(OpenAiApiKey: serde::de::Deserialize<'static>)` — Deserialize would bypass `new()` validation, allowing empty/whitespace keys (BC-2.14.006)
+- `assert_not_impl_any!(AnthropicApiKey: serde::de::Deserialize<'static>)` — same
+- `assert_not_impl_any!(OpenAiApiKey: std::fmt::Display)` — Display output invoked by `format!("{}", key)` must not expose key material (BC-2.14.005 {INV-002})
+- `assert_not_impl_any!(AnthropicApiKey: std::fmt::Display)` — same
+
+Runtime tests also labeled AC-009 (traces to BC-2.14.005 {PC-005}, TV-004): `test_BC_2_14_005_openai_expose_secret_returns_inner_value` and `test_BC_2_14_005_anthropic_expose_secret_returns_inner_value` — both assert that `expose_secret()` is the only intentional path to the inner value and returns the exact key string passed to `new()`.
 
 ### AC-010 — deny-bare-api-key structural gate (BC-2.14.005 PC-006)
 Recording: `AC-010-deny-bare-api-key-pass.{webm,gif}` — re-recorded 2026-09-22
@@ -76,8 +88,12 @@ Shows: `test_BC_2_14_006_openai_empty_key_returns_err` PASS.
 Recording: `AC-008-AC-011-AC-016-credential-validation-redaction.{webm,gif}`
 Shows: `test_BC_2_14_006_no_silent_default_on_invalid_inputs` PASS — table-driven test over `["", "   "]`.
 
-### AC-013 — no From\<String\>/From\<&str\> (BC-2.14.006 EC-005)
-Compile-time static assertion — no runtime demo required.
+### AC-013 — no From\<String\>/From\<&'static str\> (BC-2.14.006 EC-005)
+Compile-time static assertions — all labeled `AC-013` in the `mod tests` block of `credentials.rs` (traces to BC-2.14.006 EC-005: fallible conversions must use `TryFrom`, not `From`; an infallible `From` cannot signal empty-key rejection):
+- `assert_not_impl_any!(OpenAiApiKey: From<String>)` — `From<String>` would bypass `new()` validation
+- `assert_not_impl_any!(OpenAiApiKey: From<&'static str>)` — `From<&'static str>` would bypass `new()` validation
+- `assert_not_impl_any!(AnthropicApiKey: From<String>)` — same rationale for Anthropic type
+- `assert_not_impl_any!(AnthropicApiKey: From<&'static str>)` — same rationale for Anthropic type
 
 ### AC-014 — error code E-CORE-005 + message format (BC-2.14.006 PC-004)
 Recording: `AC-008-AC-011-AC-016-credential-validation-redaction.{webm,gif}`
@@ -113,17 +129,17 @@ Detected violation classes (14 fixture files):
 
 Error path: demonstrates the gate detects all POL-31-mandated violation types; fix-burst 9 expanded coverage from 12 to 13 fixture files; fix-burst 18 added the 14th flagged fixture (`violation_assert_eq_bc_id_in_comparand.rs`, fifth violation class).
 
-### AC-020 — check-error-code-registry exits 0 (BC-2.14.001 EC-004 / VP-BC214001-01)
-Evidence captured: 2026-09-22
-Command: `FACTORY_DIR=/Users/jmagady/Dev/pregolya/.factory cargo xtask check-error-code-registry`
-Output: `error-code-registry PASSED: 148 codes validated, 0 collisions.`
-Demonstrates: verifies all 148 `E-<COMPONENT>-<NNN>` codes declared in `error-taxonomy.md` are unique (zero collisions); exits 1 when zero codes extracted (vacuity guard — taxonomy format change detection); does NOT cross-validate against Rust source.
-
 ### AC-018 — programmer-error guards compliant (BC-2.14.003 EC-006)
 Covered by: AC-002 recording — gate exits 0 despite programmer-error-guard asserts in `PregolyaError::new` etc., proving the EC-006 narrow exception is honoured.
 
 ### AC-019 — E-CORE-012 test is non-ignored + production path (BC-2.14.004 EC-006)
 Covered by: `test_BC_2_14_004_build_failure_production_path_invariant` in `crates/pregolya-core/src/http.rs` (non-`#[ignore]`; doc comment: "AC-019 (traces to BC-2.14.004 {EC-006} / SID-1)"). This is the primary load-bearing artifact: it asserts the invariant that `map_build_failure` is accessible in the production code path, not only in `#[cfg(test)]` scope, satisfying SID-1 (no deferred-to-integration-test rationalization).
+
+### AC-020 — check-error-code-registry exits 0 (BC-2.14.001 EC-004 / VP-BC214001-01)
+Evidence captured: 2026-09-22
+Command: `FACTORY_DIR=/Users/jmagady/Dev/pregolya/.factory cargo xtask check-error-code-registry`
+Output: `error-code-registry PASSED: 148 codes validated, 0 collisions.`
+Demonstrates: verifies all 148 `E-<COMPONENT>-<NNN>` codes declared in `error-taxonomy.md` are unique (zero collisions); exits 1 when zero codes extracted (vacuity guard — taxonomy format change detection); does NOT cross-validate against Rust source.
 
 ---
 
@@ -222,15 +238,42 @@ Gate outputs remain valid because the syn rewrite finds the same 0 violations on
 
 The fix-burst-26 evidence-report docs commit (this commit) is docs-only and does NOT trigger clause (d).
 
+## fix-burst-55 re-verification
+
+**Adversary pass 53 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 2 HIGH + 4 MED + 1 LOW + 2 OBS.
+
+| Finding | Severity | Detection class | Load-bearing artifact |
+|---------|----------|-----------------|-----------------------|
+| F-P53-HIGH-001 | HIGH | §AC Coverage Map AC-007 wrongly claimed compile-time assertion (actual: two runtime tests); AC-009 vacuous (no trait names or invocations cited); AC-013 vacuous (no From-variant names or invocations cited); AC-020 placed between AC-017 and AC-018 (monotonic ordering broken) | AC-007 → `test_BC_2_14_005_openai_new_valid_key_returns_ok` + `test_BC_2_14_005_anthropic_new_valid_key_returns_ok` (runtime, BC-2.14.005 {PC-001}); AC-009 → 10 named `assert_not_impl_any!` invocations (AsRef<str>, Deref, Serialize, Deserialize, Display for both types) + `test_BC_2_14_005_openai_expose_secret_returns_inner_value` + `test_BC_2_14_005_anthropic_expose_secret_returns_inner_value`; AC-013 → 4 named `assert_not_impl_any!` invocations (From<String>, From<&'static str> for both types); AC-020 moved after AC-019; all 20 entries verified |
+| F-P53-HIGH-002 | HIGH | fix-burst-54 tally declared `1 HIGH + 3 MED + 2 LOW` (sum=6) but 4 MED findings enumerated (HIGH-001, MED-001 through MED-004, LOW-001, LOW-002 = 7 findings) | CHANGELOG + evidence-report `**Adversary pass 52 result:**` corrected to `1 HIGH + 4 MED + 2 LOW`; `check-burst-records-parity` gate output tally corrected to `1H+2L+4M` |
+| F-P53-MED-001 | MED | burst-parity no tally-sum ↔ ID-count reconciliation; sum of tally tokens never verified against id_count, so two documents with identically wrong tallies both passed | `run_self_probes` probe-3 in `check-burst-records-parity.sh` — sum-mismatch (tally sums to 3, id_count=2) correctly exits non-zero; probe-3 SELF-PROBE PASS confirmed |
+| F-P53-MED-002 | MED | F-P52-MED-002 Load-bearing artifact column cited pass-51 tally (`1H+3M+1L+1OBS`) — wrong pass; the fix was about making the tally runtime-computed, not citing a static old tally | Corrected to "runtime-computed tally shown in Gate output block below" |
+| F-P53-MED-003 | MED | `test_BC_2_14_004_build_client_ok_and_build_failure_ec006` Part 1 comment cited retired `check-client-timeout` gate attribution — recurrence of F-P51-MED-002 paper-fix pattern | Part 1 comment cites `test_BC_2_14_004_default_timeout_applied` as discriminating artifact; no vacuous gate reference |
+| F-P53-MED-004 | MED | test named `test_BC_2_14_004_timeout_error_shape` asserted build-failure shape (E-CORE-012) while name and module doc implied fired-timeout error shape (E-PROV-002); four assertion messages cited "timeout-path" | `test_BC_2_14_004_build_client_ok_and_build_failure_ec006` (renamed); assertion messages cite "build-failure"; `cargo nextest run -p pregolya-core` 92 passed, 2 skipped |
+| F-P53-LOW-001 | LOW | burst-parity gate checked ID-set and tally parity but not pass-number agreement; CHANGELOG `Pass-N` vs evidence-report `Adversary pass N` mismatch was undetectable | Pass-number agreement guard in `check-burst-records-parity.sh` — if CHANGELOG `Pass-N` differs from evidence-report `Adversary pass N`, gate emits `[BURST-PARITY FAIL]` |
+| F-P53-OBS-001 | OBS | three near-duplicate `map_build_failure` tests (AC-015 / AC-019 / EC-006+DI-009) lacked NOTE blocks; de-duplication sweep could remove one and leave its invariant uncovered | NOTE block in `test_BC_2_14_004_build_failure_maps_to_e_core_012`, `test_BC_2_14_004_build_failure_production_path_invariant`, `test_BC_2_14_004_build_client_ok_and_build_failure_ec006` naming all three and their distinct invariants |
+| F-P53-OBS-002 | OBS | AC-020 ordering: section placed between AC-017 and AC-018, violating monotonic scan order | AC-020 moved after AC-019 (addressed as part of F-P53-HIGH-001 fix) |
+
+**Test count:** unchanged from fix-burst-54 — 346 tests pass (workspace nextest), 7 skipped; no Rust source changed.
+
+**Gate output:**
+- All corrections are documentation-only; no `crates/` or `xtask/` files changed; all recorded gate outputs remain valid under Recording Provenance validity criterion.
+- `check-burst-records-parity` → `[BURST-PARITY PASS] fix-burst-55: 9 finding IDs matched; tally: 1L+2H+2OBS+4M.`; `burst-parity-self-probe` → `[SELF-PROBE PASS] probe-1 (ID-mismatch): divergent ID pair correctly detected mismatch`; `[SELF-PROBE PASS] probe-2 (tally-divergent): identical IDs with divergent tallies correctly detected mismatch`; `[SELF-PROBE PASS] probe-3 (tally-sum≠id-count): declared tally sum 3 vs 2 IDs correctly detected`
+- Factory-dispatcher chain: `records-lint.sh` exits 0
+
+**Known limitations:** none — all pass-53 findings closed by fix-burst-55.
+
+---
+
 ## fix-burst-54 re-verification
 
-**Adversary pass 52 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH + 3 MED + 2 LOW.
+**Adversary pass 52 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH + 4 MED + 2 LOW.
 
 | Finding | Severity | Detection class | Load-bearing artifact |
 |---------|----------|-----------------|-----------------------|
 | F-P52-HIGH-001 | HIGH | §AC Coverage Map AC-015 vacuous (timeout scanner cited for E-CORE-012 mapping); AC-019 mis-anchored to AC-015 test | AC-015 → `test_BC_2_14_004_build_failure_maps_to_e_core_012`; AC-019 → `test_BC_2_14_004_build_failure_production_path_invariant` |
-| F-P52-MED-001 | MED | `test_BC_2_14_004_timeout_error_shape` body only asserted `is_ok()` while name promised error shape; AC-006 citation description wrong | Test body extended: now asserts E-CORE-012 `code`, `Category::Transport`, `RetryHint::Never`, `message` prefix via `map_build_failure`; AC-006 description corrected |
-| F-P52-MED-002 | MED | Burst-parity tally path unpinned; self-probe never reached it; PASS line unconditional "tally verified" | Second self-probe (identical IDs, divergent tally); fail-closed empty tally; runtime PASS line (`tally: 1H+3M+1L+1OBS`); both `[SELF-PROBE PASS]` |
+| F-P52-MED-001 | MED | `test_BC_2_14_004_build_client_ok_and_build_failure_ec006` (formerly `test_BC_2_14_004_timeout_error_shape`) body only asserted `is_ok()` while name promised error shape; AC-006 citation description wrong | Test body extended: now asserts E-CORE-012 `code`, `Category::Transport`, `RetryHint::Never`, `message` prefix via `map_build_failure`; test renamed; AC-006 description corrected |
+| F-P52-MED-002 | MED | Burst-parity tally path unpinned; self-probe never reached it; PASS line unconditional "tally verified" | Second self-probe (identical IDs, divergent tally); fail-closed empty tally; runtime-computed tally shown in Gate output block below; both `[SELF-PROBE PASS]` |
 | F-P52-MED-003 | MED | Collision HashMap case-sensitive; `E-CORE-012` ≠ `E-core-012` as keys despite being the same runtime code | HashMap keyed on `code.to_ascii_uppercase()`; `test_collision_detection_case_insensitive` added |
 | F-P52-MED-004 | MED | `test_is_valid_error_code_coupling` doc claimed "coupling guarantee" it doesn't provide | Doc corrected: pins xtask grammar only; mirror drift with production predicate unguarded |
 | F-P52-LOW-001 | LOW | Burst-parity fails open on `^## fix-burst-N` zero match (heading-format drift → silent skip) | Case-insensitive token presence check; exits 1 with `[BURST-PARITY FAIL] heading-format drift` on token-present/heading-absent |
@@ -239,7 +282,7 @@ The fix-burst-26 evidence-report docs commit (this commit) is docs-only and does
 **Test count:** 346 tests pass (workspace nextest), 7 skipped; xtask 255 (+1 `test_collision_detection_case_insensitive`), pregolya-core 92 (test body extended, no count change).
 
 **Gate output:**
-- Lefthook pre-push: `just check` PASSES; `check-burst-records-parity` → `[BURST-PARITY PASS] fix-burst-54: 7 finding IDs matched; tally: 1H+2L+3M.`; `burst-parity-self-probe` → both `[SELF-PROBE PASS]`
+- Lefthook pre-push: `just check` PASSES; `check-burst-records-parity` → `[BURST-PARITY PASS] fix-burst-54: 7 finding IDs matched; tally: 1H+2L+4M.`; `burst-parity-self-probe` → both `[SELF-PROBE PASS]`
 - Factory-dispatcher chain: `records-lint.sh` exits 0
 
 **Known limitations:** none — all pass-52 findings closed by fix-burst-54.

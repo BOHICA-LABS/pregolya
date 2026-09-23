@@ -204,27 +204,40 @@ mod tests {
         );
     }
 
-    /// DI-009 (BC-2.14.004 {PC-001}/{INV-001}) + error-shape (BC-2.14.004 {EC-006})
+    /// DI-009 (BC-2.14.004 {PC-001}/{INV-001}) + build-failure error-shape (BC-2.14.004 {EC-006})
     ///
-    /// Two assertions:
+    /// Two assertions combined in one test:
     ///
     /// 1. DI-009: `build_client()` must return `Ok(reqwest::Client)` with a
     ///    positive-timeout client. S-1.02 scope: the builder succeeds and returns a
     ///    usable client handle. E-PROV-002 end-to-end timeout-fires verification is
     ///    owned by S-2.07 (provider error-mapping layer against a mock server).
     ///
-    /// 2. Error-shape (SID-1): when `build_client()` fails (e.g. TLS misconfiguration),
-    ///    the resulting `PregolyaError` must carry `Category::Transport`,
-    ///    code `"E-CORE-012"`, and `RetryHint::Never` (BC-2.14.004 {EC-006}).
+    /// 2. Build-failure error-shape (EC-006 / SID-1): when `ClientBuilder::build()`
+    ///    fails (e.g. TLS misconfiguration), `map_build_failure` must produce a
+    ///    `PregolyaError` with `Category::Transport`, code `"E-CORE-012"`, and
+    ///    `RetryHint::Never`. This is the **build-failure** error shape
+    ///    (E-CORE-012 / Transport). The **timeout-fires** error shape (E-PROV-002 /
+    ///    Category::TIMEOUT) is a separate code path owned by S-2.07.
     ///    Exercised here via `map_build_failure` to avoid requiring a broken TLS stack.
+    ///
+    /// NOTE: This test intentionally shares assertion patterns with
+    /// `test_BC_2_14_004_build_failure_maps_to_e_core_012` and
+    /// `test_BC_2_14_004_build_failure_production_path_invariant`. Each serves a
+    /// distinct invariant: AC-015 (error-code mapping), AC-019 (production-scope
+    /// accessibility), EC-006+DI-009 (combined Ok+build-failure shape). Do not
+    /// de-duplicate — removing either would leave its specific invariant uncovered.
     ///
     /// GREEN: `build_client()` is implemented and `map_build_failure` produces the
     /// correct E-CORE-012 / Transport / Never shape.
     #[test]
-    fn test_BC_2_14_004_timeout_error_shape() {
+    fn test_BC_2_14_004_build_client_ok_and_build_failure_ec006() {
         // Part 1 — DI-009: build_client() must succeed (returns Ok with a
-        // positive-timeout client). The timeout value is verified by the xtask gate
-        // (check-client-timeout).
+        // positive-timeout client). The 30-second timeout *value* is pinned by
+        // `test_BC_2_14_004_default_timeout_applied`. The `check-client-timeout`
+        // xtask gate verifies only that a non-zero `.timeout()` is present at
+        // production call sites — it cannot discriminate 30s from 1s and is
+        // non-load-bearing for the 30s value.
         let result = build_client();
         assert!(
             result.is_ok(),
@@ -240,25 +253,25 @@ mod tests {
         assert_eq!(
             err.code(),
             "E-CORE-012",
-            "BC-2.14.004 {{EC-006}}: timeout-path build failure must use code 'E-CORE-012'; \
+            "BC-2.14.004 {{EC-006}}: ClientBuilder-failure must use code 'E-CORE-012'; \
              got: {:?}",
             err.code()
         );
         assert!(
             matches!(err.category, Category::Transport),
-            "BC-2.14.004 {{EC-006}}: timeout-path build failure must carry \
+            "BC-2.14.004 {{EC-006}}: build-failure must carry \
              Category::Transport; got: {:?}",
             err.category
         );
         assert!(
             matches!(err.retry_hint, RetryHint::Never),
-            "BC-2.14.004 {{EC-006}}: timeout-path build failure must carry \
+            "BC-2.14.004 {{EC-006}}: build-failure must carry \
              RetryHint::Never; got: {:?}",
             err.retry_hint
         );
         assert!(
             err.message.starts_with("HttpClientBuildFailed:"),
-            "BC-2.14.004 {{EC-006}}: timeout-path build failure message must start with \
+            "BC-2.14.004 {{EC-006}}: build-failure message must start with \
              'HttpClientBuildFailed:'; got: {:?}",
             err.message
         );
@@ -275,8 +288,8 @@ mod tests {
     /// Deferred to S-2.07 per BC-2.14.004 {PC-005}.
     ///
     /// SID-1 note: the unit tests above (test_BC_2_14_004_build_client_returns_ok and
-    /// test_BC_2_14_004_timeout_error_shape) drive the factory at the dependency boundary
-    /// without requiring the live 30s wait.
+    /// test_BC_2_14_004_build_client_ok_and_build_failure_ec006) drive the factory at the
+    /// dependency boundary without requiring the live 30s wait.
     ///
     /// GREEN: `build_client()` is implemented — the client is constructed and the timeout
     /// fires as expected against a stalled server.
@@ -341,6 +354,13 @@ mod tests {
     /// SID-1: the `#[ignore]`'d test below exercises the live ClientBuilder::build() failure
     /// path; this non-ignored test covers the mapping boundary without requiring a broken
     /// TLS stack.
+    ///
+    /// NOTE: This test intentionally shares assertion patterns with
+    /// `test_BC_2_14_004_build_failure_production_path_invariant` and
+    /// `test_BC_2_14_004_build_client_ok_and_build_failure_ec006`. Each serves a
+    /// distinct invariant: AC-015 (error-code mapping), AC-019 (production-scope
+    /// accessibility), EC-006+DI-009 (combined Ok+build-failure shape). Do not
+    /// de-duplicate — removing either would leave its specific invariant uncovered.
     #[test]
     fn test_BC_2_14_004_build_failure_maps_to_e_core_012() {
         let e = map_build_failure("simulated TLS stack unavailable");
@@ -385,6 +405,13 @@ mod tests {
     /// This test directly calls `map_build_failure`, which is defined in production code.
     /// If `map_build_failure` were moved into `#[cfg(test)]`, this call would fail to
     /// compile — making the test a load-bearing production-scope invariant.
+    ///
+    /// NOTE: This test intentionally shares assertion patterns with
+    /// `test_BC_2_14_004_build_failure_maps_to_e_core_012` and
+    /// `test_BC_2_14_004_build_client_ok_and_build_failure_ec006`. Each serves a
+    /// distinct invariant: AC-015 (error-code mapping), AC-019 (production-scope
+    /// accessibility), EC-006+DI-009 (combined Ok+build-failure shape). Do not
+    /// de-duplicate — removing either would leave its specific invariant uncovered.
     ///
     /// GREEN: `map_build_failure` is `pub(crate)` outside any `#[cfg(test)]` block.
     #[test]

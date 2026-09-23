@@ -128,6 +128,21 @@ do_parity_check() {
     er_tally=$(printf '%s\n' "$er_section" \
         | grep -oE '\*\*Adversary pass [0-9]+ result:\*\*.*' | head -1 || true)
 
+    # ── Pass-number agreement between CHANGELOG and evidence-report ─────────────
+    # Only fires when BOTH pass-numbers are extractable.  When either is absent
+    # (format drift or new-style tally), fall through to the fail-closed
+    # empty-tally guard below — do not short-circuit on a missing extraction.
+    local cl_pass er_pass
+    cl_pass=$(printf '%s\n' "$cl_tally" \
+        | grep -oE 'Pass-[0-9]+' | grep -oE '[0-9]+' || true)
+    er_pass=$(printf '%s\n' "$er_tally" \
+        | grep -oE 'pass [0-9]+' | grep -oE '[0-9]+' || true)
+
+    if [ -n "$cl_pass" ] && [ -n "$er_pass" ] && [ "$cl_pass" != "$er_pass" ]; then
+        echo "[BURST-PARITY FAIL] fix-burst-${newest_burst}: CHANGELOG cites Pass-${cl_pass} but evidence-report cites Adversary pass ${er_pass}"
+        return 1
+    fi
+
     local cl_counts er_counts
     cl_counts=$(printf '%s\n' "$cl_tally" \
         | grep -oE "[0-9]+ ${SEV}" | sort || true)
@@ -150,6 +165,22 @@ do_parity_check() {
 
     local id_count
     id_count=$(printf '%s\n' "$cl_ids" | wc -l | tr -d ' ')
+
+    # ── Tally sum ↔ ID count reconciliation ─────────────────────────────────────
+    # Sum the leading integers from cl_counts and compare to the actual finding
+    # ID count.  Catches cases where the tally text is arithmetically inconsistent
+    # with the number of heading-delimited IDs in the CHANGELOG section (e.g.,
+    # "1 HIGH + 2 MED" declared but only 2 finding headings present → sum 3 ≠ 2).
+    local tally_sum=0 n
+    while IFS= read -r token; do
+        n=$(printf '%s' "$token" | grep -oE '^[0-9]+' || echo 0)
+        tally_sum=$((tally_sum + n))
+    done <<< "$cl_counts"
+
+    if [ "$tally_sum" -ne "$id_count" ]; then
+        echo "[BURST-PARITY FAIL] fix-burst-${newest_burst}: declared tally sums to ${tally_sum} but ${id_count} finding IDs enumerated"
+        return 1
+    fi
 
     # ── Runtime-computed tally label ─────────────────────────────────────────────
     # Emit the actual compared tally (e.g. "1H+1M") rather than an unconditional
@@ -272,6 +303,52 @@ PROBE_HEREDOC
         echo "[SELF-PROBE PASS] probe-2 (tally-divergent): identical IDs with divergent tallies correctly detected mismatch"
     else
         echo "[SELF-PROBE FAIL] probe-2 (tally-divergent): tally mismatch was not detected (tally comparison path untested)"
+        all_passed=1
+    fi
+
+    # ── Probe 3: tally-sum ≠ id-count ────────────────────────────────────────────
+    # CHANGELOG declares "1 HIGH + 2 MED" (sum=3) but contains only 2 finding
+    # headings (HIGH-001 + MED-001).  Evidence-report has matching IDs and the
+    # same tally, so ID-set and tally-text comparisons both pass.  The new
+    # tally-sum ↔ id-count reconciliation must catch the discrepancy (3 ≠ 2).
+    local tmpdir3
+    tmpdir3="$(mktemp -d)"
+
+    local fake_cl3="$tmpdir3/CHANGELOG.md"
+    cat > "$fake_cl3" <<'PROBE_HEREDOC'
+## fix-burst-97 (pass-95 findings)
+
+**Pass-97 finding tally: 1 HIGH + 2 MED**
+
+### HIGH-001: A high severity finding
+
+Description of the high finding.
+
+### MED-001: A medium severity finding
+
+Description of the medium finding.
+PROBE_HEREDOC
+
+    local fake_er3="$tmpdir3/evidence-report.md"
+    cat > "$fake_er3" <<'PROBE_HEREDOC'
+## fix-burst-97 re-verification
+
+**Adversary pass 97 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH + 2 MED.
+
+| Finding | Severity | Detection class | Load-bearing artifact |
+|---------|----------|-----------------|-----------------------|
+| F-P97-HIGH-001 | HIGH | test class | test artifact |
+| F-P97-MED-001 | MED | test class | test artifact |
+PROBE_HEREDOC
+
+    local probe3_exit=0
+    do_parity_check "$fake_cl3" "$fake_er3" >/dev/null 2>&1 || probe3_exit=$?
+    rm -rf "$tmpdir3"
+
+    if [ "$probe3_exit" -ne 0 ]; then
+        echo "[SELF-PROBE PASS] probe-3 (tally-sum≠id-count): declared tally sum 3 vs 2 IDs correctly detected"
+    else
+        echo "[SELF-PROBE FAIL] probe-3 (tally-sum≠id-count): tally-sum/id-count mismatch was not detected"
         all_passed=1
     fi
 

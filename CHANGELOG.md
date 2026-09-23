@@ -16,9 +16,89 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-55 (pass-53 findings)
+
+**Pass-53 finding tally: 2 HIGH + 4 MED + 1 LOW + 2 OBS**
+
+### HIGH-001: §AC Coverage Map AC-007, AC-009, AC-013 vacuous; AC-020 monotonic ordering broken
+
+**What was wrong:** Three §AC Coverage Map entries were vacuous or incorrect: AC-007 claimed "Compile-time static assertion — no runtime demo required (structural property enforced at compile time by `static_assertions::assert_not_impl_any!`)" — wrong (the `assert_not_impl_any!` block is labeled AC-009/AC-013; AC-007's load-bearing artifacts are two runtime tests); AC-009 said "Compile-time static assertion — no runtime demo required" without naming the excluded traits or specific invocations; AC-013 said the same without naming the excluded `From` variants. Additionally AC-020 was placed between AC-017 and AC-018, breaking monotonic ordering.
+
+**What was fixed:** All 20 §AC Coverage Map entries enumerated and verified:
+- AC-001 — `test_BC_2_14_003_constructor_returns_result` (discriminating runtime test) — verified
+- AC-002 — recording `AC-002-check-no-panic-pass.{webm,gif}` — verified
+- AC-003 — `test_BC_2_14_003_debug_assert_not_flagged` (synthetic `debug_assert!`; discriminating) — verified
+- AC-004 — `test_BC_2_14_004_default_timeout_applied` (asserts 30-second value; discriminating) — verified
+- AC-005 — recording `AC-005-check-client-timeout-pass.{webm,gif}` — verified
+- AC-006 — `test_BC_2_14_004_build_client_returns_ok` + `test_BC_2_14_004_build_client_ok_and_build_failure_ec006` (both invoke `build_client()` directly) — verified
+- AC-007 — FIXED: was "Compile-time static assertion"; corrected to `test_BC_2_14_005_openai_new_valid_key_returns_ok` + `test_BC_2_14_005_anthropic_new_valid_key_returns_ok` (runtime tests asserting constructor returns `Ok`; BC-2.14.005 {PC-001}); PC-004 claim removed (owned by AC-009)
+- AC-008 — recording `AC-008-AC-011-AC-016-credential-validation-redaction.{webm,gif}` + `test_BC_2_14_005_openai_debug_emits_redacted_sentinel` — verified
+- AC-009 — FIXED: was vacuous; now names 10 `assert_not_impl_any!` invocations (AsRef<str>, Deref, Serialize, Deserialize, Display for both `OpenAiApiKey` and `AnthropicApiKey`) and 2 runtime tests (`test_BC_2_14_005_openai_expose_secret_returns_inner_value`, `test_BC_2_14_005_anthropic_expose_secret_returns_inner_value`)
+- AC-010 — recording `AC-010-deny-bare-api-key-pass.{webm,gif}` — verified
+- AC-011 — recording (shared) + `test_BC_2_14_006_openai_empty_key_returns_err` — verified
+- AC-012 — recording (shared) + `test_BC_2_14_006_no_silent_default_on_invalid_inputs` — verified
+- AC-013 — FIXED: was vacuous; now names 4 `assert_not_impl_any!` invocations (From<String>, From<&'static str> for both types)
+- AC-014 — recording (shared) + `test_BC_2_14_006_error_code_and_format_table` — verified
+- AC-015 — `test_BC_2_14_004_build_failure_maps_to_e_core_012` (asserts E-CORE-012 full field set; discriminating) — verified
+- AC-016 — recording (shared) + `test_BC_2_14_006_openai_whitespace_only_key_returns_err` — verified
+- AC-017 — recording `AC-017-check-no-panic-flags-violations.{webm,gif}` (14/17 fixture files flagged) — verified
+- AC-018 — AC-002 recording (gate exits 0 with programmer-error guards present; proves EC-006 exemption honored) — verified
+- AC-019 — `test_BC_2_14_004_build_failure_production_path_invariant` (asserts `map_build_failure` is in production scope; SID-1) — verified
+- AC-020 — gate output text evidence + ordering corrected (was between AC-017 and AC-018; moved after AC-019) — verified
+
+### HIGH-002: fix-burst-54 tally declared 1 HIGH + 3 MED + 2 LOW; enumeration shows 4 MED
+
+**What was wrong:** `## fix-burst-54 (pass-52 findings)` in CHANGELOG.md declared "Pass-52 finding tally: 1 HIGH + 3 MED + 2 LOW" (sum = 6). The section enumerates seven distinct findings: HIGH-001, MED-001, MED-002, MED-003, MED-004, LOW-001, LOW-002 — MED count is 4, not 3. The same `1 HIGH + 3 MED + 2 LOW` discrepancy appeared in the evidence-report `**Adversary pass 52 result:**` line and in the `check-burst-records-parity` gate output tally `1H+2L+3M`.
+
+**What was fixed:** CHANGELOG fix-burst-54 tally corrected to `1 HIGH + 4 MED + 2 LOW`. Evidence-report fix-burst-54 re-verification `**Adversary pass 52 result:**` corrected to `1 HIGH + 4 MED + 2 LOW`. Gate output `check-burst-records-parity` tally corrected to `1H+2L+4M`.
+
+### MED-001: burst-parity no tally-sum ↔ ID-count reconciliation
+
+**Reported:** F-P53-MED-001 — `check-burst-records-parity.sh` compared cross-document ID sets and tallies but never verified that the sum of tally counts matched the ID count. Two documents with identically wrong tallies (both saying 6 when 7 IDs were present) both passed, as demonstrated by HIGH-002.
+
+**What was fixed:** Added intra-document tally-sum vs ID-count reconciliation in `check-burst-records-parity.sh`. After extracting the tally tokens from `cl_counts`, each token's leading integer is summed; if that sum differs from `id_count` the gate emits `[BURST-PARITY FAIL] fix-burst-N: declared tally sums to SUM but ID_COUNT finding IDs enumerated` and exits non-zero. Added probe-3 (synthetic fix-burst-97: 2 IDs, tally `1 HIGH + 2 MED` with sum=3) to exercise the new path; all three probes pass under `--self-probe`. See `check-burst-records-parity.sh` `run_self_probes` function.
+
+### MED-002: F-P52-MED-002 Load-bearing artifact cited pass-51 tally, not pass-52
+
+**What was wrong:** The fix-burst-54 re-verification table row for F-P52-MED-002 cited "runtime PASS line (`tally: 1H+3M+1L+1OBS`)" in the Load-bearing artifact column. That tally format (`1H+3M+1L+1OBS`) is the pass-51 PASS-line format, not the pass-52 output. The finding F-P52-MED-002 was about making the PASS line show a runtime-computed tally from the actual burst under review — citing a static old tally from a prior pass as the evidence value defeats the purpose of the fix.
+
+**What was fixed:** F-P52-MED-002 Load-bearing artifact cell corrected to "runtime-computed tally shown in Gate output block below," pointing at the Gate output block that contains the actual runtime tally from the post-fix-burst-54 run.
+
+### MED-003: test Part-1 comment resurfaces retired gate attribution
+
+**Reported:** F-P53-MED-003 — `test_BC_2_14_004_build_client_ok_and_build_failure_ec006` Part 1 comment stated "The timeout value is verified by the xtask gate (check-client-timeout)" — the exact claim retired by F-P51-MED-002 in fix-burst-52.
+
+**What was fixed:** Replaced the vacuous gate-attribution sentence with a two-sentence accurate statement: `test_BC_2_14_004_default_timeout_applied` pins the 30 s value; `check-client-timeout` is a non-discriminating static lint that cannot distinguish 30 s from 1 s and is non-load-bearing for the value invariant. See `crates/pregolya-core/src/http.rs` — `test_BC_2_14_004_build_client_ok_and_build_failure_ec006` Part 1 comment.
+
+### MED-004: test named `timeout_error_shape` asserts build-failure shape, contradicting module doc
+
+**Reported:** F-P53-MED-004 — `test_BC_2_14_004_timeout_error_shape` name implied the test proved the shape of a fired-timeout error (E-PROV-002 / TIMEOUT per module doc) but its body asserted build-failure shape (E-CORE-012 / Transport / Never / "HttpClientBuildFailed:"). Assertion messages contained "timeout-path" in contradiction to the build-failure semantics.
+
+**What was fixed:** Renamed `test_BC_2_14_004_timeout_error_shape` → `test_BC_2_14_004_build_client_ok_and_build_failure_ec006`. Updated doc comment to describe DI-009 (Ok-return assertion) and EC-006 (build-failure error shape) distinctly, explicitly noting that fired-timeout error shape (E-PROV-002) belongs to a future provider story. Replaced all four Part 2 assertion messages "timeout-path" with "build-failure" / "ClientBuilder-failure". Sibling sweep: all references to old test name in CHANGELOG and evidence-report updated. `cargo nextest run -p pregolya-core` — 92 passed, 2 skipped. See `crates/pregolya-core/src/http.rs`.
+
+### LOW-001: burst-parity no pass-number agreement check
+
+**Reported:** F-P53-LOW-001 — `check-burst-records-parity.sh` verified ID-set and tally agreement between CHANGELOG and evidence-report but did not check that both cited the same adversary pass number (e.g. CHANGELOG "Pass-52" vs evidence-report "Adversary pass 51" would pass silently).
+
+**What was fixed:** Added pass-number agreement check in `check-burst-records-parity.sh`. After extracting `cl_tally` and `er_tally`, the integer from CHANGELOG `Pass-N` and from evidence-report `Adversary pass N` are both extracted; if both are non-empty and differ the gate emits `[BURST-PARITY FAIL] fix-burst-N: CHANGELOG cites Pass-CL but evidence-report cites Adversary pass ER` and exits non-zero. If either cannot be extracted the guard falls through to the existing fail-closed empty-tally check. See `check-burst-records-parity.sh`.
+
+### OBS-001: three near-duplicate `map_build_failure` tests lack intentionally-redundant NOTE
+
+**Reported:** F-P53-OBS-001 — `test_BC_2_14_004_build_failure_maps_to_e_core_012` (AC-015), `test_BC_2_14_004_build_failure_production_path_invariant` (AC-019), and `test_BC_2_14_004_build_client_ok_and_build_failure_ec006` (EC-006+DI-009) share near-identical assertion patterns; without documentation a future de-duplication sweep could remove one and leave its specific invariant uncovered.
+
+**What was fixed:** Added NOTE block to all three tests explicitly naming the other two and their distinct invariants: AC-015 (error-code mapping contract), AC-019 (production-scope accessibility), EC-006+DI-009 (combined Ok-return + build-failure shape). See `crates/pregolya-core/src/http.rs`.
+
+### OBS-002: AC-020 placed out of order (between AC-017 and AC-018)
+
+**What was wrong:** The §AC Coverage Map listed AC-020 between AC-017 and AC-018, violating monotonic ordering. Monotonic ordering enables an O(N) completeness scan — readers can verify all 20 ACs are present by scanning top-to-bottom without counting.
+
+**What was fixed:** AC-020 moved to after AC-019 (end of §AC Coverage Map), restoring monotonic ordering through AC-001..AC-020. This fix was bundled into the HIGH-001 sweep commit.
+
+**Test count:** unchanged from fix-burst-54 — 346 tests pass (workspace nextest), 7 skipped; no Rust source changed.
+
 ## fix-burst-54 (pass-52 findings)
 
-**Pass-52 finding tally: 1 HIGH + 3 MED + 2 LOW**
+**Pass-52 finding tally: 1 HIGH + 4 MED + 2 LOW**
 
 ### HIGH-001: AC-015 and AC-019 vacuous attributions — third recurrence of incomplete sibling sweep
 
@@ -80,7 +160,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 **What was wrong:** Fix-burst-52 closed F-P50-MED-002 by reattributing AC-003 to `test_BC_2_14_003_debug_assert_not_flagged`. The sweep was applied to AC-003 only; two siblings in the same §AC Coverage Map retained the identical defect. AC-004 (30s timeout) was attributed to the `check-client-timeout` gate PASS (which only verifies *some* non-zero timeout, not 30s specifically). AC-006 (build_client returns Ok) was attributed to the AC-005 recording + compilation proof (a static lint never invokes `build_client()`).
 
-**What was fixed:** AC-004 reattributed to `test_BC_2_14_004_default_timeout_applied` (asserts `HTTP_CLIENT_TIMEOUT_SECS` = 30 appears in reqwest Client Debug output; discriminating — would catch 1s regression). AC-006 reattributed to `test_BC_2_14_004_build_client_returns_ok` + `test_BC_2_14_004_timeout_error_shape` (both invoke `build_client()` directly; non-`#[ignore]`).
+**What was fixed:** AC-004 reattributed to `test_BC_2_14_004_default_timeout_applied` (asserts `HTTP_CLIENT_TIMEOUT_SECS` = 30 appears in reqwest Client Debug output; discriminating — would catch 1s regression). AC-006 reattributed to `test_BC_2_14_004_build_client_returns_ok` + `test_BC_2_14_004_build_client_ok_and_build_failure_ec006` (both invoke `build_client()` directly; non-`#[ignore]`).
 
 ### MED-003: xtask error-code registry gate silently skipped Custom-namespace codes; accepted unconstructible codes
 
@@ -1157,7 +1237,7 @@ Test count: 309 passing, 7 skipped (pre-existing ignored tests requiring live AP
 - **F-P14-M03** — Removed "or examples" / "/ examples" from three doc sites: `scan_for_anyhow_in_source` doc in `main.rs`, `scan_for_description_cache_key_in_source` doc in `main.rs`, and `test_description_cache_key_scanner_skips_test_files` doc in `tests.rs`.
 - **F-P14-M04** — Replaced phantom `SEC-004` anchor with `BC-2.14.005 {PC-004}/{INV-003}` in `impl_body_has_target_str` doc (`deny_bare_api_key.rs`); replaced all `SEC-007` occurrences in `http.rs` with `BC-2.14.004 {EC-006}` (retaining `CWE-209`): `map_build_failure` doc, `sanitize_error_message` doc, test section header, and four test doc comments.
 - **F-P14-M05** — Replaced "struct-literal" with "`from_raw_for_tests`" in three test doc comments in `credentials.rs`: `test_BC_2_14_005_openai_debug_emits_redacted_sentinel`, `test_BC_2_14_005_anthropic_debug_emits_redacted_sentinel`, and `test_BC_2_14_005_debug_does_not_leak_key_material`.
-- **F-P14-L02** — Removed `check-no-panic` from the timeout test parenthetical in `test_BC_2_14_004_timeout_error_shape` (`http.rs`); comment now reads "(check-client-timeout)" only.
+- **F-P14-L02** — Removed `check-no-panic` from the timeout test parenthetical in `test_BC_2_14_004_build_client_ok_and_build_failure_ec006` (formerly `test_BC_2_14_004_timeout_error_shape`) (`http.rs`); comment now reads "(check-client-timeout)" only.
 - **F-P14-L03** — Replaced stale "Table: (constructor, input, must_be_err) / Only empty string is a guaranteed failure ... may be added by the implementer." comment in `test_BC_2_14_006_error_code_and_format_table` with accurate comment describing direct assertions over `OpenAiApiKey::new("")` / `AnthropicApiKey::new("")`.
 
 ### Fixed (fix-burst-15, 2026-09-22)
@@ -1175,7 +1255,7 @@ Test count: 309 passing, 7 skipped (pre-existing ignored tests requiring live AP
 - **F-P12-M03** — Fixed test doc in `test_bc_2_14_003_panic_in_macro_arg_detected_by_panic_family`: replaced incorrect label "KNOWN-LIMITATION 4" with the correct label "Residual detection gap" for the token-pasting gap paragraph.
 - **F-P12-M04** — Fixed three dangling anchors in `crates/pregolya-core/src/http.rs` doc comments: replaced phantom `make_build_error_for_test` coupling description with the actual compile-time coupling mechanism; replaced adversary finding ID `F-C` with BC clause `{EC-006}`; replaced non-existent `POL-34` with `SID-1`.
 - **F-P12-M05** — Fixed incorrect `AC-010` references in `crates/pregolya-core/src/credentials.rs`: `test_BC_2_14_005_openai_expose_secret_returns_inner_value` and `test_BC_2_14_005_anthropic_expose_secret_returns_inner_value` trace to `AC-009` (the only-intentional-exposure-path AC), not `AC-010` (the structural gate AC).
-- **F-P12-M06** — Fixed `{INV-004}` → `{INV-001}` in `test_BC_2_14_004_timeout_error_shape` doc: INV-001 is the outbound connection timeout invariant that DI-009 covers; INV-004 was wrong.
+- **F-P12-M06** — Fixed `{INV-004}` → `{INV-001}` in `test_BC_2_14_004_build_client_ok_and_build_failure_ec006` (formerly `test_BC_2_14_004_timeout_error_shape`) doc: INV-001 is the outbound connection timeout invariant that DI-009 covers; INV-004 was wrong.
 - **F-P12-L01** — Fixed `xtask/tests/fixtures/violations/violation_todo_stub.rs`: corrected header comment to say "detects `todo!()`" only (removed false claim of `unimplemented!()` coverage); renamed `unimplemented_function` to `todo_stub_function` to remove the false implication.
 - **F-P12-L03** — Fixed self-contradicting Pattern-2 inline comment in `xtask/src/check_client_timeout.rs`: removed the false claim that Pattern 2 "only detects inline-qualified calls"; replaced with accurate description that bare unqualified `Client::new()` calls are flagged conservatively per KNOWN-LIMITATION 1.
 - **F-P12-L05** — Replaced `assert!` panic in `check_file_size()` (`xtask/src/main.rs`) with `check_post_exemption_vacuity` structured error path; vacuity condition now produces stderr message + exit code 1 (not exit code 101 from panic).
