@@ -287,16 +287,19 @@ mod tests {
     /// for > 30s. This test takes ~30 seconds in CI and is therefore `#[ignore]`'d.
     /// Deferred to S-2.07 per BC-2.14.004 {PC-005}.
     ///
-    /// SID-1 note: the unit tests above (test_BC_2_14_004_build_client_returns_ok and
-    /// test_BC_2_14_004_build_client_ok_and_build_failure_ec006) drive the factory at the
+    /// SID-1 note: `test_BC_2_14_004_default_timeout_applied` is the SID-1 substitute for
+    /// BC-2.14.004 {PC-002} (30-second timeout configured) — it drives the factory at the
     /// dependency boundary without requiring the live 30s wait.
+    /// `test_BC_2_14_004_build_client_returns_ok` and
+    /// `test_BC_2_14_004_build_client_ok_and_build_failure_ec006` verify the Ok-return and
+    /// build-failure shape respectively (different concerns, not the PC-002 substitute).
     ///
     /// GREEN: `build_client()` is implemented — the client is constructed and the timeout
     /// fires as expected against a stalled server.
     #[tokio::test]
     #[ignore = "PERF-BC214004: ~35 s wall-clock (inline stall server sleeps 35 s to trigger \
                 timeout); unit substitute that verifies timeout is configured without the live \
-                wait: test_BC_2_14_004_default_timeout_applied (BC-2.14.004 {PC-003}); \
+                wait: test_BC_2_14_004_default_timeout_applied (BC-2.14.004 {PC-002}); \
                 ungated in CI when S-2.07 integration suite runs with timing budget"]
     async fn test_BC_2_14_004_timeout_fires_against_mock_server() {
         use std::io::Read as _;
@@ -516,9 +519,9 @@ mod tests {
         let raw = "x".repeat(300);
         let sanitized = sanitize_error_message(&raw);
         assert!(
-            sanitized.len() <= 200,
+            sanitized.chars().count() <= 200,
             "sanitize_error_message must cap output at 200 chars; got len: {}",
-            sanitized.len()
+            sanitized.chars().count()
         );
     }
 

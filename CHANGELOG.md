@@ -16,6 +16,56 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-56 (pass-54 findings)
+
+**Pass-54 finding tally: 1 HIGH + 5 MED + 2 LOW + 3 OBS**
+
+### HIGH-001: fix-burst-55 records falsely attested "no Rust source changed" / "documentation-only"
+
+**What was fixed:** Replaced the false "no Rust source changed" / "documentation-only" attestation in both CHANGELOG `## fix-burst-55` `**Test count:**` and evidence-report `## fix-burst-55 re-verification` `**Gate output:**` / `**Test count:**` lines with an accurate per-file clause walk: `crates/pregolya-core/src/http.rs` changed (test rename, assertion-message text, doc-comment NOTE blocks) — all inside `#[cfg(test)]`; Clause (a): no `crates/` files added or deleted — OK; Clause (b): no panic-family, timeout, or credential constructs added or removed — OK; Clauses (c) and (d): no fixture-directory or xtask change — OK; gate outputs remain valid.
+
+### MED-001: pass-number agreement guard (F-P53-LOW-001 fix) had zero self-probe coverage — recurrence of F-P52-MED-002
+
+**What was fixed:** Added probe-4 to `run_self_probes` in `check-burst-records-parity.sh`. Probe-4 provides identical ID sets, identical tally counts, but CHANGELOG `**Pass-94 finding tally:**` vs evidence-report `**Adversary pass 93 result:**`. Assert `do_parity_check` exits non-zero. Emits `[SELF-PROBE PASS] probe-4 (pass-number-divergent): divergent pass numbers (CHANGELOG Pass-94 vs evidence-report pass 93) correctly detected`. All 4 probes pass under `--self-probe`.
+
+### MED-002: pass-token extraction overclaimed as fail-closed — actually fail-open when tally line present but token un-extractable
+
+**What was fixed:** Added two fail-closed guards after `cl_pass`/`er_pass` extraction: if `cl_tally` is non-empty but `cl_pass` is empty (format drift), gate emits `[BURST-PARITY FAIL] fix-burst-N: tally line present but CHANGELOG pass number not extractable — cannot certify pass-number agreement` and exits 1; symmetrically for `er_pass`. Corrected CHANGELOG `## fix-burst-55` → `### LOW-001` "What was fixed" text to accurately describe the fail-closed behavior. See `check-burst-records-parity.sh`.
+
+### MED-003: incomplete sibling sweep of old test name — two un-swept sites not annotated
+
+**What was fixed:** Annotated the two remaining bare `test_BC_2_14_004_timeout_error_shape` citations to `test_BC_2_14_004_build_client_ok_and_build_failure_ec006` (formerly `test_BC_2_14_004_timeout_error_shape`): (1) evidence-report `## fix-burst-53 re-verification` → row `F-P51-MED-002` Load-bearing artifact cell; (2) CHANGELOG `## fix-burst-54` → `### MED-001:` heading.
+
+### MED-004: AC-006 tri-directionally mis-anchored — header describes Ok-return, PC-005 cites timeout-fires, code-labeled artifact (#[ignore]'d) absent from entry
+
+**What was fixed:** Corrected `### AC-006` in §AC Coverage Map. Header changed to: "timeout configured at construction; build_client() succeeds (BC-2.14.004 PC-005; DI-009 scope; E-PROV-002 firing deferred to S-2.07)". Entry now names primary code-labeled artifact `test_BC_2_14_004_timeout_fires_against_mock_server` (labeled AC-006, `#[ignore]`'d per EXT-001) and SID-1 non-ignored substitutes `test_BC_2_14_004_build_client_ok_and_build_failure_ec006` (formerly `test_BC_2_14_004_timeout_error_shape`; verifies `build_client()` returns Ok per DI-009) and `test_BC_2_14_004_build_client_returns_ok`. Story spec adjudication: AC-006 rescoped in spec v1.6 (pass-4/F-06) to S-1.02 DI-009 scope only; PC-005 E-PROV-002 shape deferred to S-2.07.
+
+### MED-005: `{PC-003}` cited for timeout-value property where `{PC-002}` is correct
+
+**What was fixed:** (1) evidence-report `### AC-004` header: changed `BC-2.14.004 PC-001/PC-003` to `BC-2.14.004 PC-002/PC-003` (PC-002 = default 30-second timeout; `test_BC_2_14_004_default_timeout_applied` self-declares `{PC-002}`; story spec "PC-001" is a typo for "PC-002"). (2) `crates/pregolya-core/src/http.rs` — `test_BC_2_14_004_timeout_fires_against_mock_server` `#[ignore]` reason: changed `(BC-2.14.004 {PC-003})` to `(BC-2.14.004 {PC-002})` for the named substitute `test_BC_2_14_004_default_timeout_applied`. Cargo nextest: 92 passed, 2 skipped.
+
+### LOW-001: `run_self_probes` header docblock enumerated only Probe 1 and Probe 2
+
+**What was fixed:** Added "Probe 3 — Tally-sum ≠ ID-count probe" and "Probe 4 — Pass-number divergence probe" paragraphs to the `# ── Self-probe ──` comment block preceding `run_self_probes()` in `check-burst-records-parity.sh`. Docblock now enumerates all 4 probes.
+
+### LOW-002: `test_BC_2_14_004_timeout_fires_against_mock_server` SID-1 doc comment and `#[ignore]` reason named different substitutes
+
+**What was fixed:** Unified the SID-1 substitute citation in `crates/pregolya-core/src/http.rs`. Doc comment SID-1 note now consistently names `test_BC_2_14_004_default_timeout_applied` (verifies 30s timeout value, PC-002) as the authoritative SID-1 deferral anchor; clarifies that `test_BC_2_14_004_build_client_returns_ok` and `test_BC_2_14_004_build_client_ok_and_build_failure_ec006` verify Ok-return and build-failure shape (different concerns). Consistent with `#[ignore]` reason.
+
+### OBS-001: probe-2 and probe-3 synthetic fixtures had inconsistent heading parentheticals
+
+**What was fixed:** In `run_self_probes` in `check-burst-records-parity.sh`: probe-2 heading changed to `## fix-burst-98 (pass-97 findings)` with tally `**Pass-97 finding tally:**` and ER `**Adversary pass 97 result:**`; probe-3 heading changed to `## fix-burst-97 (pass-96 findings)` with tally `**Pass-96 finding tally:**` and ER `**Adversary pass 96 result:**`. Both now follow the burst-N closes pass-N-1 convention, consistent with probe-1.
+
+### OBS-002: burst-parity gate derived newest burst from CHANGELOG only — evidence-report-ahead drift undetectable
+
+**What was fixed:** Added `er_newest_burst` extraction from `^## fix-burst-[0-9]+ re-verification` headings in evidence-report after the section-existence check. If `er_newest_burst` is non-empty and differs from `newest_burst` (CHANGELOG-derived), gate emits `[BURST-PARITY FAIL] evidence-report newest burst (fix-burst-ER) differs from CHANGELOG newest burst (fix-burst-CL)` and exits 1. See `check-burst-records-parity.sh`.
+
+### OBS-003: `test_sanitize_error_message_caps_at_200_chars` asserted byte length against char-count contract
+
+**What was fixed:** Changed `sanitized.len() <= 200` to `sanitized.chars().count() <= 200` (and matching format argument) in `crates/pregolya-core/src/http.rs` `test_sanitize_error_message_caps_at_200_chars`. The `sanitize_error_message` contract is `chars().take(200)`; char-count assertion is contract-consistent.
+
+**Test count:** 92 passed, 2 skipped (pregolya-core nextest; 2 `#[ignore]`'d live-network tests). `crates/pregolya-core/src/http.rs` changed — doc-comment corrections, SID-1 consolidation, test assertion fix; all changes inside `#[cfg(test)]`. Clause (a): no `crates/` files added or deleted — OK. Clause (b): no panic-family, timeout, or credential constructs added or removed — OK. Clauses (c)+(d): no fixture-directory or xtask change — OK. Gate outputs remain valid.
+
 ## fix-burst-55 (pass-53 findings)
 
 **Pass-53 finding tally: 2 HIGH + 4 MED + 1 LOW + 2 OBS**
@@ -80,7 +130,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 **Reported:** F-P53-LOW-001 — `check-burst-records-parity.sh` verified ID-set and tally agreement between CHANGELOG and evidence-report but did not check that both cited the same adversary pass number (e.g. CHANGELOG "Pass-52" vs evidence-report "Adversary pass 51" would pass silently).
 
-**What was fixed:** Added pass-number agreement check in `check-burst-records-parity.sh`. After extracting `cl_tally` and `er_tally`, the integer from CHANGELOG `Pass-N` and from evidence-report `Adversary pass N` are both extracted; if both are non-empty and differ the gate emits `[BURST-PARITY FAIL] fix-burst-N: CHANGELOG cites Pass-CL but evidence-report cites Adversary pass ER` and exits non-zero. If either cannot be extracted the guard falls through to the existing fail-closed empty-tally check. See `check-burst-records-parity.sh`.
+**What was fixed:** Added pass-number agreement check in `check-burst-records-parity.sh`. After extracting `cl_tally` and `er_tally`, the integer from CHANGELOG `Pass-N` and from evidence-report `Adversary pass N` are both extracted; if both are non-empty and differ the gate emits `[BURST-PARITY FAIL] fix-burst-N: CHANGELOG cites Pass-CL but evidence-report cites Adversary pass ER` and exits non-zero. If either tally line is present but the pass token cannot be extracted, the gate emits `[BURST-PARITY FAIL]` and exits non-zero (fail-closed). If the tally line itself is absent, the existing empty-tally fail-closed guard fires. See `check-burst-records-parity.sh`.
 
 ### OBS-001: three near-duplicate `map_build_failure` tests lack intentionally-redundant NOTE
 
@@ -94,7 +144,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 **What was fixed:** AC-020 moved to after AC-019 (end of §AC Coverage Map), restoring monotonic ordering through AC-001..AC-020. This fix was bundled into the HIGH-001 sweep commit.
 
-**Test count:** unchanged from fix-burst-54 — 346 tests pass (workspace nextest), 7 skipped; no Rust source changed.
+**Test count:** 92 passed, 2 skipped (pregolya-core nextest; 2 `#[ignore]`'d live-network tests). `crates/pregolya-core/src/http.rs` changed — test rename, assertion-message text, doc-comment NOTE blocks; all changes inside `#[cfg(test)]`. Clause (a): no `crates/` files added or deleted — OK. Clause (b): no panic-family, timeout constructs, or credential constructs added or removed — OK. Clause (c): no fixture-directory change — OK. Clause (d): no `xtask/src/**/*.rs` change — OK. Recorded gate outputs remain valid.
 
 ## fix-burst-54 (pass-52 findings)
 
@@ -106,7 +156,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 **What was fixed:** AC-015 → `test_BC_2_14_004_build_failure_maps_to_e_core_012` (asserts code, category, retry_hint, message prefix); AC-005 gate demoted to non-load-bearing. AC-019 → `test_BC_2_14_004_build_failure_production_path_invariant` (asserts `map_build_failure` is in production scope; SID-1 gate). §AC Coverage Map fully verified: AC-001/AC-003/AC-004/AC-006/AC-015/AC-018/AC-019 all now cite discriminating tests; no remaining vacuous gate-PASS attributions.
 
-### MED-001: test_BC_2_14_004_timeout_error_shape body only asserted is_ok(), contradicting name
+### MED-001: test_BC_2_14_004_build_client_ok_and_build_failure_ec006 (formerly test_BC_2_14_004_timeout_error_shape) body only asserted is_ok(), contradicting name
 
 **What was wrong:** The test name implied an error-shape assertion; the body only called `assert!(result.is_ok())`. The AC-006 attribution from fix-burst-53 consequently described it as asserting "error shape for the ClientBuilder failure path" — inaccurate. Both the test and the attribution were wrong.
 

@@ -44,15 +44,15 @@ Shows: `cargo xtask check-no-panic` — output: `check-no-panic PASSED: 25 analy
 ### AC-003 — debug_assert exempt (BC-2.14.003 INV-003/INV-004)
 Covered by: `test_BC_2_14_003_debug_assert_not_flagged` in `xtask::tests` — places a synthetic `debug_assert!` call in non-test scope and asserts the gate returns Ok with 0 violations; discriminating (the test would fail if the `debug_assert!` exemption was removed). The gate PASS recording (AC-002) is not itself load-bearing for the exemption because the production tree contains zero `debug_assert!` or exhaustive-match `unreachable!` sites; a gate PASS on an empty scan set proves nothing about the exemption path.
 
-### AC-004 — build_client 30s timeout (BC-2.14.004 PC-001/PC-003)
+### AC-004 — build_client 30s timeout (BC-2.14.004 PC-002/PC-003)
 Covered by: `test_BC_2_14_004_default_timeout_applied` in `crates/pregolya-core/src/http.rs`. This test is the primary load-bearing artifact: it asserts that the `HTTP_CLIENT_TIMEOUT_SECS` constant value (`30`) appears in the reqwest `Client`'s `Debug` output, discriminating 30 seconds from any other non-zero timeout value. The check-client-timeout gate PASS (AC-005 recording) provides secondary confirmation that no production call site is missing a `.timeout()` call, but the gate cannot distinguish 30 s from 1 s and is therefore non-load-bearing for this AC.
 
 ### AC-005 — check-client-timeout exits 0 (BC-2.14.004 PC-003)
 Recording: `AC-005-check-client-timeout-pass.{webm,gif}` — re-recorded 2026-09-22
 Shows: `cargo xtask check-client-timeout` — output: `check-client-timeout PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations`
 
-### AC-006 — build_client returns Ok (BC-2.14.004 PC-005)
-Covered by: `test_BC_2_14_004_build_client_returns_ok` in `crates/pregolya-core/src/http.rs` (non-`#[ignore]`). This is the primary load-bearing artifact: it actually invokes `build_client()` and asserts the `Ok` return. `test_BC_2_14_004_build_client_ok_and_build_failure_ec006` secondarily asserts `build_client()` returns `Ok` with a valid positive-timeout client (DI-009) and also asserts E-CORE-012 error shape via `map_build_failure` (code, category, retry_hint, message prefix); traces to BC-2.14.004 {EC-006} / DI-009. The AC-005 gate PASS proves only that no production call site is structurally missing `.timeout()`; it is a static lint that never invokes `build_client()` and therefore carries no information about the function's `Ok` return value.
+### AC-006 — timeout configured at construction; build_client() succeeds (BC-2.14.004 PC-005; DI-009 scope; E-PROV-002 firing deferred to S-2.07)
+Primary code-labeled artifact: `test_BC_2_14_004_timeout_fires_against_mock_server` (labeled AC-006 in source, `#[ignore]`'d per EXT-001 — requires mock HTTP server; full E-PROV-002 shape deferred to S-2.07). SID-1 non-ignored substitute: `test_BC_2_14_004_build_client_ok_and_build_failure_ec006` (formerly `test_BC_2_14_004_timeout_error_shape`), which confirms `build_client()` returns Ok (DI-009 compliance). `test_BC_2_14_004_build_client_returns_ok` also verifies the Ok-return. Both SID-1 substitutes are inside `#[cfg(test)]` in `http.rs`.
 
 ### AC-007 — constructor returns Ok for valid key (BC-2.14.005 PC-001)
 Primary load-bearing tests: `test_BC_2_14_005_openai_new_valid_key_returns_ok` and `test_BC_2_14_005_anthropic_new_valid_key_returns_ok` (both labeled AC-007 in their doc comments in `credentials.rs`). Each asserts that `new()` with a non-empty key string returns `Ok(T)` — covering BC-2.14.005 {PC-001} (constructor returns `Result<T, PregolyaError>`). No compile-time assertion is claimed for this AC; the structural type-exclusion `assert_not_impl_any!` invocations are owned by AC-009 (AsRef/Deref/Display/Serialize/Deserialize) and AC-013 (From conversions).
@@ -238,6 +238,31 @@ Gate outputs remain valid because the syn rewrite finds the same 0 violations on
 
 The fix-burst-26 evidence-report docs commit (this commit) is docs-only and does NOT trigger clause (d).
 
+## fix-burst-56 re-verification
+[Frozen HEAD: 7643e0e141bcae6c769e19ead47bf2c1bdb37bea]
+
+**Adversary pass 54 result:** 1 HIGH + 5 MED + 2 LOW + 3 OBS (11 findings)
+
+| Finding | Severity | Status | Detection class | Load-bearing artifact |
+|---------|----------|--------|-----------------|-----------------------|
+| F-P54-HIGH-001 | HIGH | CLOSED | False attestation (Recording Provenance) | Clause walk in CHANGELOG `## fix-burst-55` `**Test count:**` and evidence-report `## fix-burst-55 re-verification` `**Gate output:**` — explicitly enumerates `http.rs` inside `#[cfg(test)]`, clauses a–d |
+| F-P54-MED-001 | MED | CLOSED | Unprobed guard path (recurrence of F-P52-MED-002 class) | probe-4 in `run_self_probes` — `do_parity_check` exits non-zero on burst-95 (Pass-94 vs pass 93 divergence); `[SELF-PROBE PASS] probe-4 (pass-number-divergent)` |
+| F-P54-MED-002 | MED | CLOSED | Overclaimed fail-closed | Two `[ -n "$cl_tally" ] && [ -z "$cl_pass" ]` guards in `check-burst-records-parity.sh`; CHANGELOG `### LOW-001` description corrected |
+| F-P54-MED-003 | MED | CLOSED | Incomplete sibling sweep (partial-fix regression) | `test_BC_2_14_004_build_client_ok_and_build_failure_ec006` (formerly `test_BC_2_14_004_timeout_error_shape`) annotation in evidence-report F-P51-MED-002 row and CHANGELOG `### MED-001:` heading |
+| F-P54-MED-004 | MED | CLOSED | AC-006 tri-directional mis-anchor | `### AC-006` header corrected; body now names `test_BC_2_14_004_timeout_fires_against_mock_server` (code-labeled, `#[ignore]`'d) + SID-1 substitutes; adjudicated per story spec v1.6 (pass-4/F-06) |
+| F-P54-MED-005 | MED | CLOSED | Incorrect PC postcondition citation | `### AC-004` header `PC-002/PC-003`; `#[ignore]` reason in `test_BC_2_14_004_timeout_fires_against_mock_server` corrected to `{PC-002}` |
+| F-P54-LOW-001 | LOW | CLOSED | Stale docblock (probe inventory) | `# ── Self-probe ──` docblock in `check-burst-records-parity.sh` updated to enumerate all 4 probes |
+| F-P54-LOW-002 | LOW | CLOSED | Conflicting SID-1 substitute citations in adjacent lines | Doc comment SID-1 note in `test_BC_2_14_004_timeout_fires_against_mock_server` unified to cite `test_BC_2_14_004_default_timeout_applied` as authoritative PC-002 substitute |
+| F-P54-OBS-001 | OBS | CLOSED | Probe heading parenthetical inconsistency | probe-2 and probe-3 `run_self_probes` headings updated to follow burst-N / pass-N-1 convention |
+| F-P54-OBS-002 | OBS | CLOSED | ER newest-burst drift undetectable | `er_newest_burst` check added to `do_parity_check` in `check-burst-records-parity.sh` |
+| F-P54-OBS-003 | OBS | CLOSED | Test assertion byte-length vs char-count contract mismatch | `test_sanitize_error_message_caps_at_200_chars` uses `sanitized.chars().count() <= 200` |
+
+**Gate output (fix-burst-56):**
+- `check-burst-records-parity` (normal mode): `[BURST-PARITY PASS] fix-burst-56: 11 finding IDs matched; tally: 1H+2L+3OBS+5M.`
+- `check-burst-records-parity` (`--self-probe`): `[SELF-PROBE PASS] probe-1 (ID-mismatch): divergent ID pair correctly detected mismatch`; `[SELF-PROBE PASS] probe-2 (tally-divergent): identical IDs with divergent tallies correctly detected mismatch`; `[SELF-PROBE PASS] probe-3 (tally-sum≠id-count): declared tally sum 3 vs 2 IDs correctly detected`; `[SELF-PROBE PASS] probe-4 (pass-number-divergent): divergent pass numbers (CHANGELOG Pass-94 vs evidence-report pass 93) correctly detected`
+
+---
+
 ## fix-burst-55 re-verification
 
 **Adversary pass 53 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 2 HIGH + 4 MED + 1 LOW + 2 OBS.
@@ -254,10 +279,10 @@ The fix-burst-26 evidence-report docs commit (this commit) is docs-only and does
 | F-P53-OBS-001 | OBS | three near-duplicate `map_build_failure` tests (AC-015 / AC-019 / EC-006+DI-009) lacked NOTE blocks; de-duplication sweep could remove one and leave its invariant uncovered | NOTE block in `test_BC_2_14_004_build_failure_maps_to_e_core_012`, `test_BC_2_14_004_build_failure_production_path_invariant`, `test_BC_2_14_004_build_client_ok_and_build_failure_ec006` naming all three and their distinct invariants |
 | F-P53-OBS-002 | OBS | AC-020 ordering: section placed between AC-017 and AC-018, violating monotonic scan order | AC-020 moved after AC-019 (addressed as part of F-P53-HIGH-001 fix) |
 
-**Test count:** unchanged from fix-burst-54 — 346 tests pass (workspace nextest), 7 skipped; no Rust source changed.
+**Test count:** 92 passed, 2 skipped (pregolya-core nextest; 2 `#[ignore]`'d live-network tests). `crates/pregolya-core/src/http.rs` changed — test rename, assertion-message text, doc-comment NOTE blocks; all changes inside `#[cfg(test)]`. Clause (a): no `crates/` files added or deleted — OK. Clause (b): no panic-family, timeout constructs, or credential constructs added or removed — OK. Clause (c): no fixture-directory change — OK. Clause (d): no `xtask/src/**/*.rs` change — OK. Recorded gate outputs remain valid.
 
 **Gate output:**
-- All corrections are documentation-only; no `crates/` or `xtask/` files changed; all recorded gate outputs remain valid under Recording Provenance validity criterion.
+- `crates/pregolya-core/src/http.rs` changed — test rename, assertion-message text, doc-comment NOTE blocks; all changes inside `#[cfg(test)]`. Clause (a): no `crates/` files added or deleted — OK. Clause (b): no panic-family, timeout constructs, or credential constructs added or removed — OK. Clause (c): no fixture-directory change — OK. Clause (d): no `xtask/src/**/*.rs` change — OK. Recorded gate outputs remain valid.
 - `check-burst-records-parity` → `[BURST-PARITY PASS] fix-burst-55: 9 finding IDs matched; tally: 1L+2H+2OBS+4M.`; `burst-parity-self-probe` → `[SELF-PROBE PASS] probe-1 (ID-mismatch): divergent ID pair correctly detected mismatch`; `[SELF-PROBE PASS] probe-2 (tally-divergent): identical IDs with divergent tallies correctly detected mismatch`; `[SELF-PROBE PASS] probe-3 (tally-sum≠id-count): declared tally sum 3 vs 2 IDs correctly detected`
 - Factory-dispatcher chain: `records-lint.sh` exits 0
 
@@ -297,7 +322,7 @@ The fix-burst-26 evidence-report docs commit (this commit) is docs-only and does
 |---------|----------|-----------------|-----------------------|
 | F-P51-HIGH-001 | HIGH | Burst-parity hook inert (regexes never matched CHANGELOG bare headings or ER `result:**` tally format; false-green PASS on zero comparisons) | `scripts/check-burst-records-parity.sh` with fixed regexes; fail-closed empty extraction; self-probe (`--self-probe` flag) smoke test: `[SELF-PROBE PASS] burst-parity deliberately-divergent pair correctly detected mismatch` |
 | F-P51-MED-001 | MED | PROCESS-GAP IDs with internal hyphen not matched by `[A-Z]+` in severity token | All severity patterns changed to `(CRIT\|HIGH\|MED\|LOW\|OBS\|PROCESS-GAP)` throughout both extraction paths |
-| F-P51-MED-002 | MED | AC-004/AC-006 vacuous gate-PASS attributions (incomplete sibling sweep of F-P50-MED-002) | AC-004 → `test_BC_2_14_004_default_timeout_applied`; AC-006 → `test_BC_2_14_004_build_client_returns_ok` + `test_BC_2_14_004_timeout_error_shape` |
+| F-P51-MED-002 | MED | AC-004/AC-006 vacuous gate-PASS attributions (incomplete sibling sweep of F-P50-MED-002) | AC-004 → `test_BC_2_14_004_default_timeout_applied`; AC-006 → `test_BC_2_14_004_build_client_returns_ok` + `test_BC_2_14_004_build_client_ok_and_build_failure_ec006` (formerly `test_BC_2_14_004_timeout_error_shape`) |
 | F-P51-MED-003 | MED | xtask `is_valid_error_code` rejected Custom-namespace codes; accepted unconstructible 2/4-digit suffix codes | `is_valid_component_segment_xtask` added; suffix exactly-3-digits enforced; `test_is_valid_error_code_coupling` added (9-row fixture) |
 | F-P51-LOW-001 | LOW | `ID_COUNT` doubled on empty (`grep -c` exit-1 + `\|\| echo "0"` double-emission) | `printf '%s\n' "$cl_ids" \| wc -l \| tr -d ' '` |
 | F-P51-OBS-001 | OBS | Adversary dispatch-brief paraphrase diverges from code (`display_message()`/`ApiKeyExposed` absent; `debug_assert!` polarity inverted; enum-variant notation for struct) | DISCARDED — code is correct; adversary prompt error, not product defect |
