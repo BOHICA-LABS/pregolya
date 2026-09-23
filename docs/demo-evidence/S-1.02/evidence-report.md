@@ -345,6 +345,58 @@ Total: 233 xtask tests pass, 5 skipped.
 
 ---
 
+## fix-burst-31 re-verification
+
+**Adversary pass 29 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH + 3 MED + 1 LOW findings.
+
+**Implementation commits:** implementer `c34ecc3` (code/doc), test-writer `db59f56` (tests), product-owner BC-2.14.004 v1.16 commit `369758b`.
+
+**Clause (d) analysis:** `check_no_panic` was modified (`syn_macro_has_bc_id` turbofish-vs-comparison disambiguation — `<` is now treated as a turbofish opener only when preceded by `::`; `Spacing` imported alongside `TokenTree`). Three new pinning tests added in test-writer commit. Clause (d) fires — per-detection-class test attestation required.
+
+**Per-detection-class test attestation (commits `c34ecc3`, `db59f56`):**
+
+| Detection class | Representative tests | Pass |
+|----------------|----------------------|------|
+| Pattern A — direct `Client::new` / `Client::default` construction | `test_timeout_scanner_still_flags_reqwest_client_new`, `test_timeout_checker_detects_client_default_qualified` | pass |
+| Pattern A — UFCS `<reqwest::Client as Default>::default()` (qself) | `test_timeout_checker_detects_client_ufcs_default_qualified` (positive), `test_timeout_checker_ufcs_non_reqwest_client_as_default_clean` (negative) | pass |
+| Pattern A — UFCS `<reqwest::Client>::new()` (qself) | `test_timeout_checker_detects_client_ufcs_new_qualified` | pass |
+| Pattern B — builder chain via `analyze_build_chain` | `test_timeout_scanner_flags_builder_build_without_timeout_single_line`, `test_timeout_checker_detects_builder_default_qualified` | pass |
+| Macro scanning — `scan_macro_body_as_ast` Strategy 1 | `test_timeout_checker_detects_reqwest_client_in_thread_local` | pass |
+| Macro scanning — `scan_macro_body_as_ast` Strategy 2 | `test_timeout_checker_strategy2_detects_statement_macro_violation` | pass |
+| Macro scanning — `scan_macro_body_as_ast` Strategy 3 | `test_timeout_checker_detects_builder_in_lazy_static` | pass |
+| `#[cfg(test)]` stmt macro exempt — `check_client_timeout` | `test_timeout_checker_cfg_test_stmt_macro_not_flagged` | pass |
+| `#[cfg(test)]` stmt macro exempt — `check_no_panic` | `test_no_panic_cfg_test_stmt_macro_not_flagged` | pass |
+| Exemption-2 BC-ID detection (turbofish condition) | `test_no_panic_exemption2_bc_id_with_turbofish_condition` — EXEMPT, zero findings | pass |
+| Exemption-2 BC-ID detection (comparison condition, HIGH-001 regression) | `test_no_panic_exemption2_bc_id_with_comparison_condition` — EXEMPT, zero findings | pass |
+| Exemption-2 BC-ID negative control | `test_no_panic_comparison_condition_no_bc_id_flagged` — FLAGGED, 1 finding | pass |
+| Test context suppression | `test_timeout_checker_ignores_tokio_test_fns`, `test_timeout_checker_ignores_cfg_test_trait_default_method` | pass |
+
+Total: 236 xtask tests pass, 5 skipped.
+
+**Clause-(d) coverage summary:**
+- HIGH-001: load-bearing test `test_no_panic_exemption2_bc_id_with_comparison_condition`
+- MED-001: three tests close the paper-fix; `NP-KL-2` confirmed RESOLVED
+- MED-002: BC amendment (v1.16), no code test needed (spec corrected to match code)
+- MED-003: doc rename across 4 files; grepped clean (zero `KNOWN-LIMITATION` in source)
+- LOW-001: defense-in-depth annotation; no test (stable Rust cannot express `#[cfg(test)]` on expr-position macro)
+
+**Updated known limitations (namespaced IDs):**
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind flat-token macro scan (conservative FP direction) |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31) | Turbofish comma miscounting — angle-bracket depth tracking + turbofish-vs-comparison disambiguation; `test_no_panic_exemption2_bc_id_with_turbofish_condition` and `test_no_panic_exemption2_bc_id_with_comparison_condition` validate the resolution |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` false negative |
+
+**Docs-only note:** The docs commit for this fix-burst-31 CHANGELOG and evidence-report update is docs-only — no `xtask/src/**/*.rs` behavioral changes. Clause (d) does not fire for the docs commit.
+
+---
+
 ## Notes
 
 - All recordings produced with VHS 0.11.0 using `FiraCode Nerd Font Mono`, Catppuccin Mocha theme, 1200×600 or 1200×700 resolution.
