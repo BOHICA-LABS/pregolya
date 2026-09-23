@@ -4204,3 +4204,44 @@ fn test_timeout_checker_cfg_test_item_trait_exempt() {
          if this fails, visit_item_trait guard was removed or broken (fix-burst-34 MED-001)"
     );
 }
+
+#[test]
+fn test_timeout_checker_hex_literal_with_f64_suffix_not_zero() {
+    // LOAD-BEARING for LOW-001 (fix-burst-35): is_zero_literal must detect radix prefix
+    // BEFORE stripping type suffixes. 0x0f64 is hex 3940 (NOT zero); without the fix,
+    // strip_suffix("f64") on "0x0f64" yields "0x0" which falsely looks like hex zero.
+    // Deleting the radix-first fix causes this test to FAIL.
+    let source = r#"
+        fn make_client() -> reqwest::Client {
+            reqwest::Client::builder()
+                .timeout(std::time::Duration::from_secs(0x0f64))
+                .build()
+                .unwrap()
+        }
+    "#;
+    let findings = scan_for_timeout_violations_in_source(source, "src/lib.rs");
+    assert_eq!(
+        findings.len(),
+        0,
+        "hex literal 0x0f64 (= 3940 seconds, non-zero) must NOT be flagged as zero timeout; \
+         if this fails, the radix-before-suffix fix in is_zero_literal was reverted (fix-burst-35 LOW-001)"
+    );
+}
+
+#[test]
+fn test_timeout_checker_hex_zero_literal_flagged() {
+    // Negative control for LOW-001: pure hex zero (0x0, 0x00, 0x000) IS flagged.
+    let source = r#"
+        fn make_client() -> reqwest::Client {
+            reqwest::Client::builder()
+                .timeout(std::time::Duration::from_secs(0x0))
+                .build()
+                .unwrap()
+        }
+    "#;
+    let findings = scan_for_timeout_violations_in_source(source, "src/lib.rs");
+    assert!(
+        !findings.is_empty(),
+        "hex zero 0x0 must still be flagged as zero timeout (negative control for fix-burst-35 LOW-001)"
+    );
+}
