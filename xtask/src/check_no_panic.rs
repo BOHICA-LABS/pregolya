@@ -8,7 +8,10 @@
 //!
 //! ## Flagged patterns (in non-test, non-exempt scope):
 //! - `.unwrap()` / `.expect(...)` calls
-//! - bare `assert!`, `assert_eq!`, `assert_ne!`, `panic!` WITHOUT:
+//! - `todo!()`, `unimplemented!()` — always flagged; mark incomplete production code; no exemption applies
+//! - `panic!()` — always flagged; unconditional abort; no exemption applies; use `assert!` with
+//!   `# Panics` doc + BC-ID message for programmer-error guards, or `?` for recoverable errors
+//! - bare `assert!`, `assert_eq!`, `assert_ne!`, `assert_matches!` WITHOUT:
 //!   - a `# Panics` doc section on the enclosing function, AND
 //!   - a BC-ID (e.g. `BC-2.14.001`) in the assert message
 //! - `_ => unreachable!()` wildcard match arms (latent panic under enum evolution)
@@ -600,7 +603,8 @@ impl PanicVisitor<'_> {
     /// Core macro-invocation checker — called for both expression-context and
     /// statement-context macro invocations (`ExprMacro` and `StmtMacro`).
     /// `unreachable!` is checked against the current arm-stack context;
-    /// `panic!`/`assert!`/`assert_eq!`/`assert_ne!` are flagged unless
+    /// `panic!` is unconditionally flagged (no exemption applies);
+    /// `assert!`/`assert_eq!`/`assert_ne!`/`assert_matches!` are flagged unless
     /// Exemption 2 (§PC-005: `# Panics` doc + BC-ID in message) applies.
     fn handle_macro_invocation(&mut self, mac: &syn::Macro) {
         let Some(seg) = mac.path.segments.last() else {
@@ -658,12 +662,25 @@ impl PanicVisitor<'_> {
                 // EXEMPT (Exemption 1). The match is fully exhaustive over named variants,
                 // so unreachable! is a valid exhaustiveness assertion.
             }
+            // panic!() is not an assertion — it is an unconditional abort. No exemption
+            // applies: Exemption 1 (exhaustive-match guard) is for unreachable!; Exemption 2
+            // (# Panics doc + BC-ID) applies only to assert-family macros that encode a
+            // programmer-error-guard invariant check. panic!() bypasses all invariant
+            // documentation requirements and is always flagged (BC-2.14.003 {PC-004}).
+            "panic" => {
+                self.findings.push(format!(
+                    "{}:{}: panic!() in non-test code (BC-2.14.003 violation: \
+                     panic! is unconditionally forbidden; use assert! with # Panics doc \
+                     + BC-ID message for programmer-error guards, or ? for recoverable errors)",
+                    self.path, line
+                ));
+            }
             // assert_matches! (std::assert_matches) panics on mismatch — same semantics
             // as assert!/assert_eq!/assert_ne!. Exemption 2 (# Panics doc + BC-ID message)
             // applies identically.
             // debug_assert_matches! compiles out in release — exempt like other debug_assert*
             // (BC-2.14.003 {INV-003}).
-            n @ ("panic" | "assert" | "assert_eq" | "assert_ne" | "assert_matches")
+            n @ ("assert" | "assert_eq" | "assert_ne" | "assert_matches")
                 if !(self.fn_has_panics_doc && syn_macro_has_bc_id(mac)) =>
             {
                 self.findings.push(format!(
@@ -706,7 +723,8 @@ fn scan_with_syn(src: &str, path: &str) -> Result<Vec<String>, syn::Error> {
 }
 
 /// Scans a single Rust source file (as a string) for `.unwrap()` / `.expect(...)`
-/// calls, bare `assert!`/`assert_eq!`/`assert_ne!`/`panic!` without documented
+/// calls, `panic!()` (unconditionally flagged — no exemption), bare
+/// `assert!`/`assert_eq!`/`assert_ne!`/`assert_matches!` without documented
 /// programmer-error-guard exemption, and wildcard/irrefutable-binding
 /// `unreachable!()` arms outside `#[cfg(test)]` blocks.
 ///
@@ -720,8 +738,8 @@ fn scan_with_syn(src: &str, path: &str) -> Result<Vec<String>, syn::Error> {
 /// is ALWAYS flagged (BC-2.14.003 §EC-004).
 ///
 /// Exemption 2 — documented programmer-error-guard assert: `assert!`/`assert_eq!`/
-/// `assert_ne!` where the enclosing function has a `# Panics` doc section AND the
-/// assert message contains a BC-ID is NOT flagged.
+/// `assert_ne!`/`assert_matches!` where the enclosing function has a `# Panics` doc
+/// section AND the assert message contains a BC-ID is NOT flagged.
 ///
 /// Returns a `Vec<String>` of human-readable violation messages.
 ///

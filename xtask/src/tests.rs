@@ -1124,7 +1124,7 @@ fn test_description_cache_key_scanner_ignores_doc_comments() {
     );
 }
 
-/// FIX-E: Test / examples files must be excluded from the scanner entirely.
+/// FIX-E: Test files must be excluded from the scanner entirely.
 #[test]
 fn test_description_cache_key_scanner_skips_test_files() {
     let src = "fn build_cache(description: &str) { let key = get_cache_key(description); }\n";
@@ -2610,9 +2610,9 @@ pub fn handle_status(s: Status) -> i32 {
         findings.is_empty(),
         "BC-2.14.003 §EC-007 pass-5 F-05: `Status::Done => std::unreachable!(...)` in a \
          fully-enumerated no-wildcard named-arm match MUST NOT be flagged; \
-         `in_match_arm_position` checks tokens[i-2]='=' tokens[i-1]='>' but for \
-         `std::unreachable` tokens[i-1] is `::` (not `>`), so the check fails and the \
-         §PC-006 handler fires; got: {findings:?}"
+         the former token-based `in_match_arm_position` checked tokens[i-2]='=' tokens[i-1]='>' but for \
+         `std::unreachable` tokens[i-1] was `::` (not `>`), so the check failed and the \
+         §PC-006 handler fired; got: {findings:?}"
     );
 }
 
@@ -2639,8 +2639,8 @@ pub fn handle_step(s: Step) -> i32 {
         findings.is_empty(),
         "BC-2.14.003 §EC-007 pass-5 F-05: `Step::End => core::unreachable!(...)` in a \
          fully-enumerated no-wildcard named-arm match MUST NOT be flagged; \
-         same root cause as std::unreachable! — tokens[i-1] is `::` not `>`, so \
-         `in_match_arm_position = false` and the §PC-006 handler fires; \
+         same root cause as std::unreachable! — tokens[i-1] was `::` not `>`, so \
+         `in_match_arm_position = false` and the §PC-006 handler fired; \
          got: {findings:?}"
     );
 }

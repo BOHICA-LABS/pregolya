@@ -594,7 +594,7 @@ fn skip_cfg_test_body(
 ///
 /// Both `Deref<Target=str>` and `Deref<Target=String>` expose the inner value
 /// via auto-deref coercion (`*key` and coercion to `&str`/`&String`). Both are
-/// forbidden on credential-sentinel structs (SEC-004 / {INV-003}). Returning the
+/// forbidden on credential-sentinel structs (BC-2.14.005 {PC-004}/{INV-003}). Returning the
 /// matched type name rather than a bare bool allows the caller to emit a precise
 /// diagnostic (`Target=str` vs `Target=String`).
 fn impl_body_has_target_str(body: &proc_macro2::Group) -> Option<&'static str> {

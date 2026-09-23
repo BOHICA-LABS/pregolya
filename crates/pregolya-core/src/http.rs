@@ -65,7 +65,7 @@ pub fn build_client() -> Result<reqwest::Client, PregolyaError> {
 /// The `reason` string is sanitized before inclusion in the error message —
 /// URL-embedded credentials (e.g. proxy `://user:password@host`) are redacted to
 /// `://***@host`, and the message is capped at 200 characters for defense-in-depth
-/// (SEC-007, CWE-209).
+/// (BC-2.14.004 {EC-006}, CWE-209).
 ///
 /// # Returns
 ///
@@ -93,7 +93,7 @@ pub(crate) fn map_build_failure(reason: &str) -> PregolyaError {
 ///
 /// This prevents proxy credentials (e.g. `http://corp-proxy:password@10.0.0.1:3128`)
 /// from leaking into structured error messages that may be logged or surfaced in
-/// API responses (SEC-007, CWE-209).
+/// API responses (BC-2.14.004 {EC-006}, CWE-209).
 pub(crate) fn sanitize_error_message(s: &str) -> String {
     let sanitized = redact_url_credentials(s);
     // Cap at 200 chars, respecting UTF-8 char boundaries.
@@ -227,7 +227,7 @@ mod tests {
     #[test]
     fn test_BC_2_14_004_timeout_error_shape() {
         // DI-009: build_client() must succeed (returns Ok with a positive-timeout client).
-        // The timeout value is verified by the xtask gate (check-no-panic, check-client-timeout).
+        // The timeout value is verified by the xtask gate (check-client-timeout).
         let result = build_client();
         assert!(
             result.is_ok(),
@@ -384,9 +384,9 @@ mod tests {
         );
     }
 
-    // ─── SEC-007 / CWE-209 — sanitize_error_message tests ────────────────────
+    // ─── BC-2.14.004 {EC-006} / CWE-209 — sanitize_error_message tests ───────
 
-    /// SEC-007: URL-embedded credentials in a build-failure reason must be redacted.
+    /// BC-2.14.004 {EC-006} / CWE-209:URL-embedded credentials in a build-failure reason must be redacted.
     ///
     /// A misconfigured proxy (e.g. `http://user:password@proxy:3128`) may appear in the
     /// reqwest error string. The canonical E-CORE-012 message must NOT include the
@@ -444,7 +444,7 @@ mod tests {
         );
     }
 
-    /// SEC-007: Error messages with no URL-embedded credentials must pass through unchanged.
+    /// BC-2.14.004 {EC-006} / CWE-209:Error messages with no URL-embedded credentials must pass through unchanged.
     #[test]
     fn test_sanitize_error_message_passthrough_when_no_credentials() {
         let raw = "TLS handshake failed: certificate verify failed";
@@ -455,7 +455,7 @@ mod tests {
         );
     }
 
-    /// SEC-007: Error messages longer than 200 chars must be capped.
+    /// BC-2.14.004 {EC-006} / CWE-209:Error messages longer than 200 chars must be capped.
     #[test]
     fn test_sanitize_error_message_caps_at_200_chars() {
         let raw = "x".repeat(300);
@@ -467,7 +467,7 @@ mod tests {
         );
     }
 
-    /// SEC-007: Proxy URL credentials flow through map_build_failure and are absent from the
+    /// BC-2.14.004 {EC-006} / CWE-209:Proxy URL credentials flow through map_build_failure and are absent from the
     /// resulting PregolyaError message (end-to-end integration of the sanitize path).
     #[test]
     fn test_map_build_failure_redacts_proxy_credentials_in_message() {
@@ -485,7 +485,7 @@ mod tests {
         );
     }
 
-    /// SEC-007: Error reason with no URL must pass through map_build_failure unaltered.
+    /// BC-2.14.004 {EC-006} / CWE-209:Error reason with no URL must pass through map_build_failure unaltered.
     #[test]
     fn test_map_build_failure_passthrough_no_url() {
         let raw_reason = "simulated TLS stack unavailable";

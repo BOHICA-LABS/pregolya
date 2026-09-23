@@ -191,7 +191,8 @@ fn is_test_file(path: &str) -> bool {
 /// `benches/` are NOT exempt — they are not listed in the BC and no crate currently
 /// contains them, so the exclusion was unsanctioned.
 ///
-/// Used by: `check_no_panic`, `check_client_timeout`, `deny_anyhow_in_lib`.
+/// Used by: `check_no_panic`, `check_client_timeout`, `deny_anyhow_in_lib`,
+/// `deny_bare_api_key`, `deny_description_cache_key`.
 fn is_lint_exempt_file(path: &str) -> bool {
     is_test_file(path)
 }
@@ -612,7 +613,7 @@ fn deny_anyhow_in_lib() {
 /// (which are legitimate for compatibility verification) are not flagged.
 ///
 /// Returns a `Vec<String>` of `"path:line: use anyhow"` findings.
-/// Returns empty when `path` is a test or examples file (per `is_test_file`).
+/// Returns empty when `path` is a test file (per `is_test_file`).
 fn scan_for_anyhow_in_source(src: &str, path: &str) -> Vec<String> {
     if is_lint_exempt_file(path) {
         return Vec::new();
@@ -823,7 +824,7 @@ fn collect_idents(ts: proc_macro2::TokenStream) -> Vec<(String, usize)> {
 ///
 /// The adjacency window is set to 10 tokens on each side of the cache-key ident.
 ///
-/// Returns empty when `path` is a test or examples file (per `is_lint_exempt_file`).
+/// Returns empty when `path` is a test file (per `is_lint_exempt_file`).
 fn scan_for_description_cache_key_in_source(src: &str, path: &str) -> Vec<String> {
     if is_lint_exempt_file(path) {
         return Vec::new();

@@ -285,7 +285,7 @@ mod tests {
     /// log-scrubber sentinel per {INV-002}. No substring of the actual key value appears.
     ///
     /// Green-by-design: the `Debug` implementation is fully implemented and does not depend on
-    /// `new()`; this test constructs directly via struct-literal to keep the Debug assertion
+    /// `new()`; this test constructs via `from_raw_for_tests` to keep the Debug assertion
     /// independent of constructor validation logic.
     #[test]
     fn test_BC_2_14_005_openai_debug_emits_redacted_sentinel() {
@@ -305,7 +305,8 @@ mod tests {
     ///
     /// `format!("{:?}", AnthropicApiKey("..."))` returns exactly `"<redacted>"`.
     ///
-    /// GREEN-BY-DESIGN: same rationale as the OpenAI variant above.
+    /// GREEN-BY-DESIGN: `Debug` is fully implemented and does not depend on `new()`;
+    /// constructs via `from_raw_for_tests`, independent of constructor validation logic.
     #[test]
     fn test_BC_2_14_005_anthropic_debug_emits_redacted_sentinel() {
         let key = AnthropicApiKey::from_raw_for_tests("sk-ant-real-secret-value");
@@ -323,7 +324,7 @@ mod tests {
     /// The `Debug` output must NOT contain any substring of the actual key value.
     /// Verifies the redaction is structural — not just a prefix/suffix trim.
     ///
-    /// Green-by-design: constructs directly via struct-literal, independent of constructor logic.
+    /// Green-by-design: constructs via `from_raw_for_tests`, independent of constructor logic.
     #[test]
     fn test_BC_2_14_005_debug_does_not_leak_key_material() {
         let sentinel = "LEAK_SENTINEL_ABC123_DO_NOT_LOG";
@@ -574,9 +575,8 @@ mod tests {
     /// GREEN: `new("")` is implemented — returns `Err` with code `"E-CORE-005"` and the canonical message format.
     #[test]
     fn test_BC_2_14_006_error_code_and_format_table() {
-        // Table: (constructor, input, must_be_err)
-        // Only empty string is a guaranteed failure per the current BCs;
-        // other patterns may be added by the implementer.
+        // BC-2.14.006 {EC-005}: empty string and whitespace-only string return Err.
+        // Asserts directly over OpenAiApiKey::new("") and AnthropicApiKey::new("").
         let openai_err = OpenAiApiKey::new("").unwrap_err();
         assert_eq!(openai_err.code(), "E-CORE-005");
         assert!(openai_err.message.starts_with("Validation failed for"));

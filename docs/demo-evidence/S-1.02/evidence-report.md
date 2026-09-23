@@ -176,7 +176,16 @@ Rationale for fix-burst-14 re-verification: changes affect only the following fi
 - `docs/demo-evidence/S-1.02/evidence-report.md` — evidence artifact, not in `crates/` scan
 - `CHANGELOG.md` — not in `crates/` scan
 
-Conclusion: all three recorded gate outputs (25 analyzed / 16 exempt / 0 violations; 13/16 fixture-mode; 148 codes / 0 collisions) remain valid at `8619aa7`. The SHA `1ab2d10` in individual AC sections accurately reflects when recordings were made; re-verification at `36cb4da` and `8619aa7` confirms the evidence is current.
+Rationale for fix-burst-15 re-verification: changes affect only the following files, none of which participate in the recorded gate scan paths:
+- `xtask/src/tests.rs` — test assertion updates and doc comment changes; xtask is outside the `crates/`-rooted scan
+- `xtask/src/check_no_panic.rs` — doc comment fix (stale `assert!` reference removed); xtask is outside the `crates/`-rooted scan
+- `xtask/src/main.rs` — doc comment additions (cross-reference paragraphs on `is_test_file`/`is_test_class_file`); xtask is outside the `crates/`-rooted scan
+- `docs/demo-evidence/S-1.02/evidence-report.md` — evidence artifact, not in `crates/` scan
+- `CHANGELOG.md` — not in `crates/` scan
+
+No changes were made to `crates/pregolya-core/` or any other `crates/`-rooted file. Fixture count (16 total, 13 flagged), `CREDENTIAL_FIXTURE_COUNT` (3), and all gate counts (25 analyzed / 16 exempt / 0 violations; 13/16 fixture-mode; 148 codes / 0 collisions) are unchanged at `c31b6f6`.
+
+Conclusion: all three recorded gate outputs (25 analyzed / 16 exempt / 0 violations; 13/16 fixture-mode; 148 codes / 0 collisions) remain valid at `c31b6f6`. The SHA `1ab2d10` in individual AC sections accurately reflects when recordings were made; re-verification at `36cb4da`, `8619aa7`, and `c31b6f6` confirms the evidence is current.
 
 ---
 
