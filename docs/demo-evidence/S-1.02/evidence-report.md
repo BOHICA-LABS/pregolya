@@ -437,6 +437,29 @@ Total: 238 xtask tests pass, 5 skipped.
 
 **Docs-only note:** The docs commit for this fix-burst-32 CHANGELOG and evidence-report update is docs-only — no `xtask/src/**/*.rs` behavioral changes. Clause (d) does not fire for the docs commit.
 
+### Gate output re-attestation (LOW-001 fix — clause (d) satisfaction)
+
+**HEAD SHA:** `3eb68bec49c78d818aab3c4a9b2a7447dce5f5f7` (short: `3eb68be`)
+**Date:** 2026-09-23
+**Note:** Re-recorded per F-P31-LOW-001. Prior fix-burst-30/31/32 sections involved behavioral scanner changes (guard additions to `check_no_panic` and `check_client_timeout`) but did not record the raw gate stdout counts in the evidence-report. Clause (d) of the Recording Provenance validity criterion requires re-recording actual gate output counts whenever scanner logic changes. This subsection supplies those counts, retroactively satisfying clause (d) for the fix-burst-30/31/32 scanner changes as of the current HEAD.
+
+**Clause (d) analysis for fix-burst-33 (test additions only):** Fix-burst-33 added tests to `xtask/src/tests.rs` only. No `xtask/src/**/*.rs` scanner logic files changed. Clause (d) does NOT fire for fix-burst-33. The counts below are recorded at fix-burst-33 HEAD to serve as the durable baseline for the outstanding clause (d) obligation from fix-burst-30/31/32.
+
+**Actual gate output at `3eb68be`:**
+
+| Gate | Stdout output |
+|------|--------------|
+| `check-no-panic` | `check-no-panic PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
+| `check-client-timeout` | `check-client-timeout PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
+| `deny-bare-api-key` | `deny-bare-api-key PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
+| `check-error-code-registry` | `error-code-registry PASSED: 148 codes validated, 0 collisions.` |
+| `deny-anyhow-in-lib` | `deny-anyhow-in-lib PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
+| `deny-description-cache-key` | `deny-description-cache-key PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
+| `check-file-size` | `check-file-size PASSED (2 warnings, 45 files measured, 2 allowlisted).` |
+| `check-no-panic --fixture-mode xtask/tests/fixtures/violations` | `fixture-mode: 14/17 fixture files had findings` |
+
+All 8 registered xtask gates pass. Counts are identical to those from fix-burst-22 onward, confirming no `crates/`-rooted production files changed through fix-burst-33.
+
 ---
 
 ## Notes
