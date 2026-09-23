@@ -552,6 +552,27 @@ Total: 242 xtask tests pass, 5 skipped.
 | `check-file-size` | `check-file-size PASSED (2 warnings, 45 files measured, 2 allowlisted).` |
 | `check-no-panic --fixture-mode xtask/tests/fixtures/violations` | `fixture-mode: 14/17 fixture files had findings` |
 
+### Gate output re-attestation at frozen HEAD `5ae507a` (MED-003 fix — clause (d) re-satisfied)
+
+**HEAD SHA recorded:** `5ae507a`
+**Date:** 2026-09-23
+**Note:** Re-recorded per F-P33-MED-003: prior clause (d) discharge in fix-burst-34 cited pre-change SHA `3eb68be`; this recording satisfies clause (d) at the correct post-change frozen HEAD.
+
+**Actual gate output at `5ae507a`:**
+
+| Gate | Stdout output |
+|------|--------------|
+| `check-no-panic` | `check-no-panic PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
+| `check-client-timeout` | `check-client-timeout PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
+| `deny-bare-api-key` | `deny-bare-api-key PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
+| `check-error-code-registry` | `error-code-registry PASSED: 148 codes validated, 0 collisions.` |
+| `deny-anyhow-in-lib` | `deny-anyhow-in-lib PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
+| `deny-description-cache-key` | `deny-description-cache-key PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations.` |
+| `check-file-size` | `check-file-size PASSED (2 warnings, 45 files measured, 2 allowlisted).` |
+| `check-no-panic --fixture-mode xtask/tests/fixtures/violations` | `fixture-mode: 14/17 fixture files had findings` |
+
+All 8 registered xtask gates pass at `5ae507a`. Counts are identical to the `3eb68be` baseline — confirming no gate-relevant changes between the pre-change HEAD and the post-change frozen HEAD.
+
 **Updated known limitations:**
 
 | ID | Gate | Status | Description |
