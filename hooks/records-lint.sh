@@ -125,9 +125,10 @@
 #        Genuine skip (no assertion): §Convergence Status section absent or
 #        containing no `**D-NNN` bold entry (pre-convergence state — check emits
 #        a SKIPPED label, not FAIL).
-#        Self-probes: seven probes exercise this check (A: checkpoint-stale,
+#        Self-probes: nine probes exercise this check (A: checkpoint-stale,
 #        B: convergence-stale, C: clean-pass, D: checkpoint-absent, E: convergence-absent,
-#        F: frozen-head-not-in-complete, G: frozen-head-live-mismatch).
+#        F: frozen-head-not-in-complete, G: frozen-head-live-mismatch,
+#        H: frozen-head-capitalized-form, I: multi-branch-disambiguation).
 #        Routing: state-manager (propagate newest D-NNN to §Session Resume
 #                 Checkpoint and §Convergence Status).
 #
@@ -379,7 +380,8 @@ run_self_probes() {
   # the ref does not exist). Set to $PROBE_G_REF immediately after successful ref creation.
   # Fix 1 (F-P48-LOW-002): ensures stray ref is deleted even if probe G exits mid-run.
   _PROBE_G_CLEANUP_REF=""
-  trap 'rm -rf "$PROBE_TMP"; [ -n "$_PROBE_G_CLEANUP_REF" ] && git -C "${FACTORY_DIR}/.." update-ref -d "$_PROBE_G_CLEANUP_REF" 2>/dev/null || true' EXIT
+  _PROBE_I_CLEANUP_REF=""
+  trap 'rm -rf "$PROBE_TMP"; [ -n "$_PROBE_G_CLEANUP_REF" ] && git -C "${FACTORY_DIR}/.." update-ref -d "$_PROBE_G_CLEANUP_REF" 2>/dev/null || true; [ -n "$_PROBE_I_CLEANUP_REF" ] && git -C "${FACTORY_DIR}/.." update-ref -d "$_PROBE_I_CLEANUP_REF" 2>/dev/null || true' EXIT
 
   # ── L1 self-probe: version > 1.0 with no changelog ───────────────────────
   # Synthetic violation: frontmatter version: "1.2" but no changelog entry.
@@ -697,7 +699,7 @@ EOF
   unset -f _L12_CHECK
 
   # ── L13 self-probes: STATE.md D-NNN parity ─────────────────────────────────
-  # Seven probes (A–G) each call check_l13 directly with a synthetic STATE.md
+  # Nine probes (A–I) each call check_l13 directly with a synthetic STATE.md
   # path argument. _L13_CHECK inline mirror retired — check_l13 is now
   # parameterized (Fix 1/MED-004). Swap-and-restore windows eliminated.
   #   A — checkpoint-stale: checkpoint D-NNN older than newest COMPLETE → CAUGHT
@@ -707,6 +709,8 @@ EOF
   #   E — convergence-absent: §Convergence Status absent → NOT CAUGHT (PASS, 2/2)
   #   F — frozen-head-not-in-complete: frozen HEAD SHA absent from COMPLETE rows → CAUGHT
   #   G — frozen-head-live-mismatch: checkpoint frozen HEAD ≠ live branch HEAD → CAUGHT
+  #   H — frozen-head-capitalized-form: "**Frozen HEAD:**" extraction (F-P49-LOW-001) → CAUGHT
+  #   I — multi-branch-disambiguation: SHA-co-location picks correct branch, not head-1 → CAUGHT (F-P49-LOW-002)
 
   # Probe A: §Current Phase Steps max D-999, checkpoint references D-998 → CAUGHT
   PROBE_L13A="$PROBE_TMP/l13-violation-a.md"
@@ -914,6 +918,90 @@ EOF
     git -C "${FACTORY_DIR}/.." update-ref -d "$PROBE_G_REF" 2>/dev/null || true
   else
     echo "[SELF-PROBE SKIP] L13-probe-G: could not create throwaway ref (git unavailable or repo missing) — probe skipped"
+  fi
+
+  # ── L13 Probe H: capitalized "Frozen HEAD:" form (F-P49-LOW-001 coverage) ──
+  # Verifies case-insensitive FROZEN_HEAD_SHA extraction catches the markdown-bold
+  # "**Frozen HEAD:** SHA" form used in checkpoint prose. The SHA is intentionally
+  # absent from all COMPLETE rows so the frozen-head-not-in-complete path fires when
+  # extraction succeeds. If the old case-sensitive grep is used, FROZEN_HEAD_SHA is
+  # empty, the guard is silently skipped, and check_l13 returns PASS — that
+  # false-green shape is what this probe detects. No throwaway git ref needed.
+  PROBE_L13H="$PROBE_TMP/l13-frozen-head-capitalized.md"
+  cat > "$PROBE_L13H" <<'EOF'
+## Current Phase Steps
+
+| D-201/2026-09-23 — COMPLETE row without the capitalized-form SHA. | orchestrator | COMPLETE | STATE.md D-201. |
+
+## Convergence Status
+
+**D-201 (burst-N done)**: trajectory.
+
+## Session Resume Checkpoint
+
+<!-- D-200 checkpoint archived. D-201 checkpoint is current. Keep ONLY the latest checkpoint here. -->
+
+**Frozen HEAD:** deadbeef1234567890abcdef1234567890abcdef
+
+### RESUME NEXT-ACTIONS (S-1.02 — post-D-201 state)
+EOF
+
+  _L13H_OUT="$(check_l13 "$PROBE_L13H" 2>&1 || true)"
+  if ! echo "$_L13H_OUT" | grep -q "\[FAIL\]"; then
+    echo "[SELF-PROBE FAIL] L13-probe-H: capitalized '**Frozen HEAD:** deadbeef...' in checkpoint — SHA absent from COMPLETE rows — check_l13 did NOT emit FAIL — case-insensitive FROZEN_HEAD_SHA extraction (F-P49-LOW-001 fix) not applied"
+    exit 2
+  fi
+
+  # ── L13 Probe I: multi-branch disambiguation (F-P49-LOW-002 coverage) ────────
+  # Verifies FEATURE_BRANCH resolution uses SHA co-location instead of head-1.
+  # Decoy branch (feature/S-1.99-decoy, no git ref) appears BEFORE the correct
+  # branch in the checkpoint text. The correct branch is co-located with the frozen
+  # SHA on the same line. A throwaway git ref is created for the correct branch,
+  # pointing to HEAD (which != the frozen SHA 0000...001).
+  #   Old code (head-1): picks feature/S-1.99-decoy → no git ref → live-HEAD
+  #     check skipped → no "does not match live" FAIL → false-green.
+  #   New code (SHA co-location): picks the correct branch → git ref found →
+  #     HEAD != 0000...001 → FAIL with "does not match live".
+  PROBE_I_BRANCH="feature/records-lint-selfprobe-i-$$"
+  PROBE_I_REF="refs/heads/${PROBE_I_BRANCH}"
+  _L13I_SETUP=0
+  if git -C "${FACTORY_DIR}/.." update-ref "$PROBE_I_REF" HEAD 2>/dev/null; then
+    _L13I_SETUP=1
+    _PROBE_I_CLEANUP_REF="$PROBE_I_REF"
+  fi
+
+  PROBE_L13I="$PROBE_TMP/l13-multi-branch.md"
+  cat > "$PROBE_L13I" <<EOF
+## Current Phase Steps
+
+| D-201/2026-09-23 — COMPLETE row with frozen SHA. | orchestrator | COMPLETE | STATE.md D-201 frozen HEAD 0000000000000000000000000000000000000001. |
+
+## Convergence Status
+
+**D-201 (burst-N done)**: trajectory.
+
+## Session Resume Checkpoint
+
+<!-- D-200 checkpoint archived. D-201 checkpoint is current. Keep ONLY the latest checkpoint here. -->
+
+- feature/S-1.99-decoy: unrelated story; appears first in text (decoy for head-1 selection).
+
+3-CLEAN streak 0/3 on frozen HEAD 0000000000000000000000000000000000000001 for ${PROBE_I_BRANCH}
+
+### RESUME NEXT-ACTIONS (S-1.02 — post-D-201 state)
+EOF
+
+  if [ "$_L13I_SETUP" -eq 1 ]; then
+    _L13I_OUT="$(check_l13 "$PROBE_L13I" 2>&1 || true)"
+    if ! echo "$_L13I_OUT" | grep -q "does not match live"; then
+      echo "[SELF-PROBE FAIL] L13-probe-I: multi-branch checkpoint with decoy 'feature/S-1.99-decoy' appearing before correct branch '${PROBE_I_BRANCH}' — check_l13 did NOT emit 'does not match live' FAIL — FEATURE_BRANCH extraction is using head-1 instead of SHA co-location (F-P49-LOW-002 fix not applied)"
+      git -C "${FACTORY_DIR}/.." update-ref -d "$PROBE_I_REF" 2>/dev/null || true
+      exit 2
+    fi
+    git -C "${FACTORY_DIR}/.." update-ref -d "$PROBE_I_REF" 2>/dev/null || true
+    _PROBE_I_CLEANUP_REF=""
+  else
+    echo "[SELF-PROBE SKIP] L13-probe-I: could not create throwaway ref (git unavailable or repo missing) — probe skipped"
   fi
 
   rm -rf "$PROBE_TMP"
@@ -1517,8 +1605,14 @@ check_l13() {
   # parity while referencing a stale frozen HEAD.
   local FROZEN_HEAD_SHA=""
   if [ -n "$CHECKPOINT_SECTION" ]; then
+    # Two-step extraction: (1) case-insensitive filter for lines mentioning
+    # "frozen HEAD" (any capitalisation, e.g. `frozen HEAD <sha>` or
+    # `**Frozen HEAD:** <sha>`), then (2) extract the first 7–40-char hex run
+    # from those lines. `tail -1` picks the last SHA when multiple matches appear.
+    # F-P49-LOW-001 fix: old single-pass `grep -oE 'frozen HEAD ...'` was
+    # case-sensitive and missed the capitalized `**Frozen HEAD:**` checkpoint form.
     FROZEN_HEAD_SHA=$(echo "$CHECKPOINT_SECTION" \
-      | grep -oE 'frozen HEAD [0-9a-f]{7,40}' \
+      | grep -i 'frozen[[:space:]]HEAD' \
       | grep -oE '[0-9a-f]{7,40}' | tail -1 || true)
   fi
 
@@ -1540,9 +1634,21 @@ check_l13() {
     # DELETED/REMOVED/MERGED (inactive branches).
     # Use --verify so git emits nothing to stdout when the ref does not exist.
     local FEATURE_BRANCH LIVE_BRANCH_HEAD
+    # Primary: extract feature/ branch from the same line as FROZEN_HEAD_SHA.
+    # Anchors FEATURE_BRANCH to the co-located narrative element, avoiding the
+    # head-1 ambiguity when multiple story branches share a checkpoint section
+    # in a multi-story wave (F-P49-LOW-002 fix).
     FEATURE_BRANCH=$(echo "$CHECKPOINT_SECTION" \
+      | grep -F "$FROZEN_HEAD_SHA" \
       | grep -v 'DELETED\|REMOVED\|MERGED' \
       | grep -oE 'feature/[A-Za-z0-9._-]+' | head -1 || true)
+    # Fallback: first feature/ branch anywhere in checkpoint (historical; may
+    # select the wrong branch when SHA and branch name appear on different lines).
+    if [ -z "$FEATURE_BRANCH" ]; then
+      FEATURE_BRANCH=$(echo "$CHECKPOINT_SECTION" \
+        | grep -v 'DELETED\|REMOVED\|MERGED' \
+        | grep -oE 'feature/[A-Za-z0-9._-]+' | head -1 || true)
+    fi
     if [ -n "$FEATURE_BRANCH" ]; then
       LIVE_BRANCH_HEAD=$(git -C "${FACTORY_DIR}/.." rev-parse --verify "refs/heads/${FEATURE_BRANCH}" 2>/dev/null || true)
       if [ -n "$LIVE_BRANCH_HEAD" ] && [ "$FROZEN_HEAD_SHA" != "$LIVE_BRANCH_HEAD" ]; then
@@ -1647,10 +1753,20 @@ echo "--- L13: STATE.md D-NNN Parity ---"
 check_l13
 
 echo ""
-echo "records-lint: PASS=$PASS WARN=$WARN FAIL=$FAIL UNVERIFIED=$UNVERIFIED"
+if [ "$SKIP_SELF_PROBE" = true ]; then
+  echo "[SELF-PROBE SKIPPED] records-lint was run without self-probe verification — false-green risk not validated"
+fi
+
+PROBE_SUFFIX=""
+[ "$SKIP_SELF_PROBE" = true ] && PROBE_SUFFIX=" probes=skipped"
+echo "records-lint: PASS=$PASS WARN=$WARN FAIL=$FAIL UNVERIFIED=$UNVERIFIED${PROBE_SUFFIX}"
 
 if [ "$FAIL" -gt 0 ]; then
-  echo "RESULT: FAIL — resolve violations before committing"
+  if [ "$SKIP_SELF_PROBE" = true ]; then
+    echo "RESULT: FAIL (probes=skipped) — resolve violations before committing"
+  else
+    echo "RESULT: FAIL — resolve violations before committing"
+  fi
   echo ""
   echo "Routing guide:"
   echo "  L1 violations → state-manager (frontmatter) or spec owner (changelog body)"
@@ -1664,6 +1780,10 @@ if [ "$FAIL" -gt 0 ]; then
   echo "  L13 violations → state-manager (propagate newest D-NNN to §Session Resume Checkpoint and §Convergence Status)"
   exit 1
 else
-  echo "RESULT: PASS"
+  if [ "$SKIP_SELF_PROBE" = true ]; then
+    echo "RESULT: PASS (probes=skipped)"
+  else
+    echo "RESULT: PASS"
+  fi
   exit 0
 fi
