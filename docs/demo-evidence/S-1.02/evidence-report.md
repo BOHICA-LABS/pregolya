@@ -254,7 +254,7 @@ Total: 309 pass, 7 skipped (pre-existing `#[ignore]` tests requiring live API ke
 | Detection class | Representative tests | Pass |
 |----------------|----------------------|------|
 | Pattern A — direct `Client::new` / `Client::default` construction | `test_timeout_scanner_still_flags_reqwest_client_new`, `test_timeout_checker_detects_client_default_qualified` | pass |
-| Pattern A — UFCS `<reqwest::Client as Default>::default()` | `test_timeout_checker_detects_client_default_qualified`, `test_timeout_checker_detects_client_default_bare` | pass |
+| Pattern A — UFCS `<reqwest::Client as Default>::default()` (qself) | `test_timeout_checker_detects_client_ufcs_default_qualified` (positive), `test_timeout_checker_ufcs_non_reqwest_client_as_default_clean` (negative) | pass |
 | Pattern B — builder chain via `analyze_build_chain` | `test_timeout_scanner_flags_builder_build_without_timeout_single_line`, `test_timeout_checker_detects_builder_default_qualified` | pass |
 | Pattern B — UFCS `<reqwest::ClientBuilder as Default>::default()` | `test_timeout_checker_detects_clientbuilder_ufcs_default_no_timeout` | pass |
 | Macro scanning — recursive AST via `scan_macro_body_as_ast` | `test_timeout_checker_detects_reqwest_client_in_thread_local`, `test_timeout_checker_detects_builder_in_lazy_static`, `test_timeout_checker_macro_nested_config_timeout_suppressed_violation` | pass |
@@ -267,6 +267,36 @@ All 222 xtask tests pass (314 workspace-wide per pre-push hook). 5 skipped (pre-
 **Known limitations after fix-burst-28:** KL-1 (bare name via use import), KL-2 (split-statement builder chains), KL-3 (constant-valued ZERO timeout), KL-macro (macro bodies failing all four parse strategies skipped).
 
 **Docs-only note (commit `25a4ba7711086c574297a577b0719f6d97fd9f64`):** The docs commit that follows code commit `2d2f6ece` is docs-only — no `xtask/src/**/*.rs` files changed, no fixture directory changes, no `CREDENTIAL_FIXTURE_COUNT` changed. Clause (d) does not fire for docs commit `25a4ba7711086c574297a577b0719f6d97fd9f64`.
+
+**Note:** the Pattern-A UFCS (`<reqwest::Client as Default>::default()`) test was added in fix-burst-29 (`test_timeout_checker_detects_client_ufcs_default_qualified`); this attestation row has been back-corrected to reference the load-bearing test.
+
+---
+
+## fix-burst-29 re-verification
+
+**Clause (d) analysis:** `check_client_timeout.rs` was modified (UFCS qself extended; Strategy 3 removed; module doc and KL sections updated; two test renames). `tests.rs` was modified (new UFCS tests added; test renames). Clause (d) fires.
+
+**Per-detection-class test attestation (code commits `a98d8ae`, `c0d6783`):**
+
+| Detection class | Representative tests | Pass |
+|----------------|----------------------|------|
+| Pattern A — `Client::new` | `test_timeout_scanner_still_flags_reqwest_client_new` | pass |
+| Pattern A — `Client::default` (plain path) | `test_timeout_checker_detects_client_default_qualified` | pass |
+| Pattern A — UFCS `<reqwest::Client as Default>::default()` (qself) | `test_timeout_checker_detects_client_ufcs_default_qualified` | pass |
+| Pattern A — UFCS `<reqwest::Client>::new()` | `test_timeout_checker_detects_client_ufcs_new_qualified` | pass |
+| Pattern B — builder chain `analyze_build_chain` | `test_timeout_scanner_flags_builder_build_without_timeout_single_line` | pass |
+| Pattern B — UFCS `<reqwest::ClientBuilder as Default>::default()` | `test_timeout_checker_detects_clientbuilder_ufcs_default_no_timeout` | pass |
+| Pattern B — UFCS `<reqwest::ClientBuilder>::new()` | `test_timeout_checker_detects_clientbuilder_ufcs_new_no_timeout` | pass |
+| Pattern B — UFCS `<reqwest::Client>::builder()` | `test_timeout_checker_detects_client_ufcs_builder_no_timeout` | pass |
+| Macro scanning — `scan_macro_body_as_ast` (3 strategies) | `test_timeout_checker_detects_reqwest_client_in_thread_local`, `test_timeout_checker_detects_builder_in_lazy_static` | pass |
+| Test context suppression | `test_timeout_checker_ignores_tokio_test_fns`, `test_timeout_checker_ignores_cfg_test_trait_default_method` | pass |
+| Known-limitation pinning (KL-1, KL-2, KL-5) | `test_timeout_checker_detects_client_default_bare`, `test_timeout_scanner_split_statement_false_negative_known_limitation`, `test_timeout_checker_module_alias_false_negative_known_limitation` | pass |
+
+Total: 229 xtask tests pass (approximately 320 workspace-wide per pre-push hook). 5 skipped.
+
+**Known limitations after fix-burst-29:** KL-1 (bare name via use import — conservative false positive), KL-2 (split-statement builder chains), KL-3 (constant-valued ZERO), KL-macro (macro bodies failing all three parse strategies), KL-5 (module-alias re-export false negative).
+
+**Docs-only note:** The docs commit following code commits `a98d8ae` and `c0d6783` (adding this CHANGELOG + evidence-report section) is docs-only — no `xtask/src/**/*.rs` behavioral changes. Clause (d) does not fire for the docs commit.
 
 ---
 
