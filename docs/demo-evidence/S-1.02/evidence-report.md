@@ -747,6 +747,35 @@ All pass-37 findings closed. See CHANGELOG fix-burst-39 for details.
 
 ---
 
+## fix-burst-44 re-verification
+
+**Adversary pass 42 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 0 CRIT + 0 HIGH + 5 MED + 1 LOW.
+
+All pass-42 findings closed. See CHANGELOG fix-burst-44 for details.
+
+**Test count: 251 run: 251 passed, 5 skipped.**
+
+**Clause (d) analysis:** fix-burst-44 makes NO changes to `xtask/src/**/*.rs` scanner logic. Clause (d) does NOT fire. All changes are CHANGELOG corrections (feature branch) and STATE.md/records-lint.sh updates (factory-artifacts).
+
+**Gate output:** unchanged (25 analyzed / 16 exempt / 0 violations per gate; 14/17 fixture-mode; 148 codes / 0 collisions).
+
+**KL table:** 10 rows, unchanged.
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED** in fix-burst-26 | Parenthesized/braced base subexpression — eliminated by syn AST visitor |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+---
+
 ## fix-burst-43 re-verification
 
 **Adversary pass 41 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 0 CRIT + 0 HIGH + 2 MED + 2 LOW + 1 OBS(process-gap).

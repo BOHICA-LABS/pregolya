@@ -16,6 +16,41 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-44 (pass-42 findings)
+
+### STATE.md / records-lint.sh / CHANGELOG — Decisions Log misfiling, duplicate D-407, records-lint.sh mis-anchors, CHANGELOG attestation corrections, L13 vacuity paths
+
+**MED-001 (F-P42-MED-001) — Decisions Log truncated at D-384; D-385..D-408 misfiled:** 24 decision rows were appended below the §Drift/Deferrals genuine deferral rows without a separator, making them GFM-parse into the Deferral table (wrong schema). §Decisions Log appeared to terminate at D-384. Fixed by state-manager: rows moved to §Decisions Log after D-384.
+
+**MED-002 (F-P42-MED-002) — Duplicate D-407 rows + D-406 out of sequence:** Among the misfiled rows, D-407 appeared twice (different text, same ID); D-406 was sandwiched between them. Fixed by state-manager: shorter D-407 removed; sequence restored to monotonic ...D-405, D-406, D-407, D-408.
+
+**MED-003 (F-P42-MED-003) — records-lint.sh L13 mis-anchors source table:** Comments name "Phase Progress" and "Decision Log" but the regex targets §Current Phase Steps. FAIL message routes state-manager to "Decision Log" (terminating at D-384 before fix-burst-44). Fixed by devops-engineer: all six mis-anchored references corrected to "§Current Phase Steps".
+
+**MED-004 (F-P42-MED-004) — CHANGELOG fix-burst-43 OBS-001 false DONE attestation:** CHANGELOG said PGAP marked "IN PROGRESS → DONE" but STATE.md still marks it IN PROGRESS and only the D-NNN parity half (L13) shipped. Corrected in this fix-burst.
+
+**MED-005 (F-P42-MED-005) — L13 three vacuity paths PASS silently:** STATE.md absent, zero matching rows, checkpoint-phrase absent each silently PASS instead of FAIL. Fixed by devops-engineer: vacuity FAIL guards + probe D exercising NOT-FOUND path.
+
+**LOW-001 (F-P42-LOW-001) — "A ninth function" residue:** CHANGELOG fix-burst-41 said "A ninth function"; evidence-report said "One additional function". Corrected to "One additional test function".
+
+**Test count:** 251 run: 251 passed, 5 skipped (no code or test changes in fix-burst-44 — all factory-artifacts and CHANGELOG corrections).
+
+### Known limitations after fix-burst-44
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED** in fix-burst-26 | Parenthesized/braced base subexpression — eliminated by syn AST visitor |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+Test count: 251 run: 251 passed, 5 skipped. Gate output unchanged: 25 analyzed / 16 exempt / 0 violations per scanning gate; fixture-mode 14/17; 148 codes / 0 collisions.
+
 ## fix-burst-43 (pass-41 findings)
 
 ### xtask main / STATE.md — attestation corrections, validate_allowlist_entry_path Windows normalization, records-lint parity check
@@ -28,7 +63,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 **LOW-002 (F-P41-LOW-002) — `validate_allowlist_entry_path` POSIX-only predicates:** Last unswept path predicate in the allowlist family. Fixed by implementer: `let path = path.replace('\\', "/");` added as first statement in `validate_allowlist_entry_path`. Load-bearing test `test_validate_allowlist_entry_path_windows_separator` added (3 assertions: 2 positive backslash cases, 1 negative control).
 
-**OBS-001 (F-P41-OBS-001) — PGAP-RECORDS-LINT-FIXBURST-PARITY implemented:** 5 consecutive recurrences of the STATE.md checkpoint staleness defect class triggered production-grade default (CLAUDE.md Rule 3). Devops-engineer extended `.factory/hooks/records-lint.sh` with L13 (D-NNN parity assertion): extracts max D-NNN from Phase Progress COMPLETE rows, asserts same value appears in §Session Resume Checkpoint and §Convergence Status. Three self-probes validate the check is not false-green. PGAP entry in STATE.md OPEN SELF-IMPROVEMENT ITEMS marked IN PROGRESS → DONE.
+**OBS-001 (F-P41-OBS-001) — PGAP-RECORDS-LINT-FIXBURST-PARITY implemented:** 5 consecutive recurrences of the STATE.md checkpoint staleness defect class triggered production-grade default (CLAUDE.md Rule 3). Devops-engineer extended `.factory/hooks/records-lint.sh` with L13 (D-NNN parity assertion): extracts max D-NNN from Phase Progress COMPLETE rows, asserts same value appears in §Session Resume Checkpoint and §Convergence Status. Three self-probes validate the check is not false-green. The D-NNN parity half of PGAP-RECORDS-LINT-FIXBURST-PARITY shipped (records-lint.sh L13). The primary obligation — asserting newest `## fix-burst-N` in CHANGELOG matches `## fix-burst-N re-verification` in evidence-report and a corresponding story-spec changelog row — remains unimplemented. PGAP entry remains IN PROGRESS in STATE.md OPEN SELF-IMPROVEMENT ITEMS pending the fix-burst-N ↔ evidence-report ↔ story-spec parity check.
 
 **Test count:** 251 run: 251 passed, 5 skipped (+1 `test_validate_allowlist_entry_path_windows_separator`; was 250 from fix-burst-42).
 
@@ -86,7 +121,7 @@ Test count: 250 run: 250 passed, 5 skipped. Gate output unchanged: 25 analyzed /
 
 **HIGH-001 (F-P39-HIGH-001) — Windows path-separator normalization gap in exemption predicates:** The `walkdir` refactor (fix-burst-35) replaced POSIX `find` subprocess for file *discovery* but did not extend Windows portability to file *classification*. The exemption predicates `is_test_file`, `is_test_class_file` (in `main.rs`) and the `fixtures/violations` guard in `scan_for_panics_in_source` (in `check_no_panic.rs`) matched exclusively on POSIX forward-slash forms. On Windows, `WalkDir` and `Path::push` yield OS-native backslash-separated paths, so the exemptions silently failed: test-file `unwrap()`/`expect()` calls would be flagged as violations and `check-file-size` would apply the 750-line production gate to `xtask/src/tests.rs`. Contradicted by `AllowList::is_allowed` in the same file, which explicitly normalizes with `replace('\\', "/")`.
 
-Fix: added `let path = path.replace('\\', "/");` as the first statement in `is_test_file` and `is_test_class_file`; added `let normalized_path = path.replace('\\', "/");` and updated the fixture guard in `scan_for_panics_in_source` to use `normalized_path`. Six load-bearing positive assertions plus two non-load-bearing negative controls across two extended test functions (`test_is_test_file_patterns`: 4 positive backslash cases + 1 negative control, `test_is_test_class_file_patterns`: 2 positive backslash cases + 1 negative control). The negative controls pass under reversion and are regression guards, not reversion pins. A ninth function `test_scan_for_panics_exempt_fixture_windows` was added but proved non-load-bearing: the test path `xtask\src\fixtures\violations\test.rs` does not match any `is_test_file` predicate, so `normalized_path` was never evaluated — the guard short-circuits. A discriminating replacement was added in fix-burst-42 (F-P40-MED-001); the existing test was renamed. False "Windows portability restored" attestation in fix-burst-35 MED-002 corrected.
+Fix: added `let path = path.replace('\\', "/");` as the first statement in `is_test_file` and `is_test_class_file`; added `let normalized_path = path.replace('\\', "/");` and updated the fixture guard in `scan_for_panics_in_source` to use `normalized_path`. Six load-bearing positive assertions plus two non-load-bearing negative controls across two extended test functions (`test_is_test_file_patterns`: 4 positive backslash cases + 1 negative control, `test_is_test_class_file_patterns`: 2 positive backslash cases + 1 negative control). The negative controls pass under reversion and are regression guards, not reversion pins. One additional test function `test_scan_for_panics_exempt_fixture_windows` was added but proved non-load-bearing: the test path `xtask\src\fixtures\violations\test.rs` does not match any `is_test_file` predicate, so `normalized_path` was never evaluated — the guard short-circuits. A discriminating replacement was added in fix-burst-42 (F-P40-MED-001); the existing test was renamed. False "Windows portability restored" attestation in fix-burst-35 MED-002 corrected.
 
 `is_lint_exempt_file` was inspected and requires no change — it delegates entirely to `is_test_file`, which now normalizes.
 
