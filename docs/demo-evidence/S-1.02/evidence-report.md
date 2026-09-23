@@ -162,6 +162,8 @@ Covered by: the nextest pass in AC-008/AC-011/AC-016 recording (test_BC_2_14_004
 
 ## Recording Provenance
 
+**Validity criterion:** Gate output remains valid at any HEAD where (a) no `crates/` files are added or deleted and (b) any `crates/` changes are doc-comment-only with no panic-family, timeout, or credential constructs added or removed. Future passes can apply this criterion directly rather than requiring a new per-burst paragraph.
+
 Gate output was **recorded** at `1ab2d10` (frozen HEAD at time of recording). Recordings were **re-verified valid** at frozen review HEAD `36cb4da` (fix-burst-13) and again at `8619aa7` (fix-burst-14).
 
 Rationale for fix-burst-13 re-verification: changes affected only `xtask/src/tests.rs` assertion values and `check_no_panic.rs` doc comments. Neither file participates in the `crates/`-rooted scan path executed by the gates. Fixture count (16 total, 13 flagged) and `CREDENTIAL_FIXTURE_COUNT` are unchanged at both SHAs.
@@ -185,7 +187,17 @@ Rationale for fix-burst-15 re-verification: changes affect only the following fi
 
 No changes were made to `crates/pregolya-core/` or any other `crates/`-rooted file. Fixture count (16 total, 13 flagged), `CREDENTIAL_FIXTURE_COUNT` (3), and all gate counts (25 analyzed / 16 exempt / 0 violations; 13/16 fixture-mode; 148 codes / 0 collisions) are unchanged at `c31b6f6`.
 
-Conclusion: all three recorded gate outputs (25 analyzed / 16 exempt / 0 violations; 13/16 fixture-mode; 148 codes / 0 collisions) remain valid at `c31b6f6`. The SHA `1ab2d10` in individual AC sections accurately reflects when recordings were made; re-verification at `36cb4da`, `8619aa7`, and `c31b6f6` confirms the evidence is current.
+Rationale for fix-burst-16 re-verification: changes affect only the following files, none of which participate in the recorded gate scan paths:
+- `xtask/src/check_no_panic.rs` — doc comment change; xtask is outside the `crates/`-rooted scan
+- `xtask/src/main.rs` — doc comment change; xtask is outside the `crates/`-rooted scan
+- `xtask/src/deny_bare_api_key.rs` — doc comment change; xtask is outside the `crates/`-rooted scan
+- `xtask/src/tests.rs` — doc comment and test assertion changes; xtask is outside the `crates/`-rooted scan
+- `crates/pregolya-core/src/http.rs` — doc comment changes only; no panic-family, timeout, or credential constructs added or removed; all gate counts unchanged
+- `crates/pregolya-core/src/credentials.rs` — doc comment changes only; no panic-family, timeout, or credential constructs added or removed; all gate counts unchanged
+- `docs/demo-evidence/S-1.02/evidence-report.md` — evidence artifact, not in `crates/` scan
+- `CHANGELOG.md` — not in `crates/` scan
+
+Conclusion: all three recorded gate outputs (25 analyzed / 16 exempt / 0 violations; 13/16 fixture-mode; 148 codes / 0 collisions) remain valid at `5261d2c`. The SHA `1ab2d10` in individual AC sections accurately reflects when recordings were made; re-verification at `36cb4da`, `8619aa7`, `c31b6f6`, and `5261d2c` confirms the evidence is current.
 
 ---
 
