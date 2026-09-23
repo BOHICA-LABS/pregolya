@@ -330,6 +330,12 @@ fn flatten_tokens_no_test(
 /// literal). Full mitigation requires const-evaluation. At present, `HTTP_CLIENT_TIMEOUT_SECS = 30`
 /// is enforced via code review; `test_timeout_scanner_constant_zero_false_negative_known_limitation`
 /// pins this accepted false-negative.
+///
+/// **KNOWN-LIMITATION 4 — parenthesized base subexpression:** A parenthesized or braced base
+/// subexpression — `(reqwest::ClientBuilder::new()).build()` — causes a depth-0
+/// `ParenGroupEnd` to fire before the terminal `.build()`, so the violation is not reported.
+/// The test `test_timeout_scanner_parenthesized_base_subexpr_known_limitation` pins this
+/// accepted false-negative (BC-2.14.004 {PC-001}).
 fn scan_flat_for_timeout_violations(flat: &[FlatToken], path: &str, findings: &mut Vec<String>) {
     let n = flat.len();
     let mut i = 0;
@@ -361,7 +367,7 @@ fn scan_flat_for_timeout_violations(flat: &[FlatToken], path: &str, findings: &m
             {
                 let line = flat[i].line();
                 let chain_end = find_chain_end(flat, i);
-                if has_build_without_timeout(flat, i, chain_end) {
+                if has_build_without_timeout(flat, i) {
                     findings.push(format!(
                         "{}:{}: reqwest::Client::builder() without .timeout() (BC-2.14.004)",
                         path, line
@@ -378,7 +384,7 @@ fn scan_flat_for_timeout_violations(flat: &[FlatToken], path: &str, findings: &m
             {
                 let line = flat[i].line();
                 let chain_end = find_chain_end(flat, i);
-                if has_build_without_timeout(flat, i, chain_end) {
+                if has_build_without_timeout(flat, i) {
                     findings.push(format!(
                         "{}:{}: reqwest::ClientBuilder::new() without .timeout() (BC-2.14.004)",
                         path, line
@@ -428,21 +434,34 @@ fn scan_flat_for_timeout_violations(flat: &[FlatToken], path: &str, findings: &m
 
         // Pattern 3: ClientBuilder :: new ... .build() without .timeout()
         // (unqualified or qualified — qualified already handled above)
+        // Only flag bare ClientBuilder::new() — not mcp_sdk::ClientBuilder::new() or other
+        // non-reqwest qualifiers. If preceded by a non-reqwest module qualifier, skip.
         if let FlatToken::Ident(name, _) = &flat[i]
             && name == "ClientBuilder"
             && matches_double_colon(flat, i + 1)
             && matches_ident(flat, i + 3, "new")
         {
-            let line = flat[i].line();
-            let chain_end = find_chain_end(flat, i);
-            if has_build_without_timeout(flat, i, chain_end) {
-                findings.push(format!(
-                    "{}:{}: ClientBuilder::new() without .timeout() (BC-2.14.004)",
-                    path, line
-                ));
+            // Check if preceded by `:: something ::` (a module qualifier other than reqwest)
+            // If i >= 3 and flat[i-1..i-2] are '::' double-colon, check flat[i-3]
+            let preceded_by_non_reqwest = i >= 3
+                && matches_double_colon(flat, i - 2)
+                && if let FlatToken::Ident(prev, _) = &flat[i - 3] {
+                    prev != "reqwest"
+                } else {
+                    false
+                };
+            if !preceded_by_non_reqwest {
+                let line = flat[i].line();
+                let chain_end = find_chain_end(flat, i);
+                if has_build_without_timeout(flat, i) {
+                    findings.push(format!(
+                        "{}:{}: ClientBuilder::new() without .timeout() (BC-2.14.004)",
+                        path, line
+                    ));
+                }
+                i = chain_end;
+                continue;
             }
-            i = chain_end;
-            continue;
         }
 
         // Pattern 4: Client :: builder ... .build() without .timeout() (unqualified)
@@ -467,7 +486,7 @@ fn scan_flat_for_timeout_violations(flat: &[FlatToken], path: &str, findings: &m
             if !preceded_by_non_reqwest && !preceded_by_reqwest {
                 let line = flat[i].line();
                 let chain_end = find_chain_end(flat, i);
-                if has_build_without_timeout(flat, i, chain_end) {
+                if has_build_without_timeout(flat, i) {
                     findings.push(format!(
                         "{}:{}: Client::builder() without .timeout() (BC-2.14.004)",
                         path, line
@@ -538,11 +557,7 @@ fn find_chain_end(flat: &[FlatToken], start: usize) -> usize {
 /// Check if a chain from `start` calls `.build()` without a prior valid `.timeout()`.
 ///
 /// Scans forward from `start` in the full `flat` list, stopping at the first top-level
-/// `;` (a statement boundary at all depths zero). The `_end` hint produced by
-/// `find_chain_end` is intentionally ignored: when method arguments are present,
-/// `find_chain_end` truncates at the first argument token (which is inlined by
-/// `flatten_tokens_no_test` immediately after the `ParenGroup` marker), placing
-/// the subsequent `.build()` call beyond the `_end` boundary.
+/// `;` (a statement boundary at all depths zero).
 ///
 /// **Terminates at the first `.build()` encountered at nesting depth zero.**
 /// `.build()` calls at depth > 0 (inside method arguments) are attributed to inner
@@ -569,13 +584,15 @@ fn find_chain_end(flat: &[FlatToken], start: usize) -> usize {
 /// corresponding depth counter is already 0, the scan breaks immediately — the chain
 /// has exited its enclosing group.  This prevents the scanner from escaping into an
 /// outer context and claiming the outer chain's `.build()` as belonging to an inner
-/// nested builder that has no `.build()` of its own.  Semantically this is equivalent
-/// to the `;` terminator: both signal that the chain's own scope has ended.
+/// nested builder that has no `.build()` of its own.  A `*GroupEnd` at depth-0 means
+/// the scan has exited a group that was opened before `start`, which is treated as
+/// chain-end.  Unlike `;`, this can fire before a terminal `.build()` in
+/// explicitly-grouped base subexpressions — see KNOWN-LIMITATION 4.
 ///
 /// Returns `true` if `.build()` is present at depth zero and no valid `.timeout(d)` where
 /// `d > Duration::ZERO` precedes it. `.timeout(Duration::ZERO)` is treated as
 /// absent (BC-2.14.004 {PC-001}, {INV-004}).
-fn has_build_without_timeout(flat: &[FlatToken], start: usize, _end: usize) -> bool {
+fn has_build_without_timeout(flat: &[FlatToken], start: usize) -> bool {
     let n = flat.len();
     let mut found_timeout_before_build = false;
     // Track brace nesting so that ';' tokens inside brace-typed method arguments
@@ -1373,7 +1390,7 @@ pub fn build_client() -> reqwest::Client {
         let mut flat = Vec::new();
         super::flatten_tokens_no_test(ts.into_iter(), &mut flat, &mut 0u32);
         assert!(
-            !super::has_build_without_timeout(&flat, 0, flat.len()),
+            !super::has_build_without_timeout(&flat, 0),
             "outer chain with depth-0 .timeout() should NOT be flagged regardless of inner \
              builder state; depth-aware fix must not un-credit a valid depth-0 timeout"
         );
@@ -1497,6 +1514,51 @@ pub fn build_client() -> reqwest::Client {
             "outer chain with no .timeout() must be flagged even with a nested inner builder \
              that has .timeout(); got: {:?}",
             findings
+        );
+    }
+
+    /// F-P21-MED-001 — non-reqwest ClientBuilder::new() must NOT be flagged.
+    ///
+    /// `mcp_sdk::ClientBuilder::new()` is not a reqwest builder; Pattern 3 must
+    /// apply the same non-reqwest qualifier guard as Patterns 2 and 4 to suppress it.
+    #[test]
+    fn test_timeout_scanner_does_not_flag_non_reqwest_client_builder_new() {
+        // mcp_sdk::ClientBuilder::new() is not a reqwest builder — must not be flagged.
+        let src = r#"
+            fn f() {
+                mcp_sdk::ClientBuilder::new()
+                    .build()
+                    .unwrap();
+            }
+        "#;
+        let findings = scan_for_timeout_violations_in_source(src, "f.rs");
+        assert!(
+            findings.is_empty(),
+            "non-reqwest ClientBuilder::new() must not be flagged; got: {:?}",
+            findings
+        );
+    }
+
+    /// F-P21-MED-002 — KNOWN-LIMITATION 4: parenthesized base subexpression is a known
+    /// false negative.
+    ///
+    /// A parenthesized base subexpression — `(reqwest::ClientBuilder::new()).build()` —
+    /// causes a depth-0 `ParenGroupEnd` to fire before the terminal `.build()`, so the
+    /// violation is not reported.  This test pins the accepted false-negative behavior.
+    #[test]
+    fn test_timeout_scanner_parenthesized_base_subexpr_known_limitation() {
+        // KNOWN-LIMITATION 4: parenthesized base subexpression causes depth-0 ParenGroupEnd
+        // to fire before terminal .build(), so the violation is not reported.
+        let src = r#"
+            fn f() {
+                let c = (reqwest::ClientBuilder::new()).build().unwrap();
+            }
+        "#;
+        let findings = scan_for_timeout_violations_in_source(src, "f.rs");
+        assert!(
+            findings.is_empty(),
+            "KNOWN-LIMITATION 4: parenthesized base subexpression is a known false negative; \
+             if this test fails, the limitation has been fixed and this test should be updated"
         );
     }
 }
