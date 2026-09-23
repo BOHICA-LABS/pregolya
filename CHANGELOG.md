@@ -16,11 +16,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-28 (pass-26 findings, commit `2d2f6ece`)
+
+### xtask check_client_timeout — recursive macro AST, ClientBuilder UFCS, doc hygiene
+
+**F-P26-HIGH-001 + F-P26-MED-001 — Recursive macro AST scanner:** Replaced the flat-token `scan_macro_tokens_for_timeout_violations` with `scan_macro_body_as_ast`, which uses four progressive parse strategies to obtain a `syn` AST and re-run `TimeoutChecker` recursively on macro body tokens: (1) `syn::parse2::<syn::File>` (direct parse — works for `thread_local!`), (2) `fn __macro_fragment__() { … }` wrapper parse (works for statement/expression bodies), (3) `syn::parse2::<syn::Expr>` (bare expression), (4) `extract_initializer_exprs_from_tokens` (splits at top-level `;`, extracts the initializer expression — works for `lazy_static!`-style `static ref NAME: TYPE = EXPR;` bodies). Macro bodies that fail all four strategies are skipped rather than flagged conservatively. The recursive approach eliminates the depth-blind false-negative (any `.timeout` token in a flat stream had suppressed violations) and the false-positive for `reqwest::Client::builder()` (previously in Pattern A arm, now correctly classified as Pattern B via chain tracing).
+
+**F-P26-MED-002 — Module-level docs updated:** `//!` module doc, `run()`, and `scan_for_timeout_violations_in_source` now mention `Client::default()` / `ClientBuilder::default()`, recursive macro AST scanning, and UFCS qself handling.
+
+**F-P26-MED-003 — KNOWN-LIMITATION 4 added:** Documents that macro bodies failing all four parse strategies are skipped.
+
+**F-P26-MED-004 — UFCS `<reqwest::ClientBuilder as Default>::default()` detection:** `analyze_build_chain` Call branch extended — when path segments are `["Default", "default"]` and qself type is `reqwest::ClientBuilder` or bare `ClientBuilder`, treats as a builder entry point.
+
+**F-P26-MED-005 — KNOWN-LIMITATION 1 workaround corrected:** Removed nonexistent "lint-exempt allowlist" workaround claim; the correct escape is to use the fully-qualified form `reqwest::Client::new()`.
+
+**F-P26-LOW-001 — `visit_trait_item_fn` added:** `TimeoutChecker` now has the same `#[cfg(test)]` / `#[test]` guard for trait default methods as `PanicVisitor`.
+
+### Known limitations after fix-burst-28
+
+| ID | Description | Status |
+|----|-------------|--------|
+| KL-1 | Bare `Client::new()` imported via `use reqwest::Client` — false negative (cannot resolve without type info). Workaround: use fully-qualified `reqwest::Client::new()` | Preserved |
+| KL-2 | Split-statement builder chains (builder on line 1, `.build()` on line N via variable) | Preserved |
+| KL-3 | `.timeout(SOME_CONST_ZERO)` — constant-valued zero not detected | Preserved |
+| KL-macro | Macro bodies failing all four parse strategies (not valid as item sequence, wrapped-fn, expression, or initializer extraction) are skipped | Preserved (narrowed scope from fix-burst-27) |
+
+Test count: 222 passing (xtask), 5 skipped (pre-existing ignored tests requiring live API keys).
+
 ## fix-burst-27 (pass-25 findings, commit `356ee3b`)
 
 ### xtask check_client_timeout — macro scanning and Default constructor
 
-**F-P25-HIGH-001 — macro token stream scanning:** Added `visit_expr_macro`, `visit_stmt_macro`, and `visit_item_macro` overrides to `TimeoutChecker`. Each override delegates to `scan_macro_tokens_for_timeout_violations`, a flat-token scanner that detects `reqwest::Client::new`, `reqwest::Client::builder`, `reqwest::blocking::Client::new`, and `reqwest::ClientBuilder::new` constructions inside macro invocation bodies. Reqwest client constructions inside `thread_local!{}`, `lazy_static!{}`, and arbitrary macro bodies are now detected. Three new pinning tests cover this path.
+**F-P25-HIGH-001 — macro token stream scanning:** Added `visit_expr_macro`, `visit_stmt_macro`, and `visit_item_macro` overrides to `TimeoutChecker`. Each override delegates to `scan_macro_tokens_for_timeout_violations`, a flat-token scanner that detects the following qualified `reqwest::*` forms inside macro invocation bodies: `reqwest::Client::new`, `reqwest::Client::builder`, `reqwest::Client::default`, `reqwest::ClientBuilder::new`, `reqwest::ClientBuilder::default`, `reqwest::blocking::Client::new`, `reqwest::blocking::Client::builder`, `reqwest::blocking::Client::default`, `reqwest::blocking::ClientBuilder::new`, and `reqwest::blocking::ClientBuilder::default`. Reqwest client constructions inside `thread_local!{}`, `lazy_static!{}`, and arbitrary macro bodies are now detected. Three new pinning tests cover this path. Note: this flat-token scanner is replaced in fix-burst-28 by `scan_macro_body_as_ast`, a recursive AST approach that reuses `TimeoutChecker` on the macro body tokens — detection is performed via `classify_client_new` and `classify_builder_constructor` rather than flat-token matching.
 
 **F-P25-HIGH-002 — `Client::default()` / `ClientBuilder::default()` unclassified:** `classify_client_new` extended to match `Client::default` in addition to `Client::new` and `Client::builder`; `classify_builder_constructor` extended to include `ClientBuilder::default`. The UFCS qself form `<reqwest::Client as Default>::default()` is handled conservatively in the `ExprCall` visitor path. Four new pinning tests cover qualified and bare forms.
 

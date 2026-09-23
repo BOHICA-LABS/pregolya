@@ -241,6 +241,33 @@ Total: 309 pass, 7 skipped (pre-existing `#[ignore]` tests requiring live API ke
 
 **Known limitations after fix-burst-27:** KL-1 (bare name via use import), KL-2 (split-statement builder chains), KL-3 (constant-valued ZERO timeout), KL-macro (best-effort flat-token macro scanning for complex nested bodies).
 
+**Docs-only note (commit `254fd7ce`):** The CHANGELOG and evidence-report update commit that follows code commit `356ee3b` is docs-only — no `xtask/src/**/*.rs` files changed, no fixture directory changes, no `CREDENTIAL_FIXTURE_COUNT` changed. Clause (d) does not fire for commit `254fd7ce`.
+
+---
+
+## fix-burst-28 re-verification
+
+**Clause (d) analysis:** `check_client_timeout.rs` was modified (new `scan_macro_body_as_ast` function replacing flat-token `scan_macro_tokens_for_timeout_violations`; `analyze_build_chain` extended for UFCS `ClientBuilder` qself; `visit_trait_item_fn` added; module docs updated; KNOWN-LIMITATION 1 and 4 updated). Clause (d) fires — per-detection-class test attestation required.
+
+**Per-detection-class test attestation (code commit `2d2f6ece`):**
+
+| Detection class | Representative tests | Pass |
+|----------------|----------------------|------|
+| Pattern A — direct `Client::new` / `Client::default` construction | `test_timeout_scanner_still_flags_reqwest_client_new`, `test_timeout_checker_detects_client_default_qualified` | pass |
+| Pattern A — UFCS `<reqwest::Client as Default>::default()` | `test_timeout_checker_detects_client_default_qualified`, `test_timeout_checker_detects_client_default_bare` | pass |
+| Pattern B — builder chain via `analyze_build_chain` | `test_timeout_scanner_flags_builder_build_without_timeout_single_line`, `test_timeout_checker_detects_builder_default_qualified` | pass |
+| Pattern B — UFCS `<reqwest::ClientBuilder as Default>::default()` | `test_timeout_checker_detects_clientbuilder_ufcs_default_no_timeout` | pass |
+| Macro scanning — recursive AST via `scan_macro_body_as_ast` | `test_timeout_checker_detects_reqwest_client_in_thread_local`, `test_timeout_checker_detects_builder_in_lazy_static`, `test_timeout_checker_macro_nested_config_timeout_suppressed_violation` | pass |
+| Macro negative — `Client::builder().timeout().build()` in lazy_static | `test_timeout_checker_macro_client_builder_with_timeout_in_lazy_static` | pass |
+| Test context suppression (including `#[tokio::test]`, trait `#[cfg(test)]`) | `test_timeout_checker_ignores_tokio_test_fns`, `test_timeout_checker_ignores_cfg_test_trait_default_method` | pass |
+| Monotonic-OR / zero-timeout semantics | `test_timeout_checker_last_zero_timeout_overrides_valid` | pass |
+
+All 222 xtask tests pass. 5 skipped (pre-existing `#[ignore]` tests requiring live API keys).
+
+**Known limitations after fix-burst-28:** KL-1 (bare name via use import), KL-2 (split-statement builder chains), KL-3 (constant-valued ZERO timeout), KL-macro (macro bodies failing all four parse strategies skipped).
+
+**Docs-only note:** The docs commit that follows code commit `2d2f6ece` (adding this CHANGELOG + evidence-report section) is docs-only — no `xtask/src/**/*.rs` files changed, no fixture directory changes, no `CREDENTIAL_FIXTURE_COUNT` changed. Clause (d) does not fire for the docs commit.
+
 ---
 
 ## Notes
