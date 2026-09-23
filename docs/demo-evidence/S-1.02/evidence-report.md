@@ -682,6 +682,71 @@ All pass-35 findings closed. See CHANGELOG fix-burst-37 for details.
 
 ---
 
+## fix-burst-38 re-verification
+
+**Adversary pass 36 result:** CLEAN(strict)=no, CLEAN(PR-merge)=yes — 0 CRIT + 0 HIGH + 0 MED + 1 LOW; RECORDS-ONLY per TD-RECORDS-MICRO-BURST-001.
+
+All pass-36 findings closed. See CHANGELOG fix-burst-38 for details.
+
+**Test count: 248 xtask tests pass, 5 skipped.**
+
+**Clause-(d) analysis:** Records-only burst — no changes to `xtask/src/**/*.rs` scanner logic. Clause (d) does NOT fire. Gate output counts remain valid from fix-burst-37 re-verification.
+
+**Per-detection-class attestation:**
+- LOW-001 (F-P36-LOW-001): records-only text change in CHANGELOG fix-burst-36 MED-002 paragraph and story spec walkdir row. No behavioral change.
+
+**Gate output:** unchanged from fix-burst-37 (all counts valid: 25 analyzed / 16 exempt / 0 violations per gate; 14/17 fixture-mode; 148 codes / 0 collisions).
+
+**KL table:** 10 rows, unchanged from fix-burst-37.
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED** in fix-burst-26 | Parenthesized/braced base subexpression — eliminated by syn AST visitor |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+---
+
+## fix-burst-39 re-verification
+
+**Adversary pass 37 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 0 CRIT + 0 HIGH + 1 MED + 1 LOW.
+
+All pass-37 findings closed. See CHANGELOG fix-burst-39 for details.
+
+**Test count: 248 xtask tests pass, 5 skipped.**
+
+**Clause-(d) analysis:** fix-burst-39 LOW-001 modified a doc comment in `main.rs` — doc comment only, no scanner logic change. Clause (d) does NOT fire (doc comment changes are not behavioral changes to file-discovery or detection logic). Gate output counts remain valid.
+
+**Per-detection-class attestation:**
+- MED-001 (F-P37-MED-001): records-only (fix-burst-38 CHANGELOG + evidence-report sections added). No behavioral change.
+- LOW-001 (F-P37-LOW-001): doc comment on `collect_rust_files` in `main.rs` updated. No behavioral change. No new tests (doc comment only).
+
+**Gate output:** unchanged from fix-burst-38 (25 analyzed / 16 exempt / 0 violations per gate; 14/17 fixture-mode; 148 codes / 0 collisions).
+
+**KL table:** 10 rows, unchanged from fix-burst-38.
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED** in fix-burst-26 | Parenthesized/braced base subexpression — eliminated by syn AST visitor |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+---
+
 ## Notes
 
 - All recordings produced with VHS 0.11.0 using `FiraCode Nerd Font Mono`, Catppuccin Mocha theme, 1200×600 or 1200×700 resolution.

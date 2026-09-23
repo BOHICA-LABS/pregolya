@@ -16,6 +16,56 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-39 (pass-37 findings)
+
+### xtask `collect_rust_files` doc comment sibling-sweep; fix-burst-38 records added
+
+**MED-001 (F-P37-MED-001) — fix-burst-38 had no CHANGELOG or evidence-report record (recurrence of F-P35-MED-001 class):** Added `## fix-burst-38 (pass-36 findings)` CHANGELOG section and `## fix-burst-38 re-verification` evidence-report section. fix-burst-38 was a RECORDS-ONLY micro-burst closing the walkdir gate-count precision finding (F-P36-LOW-001). Records now complete through fix-burst-38.
+
+**LOW-001 (F-P37-LOW-001) — `collect_rust_files` doc comment retains "all six gate entry points" after fix-burst-38 swept the sibling record artifacts:** Doc comment on `collect_rust_files` in `main.rs` updated to match the canonical wording: "five of the seven xtask lint gates (six call sites — `check-no-panic` invokes it for both the normal scan and the `--fixture-mode` path)". Partial-Fix Regression Discipline (TD-VSDD-060) sibling-site sweep now complete: the CHANGELOG paragraph, story spec row, and source doc comment all carry the same wording.
+
+### Known limitations after fix-burst-39
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED** in fix-burst-26 | Parenthesized/braced base subexpression — eliminated by syn AST visitor |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+Test count: 248 xtask tests pass, 5 skipped. (Doc comment fix only — no behavioral change, no new tests.) Gate output unchanged: 25 analyzed / 16 exempt / 0 violations per scanning gate; fixture-mode 14/17; 148 codes / 0 collisions.
+
+## fix-burst-38 (pass-36 findings)
+
+### xtask walkdir gate-count precision fix — RECORDS-ONLY micro-burst (TD-RECORDS-MICRO-BURST-001)
+
+**LOW-001 (F-P36-LOW-001) — walkdir gate-count precision fix:** Story spec §Library & Framework Requirements walkdir row Purpose cell updated from "all six xtask lint gates" to "five of seven xtask lint gates via `collect_rust_files()` (six call sites — `check-no-panic` invokes it for both normal scan and `--fixture-mode`)". CHANGELOG fix-burst-36 MED-002 paragraph corrected: "all six xtask lint gates" → "five of seven xtask lint gates (six call sites — `check-no-panic` invokes `collect_rust_files()` for both the normal scan and `--fixture-mode` path)".
+
+**Records-only burst:** No behavioral changes to xtask gates. No scanner logic modified. records-lint.sh exit 0.
+
+### Known limitations after fix-burst-38
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED** in fix-burst-26 | Parenthesized/braced base subexpression — eliminated by syn AST visitor |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+Test count: 248 xtask tests pass, 5 skipped. Gate output unchanged: 25 analyzed / 16 exempt / 0 violations per scanning gate; fixture-mode 14/17; 148 codes / 0 collisions.
+
 ## fix-burst-37 (pass-35 findings)
 
 ### xtask check_client_timeout — records backfill, bin/oct negative controls, test count correction
