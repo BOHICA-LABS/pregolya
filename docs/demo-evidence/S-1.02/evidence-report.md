@@ -497,7 +497,7 @@ Total: 240 xtask tests pass, 5 skipped.
 - MED-001: load-bearing test `test_no_panic_tokio_test_attr_fn_exempt` (fails without the last-path-segment guard in all three function visitors)
 - MED-002: pinning test `test_no_panic_np_kl3_path_call_form_known_gap` pins zero-finding behavior for known-gap path-call form; any "fix" introducing false positives will break this test
 - LOW-001: gate output re-attestation commit `63eee0a` — all 8 gates re-run at HEAD `3eb68be`; clause (d) satisfied
-- OBS-001: process gap only — no artifact change needed
+- OBS-001: process gap — the dispatch prompt's mislabelled KL descriptions were NOT the cause of the artifact content (those descriptions were independently set by the technical-writer for fix-burst-33); the KL table descriptions in fix-burst-33 require correction per F-P32-HIGH-001
 
 **Updated known limitations:**
 
@@ -509,10 +509,10 @@ Total: 240 xtask tests pass, 5 skipped.
 | CT-KL-4 | `check-client-timeout` | **RETIRED in fix-burst-26** | Parenthesized/braced base subexpression — eliminated by syn AST visitor; see `test_timeout_scanner_parenthesized_base_subexpr_handled_by_syn` and `test_timeout_scanner_braced_base_subexpr_handled_by_syn` |
 | CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
 | CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
-| NP-KL-1 | `check-no-panic` | Active | Nested macro invocations — `panic!` inside `macro_rules!` body inside another macro |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic (cfg(test), `# Panics` doc, arm-context) not applied in macro arg scan |
 | NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Turbofish comma miscounting — angle-bracket depth tracking + turbofish-vs-comparison disambiguation; `test_no_panic_exemption2_angle_depth_multi_arg_turbofish_false_negative_guard` is the mechanism pin |
 | NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
-| BAK-KL-1 | `deny-bare-api-key` | Active | Indirect API key usage through variable aliasing |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
 
 **Docs-only note:** This fix-burst-33 CHANGELOG and evidence-report docs commit is docs-only — no `xtask/src/**/*.rs` scanner logic changes beyond those already in commits `3b1ecff` and `3eb68be`. Clause (d) does not fire for the docs commit itself.
 

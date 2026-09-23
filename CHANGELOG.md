@@ -34,7 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `check-file-size`: PASSED (2 warnings, 45 files measured, 2 allowlisted)
 - `check-no-panic --fixture-mode`: 14/17
 
-**OBS-001 (F-P31-OBS-001) — Dispatch prompt's KL list was mislabelled vs actual code/CHANGELOG/evidence-report:** Process gap only — no artifact change needed. Corrected in future dispatches by sourcing KL list from evidence-report.
+**OBS-001 (F-P31-OBS-001) — Dispatch prompt's KL list was mislabelled vs actual code/CHANGELOG/evidence-report:** Process gap — the dispatch prompt's mislabelled KL descriptions were NOT the cause of the artifact content (those descriptions were independently set by the technical-writer for fix-burst-33); the KL table descriptions in fix-burst-33 require correction per F-P32-HIGH-001. Corrected in future dispatches by sourcing KL list from evidence-report.
 
 ### Known limitations after fix-burst-33
 
@@ -46,10 +46,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 | CT-KL-4 | `check-client-timeout` | **RETIRED** in fix-burst-26 | Parenthesized/braced base subexpression — eliminated by syn AST visitor |
 | CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
 | CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
-| NP-KL-1 | `check-no-panic` | Active | Nested macro invocations — `panic!` inside `macro_rules!` body inside another macro |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic (cfg(test), `# Panics` doc, arm-context) not applied in macro arg scan |
 | NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
 | NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
-| BAK-KL-1 | `deny-bare-api-key` | Active | Indirect API key usage through variable aliasing |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
 
 Test count: 240 xtask tests pass, 5 skipped.
 
