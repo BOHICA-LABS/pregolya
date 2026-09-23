@@ -312,9 +312,11 @@ fn flatten_tokens_no_test(
 ///
 /// # Known Limitations
 ///
-/// **KNOWN-LIMITATION 1 — `use`-import false positives:** Pattern 2 (bare `Client::new()`)
-/// flags unqualified calls conservatively. If a crate uses `use some_sdk::Client;` and then
-/// calls `Client::new()`, the scanner cannot distinguish it from a reqwest `Client::new()`.
+/// **KNOWN-LIMITATION 1 — `use`-import false positives:** Patterns 2, 3, and 4 (bare
+/// `Client::new()`, bare `ClientBuilder::new()`, bare `Client::builder()`) flag unqualified
+/// calls conservatively. If a crate uses `use some_sdk::Client;` or
+/// `use some_sdk::ClientBuilder;` and then calls `Client::new()`, `ClientBuilder::new()`,
+/// or `Client::builder()`, the scanner cannot distinguish them from their reqwest equivalents.
 /// Full fix requires tracking `use` imports at file scope (not implemented).
 ///
 /// **KNOWN-LIMITATION 2 — split-statement builder chains:** A `ClientBuilder` stored in a
@@ -414,10 +416,13 @@ fn scan_flat_for_timeout_violations(flat: &[FlatToken], path: &str, findings: &m
         {
             // Check if preceded by `:: something ::` (a module qualifier other than reqwest)
             // If i >= 2 and flat[i-1] is '::' double-colon, check flat[i-2]
+            // crate/self/super/Self are path-relative qualifiers that do NOT identify a
+            // non-reqwest crate — `crate::Client::new()` must still be flagged.
             let preceded_by_non_reqwest = i >= 3
                 && matches_double_colon(flat, i - 2)
                 && if let FlatToken::Ident(prev, _) = &flat[i - 3] {
                     prev != "reqwest"
+                        && !matches!(prev.as_str(), "crate" | "self" | "super" | "Self")
                 } else {
                     false
                 };
@@ -443,10 +448,13 @@ fn scan_flat_for_timeout_violations(flat: &[FlatToken], path: &str, findings: &m
         {
             // Check if preceded by `:: something ::` (a module qualifier other than reqwest)
             // If i >= 3 and flat[i-1..i-2] are '::' double-colon, check flat[i-3]
+            // crate/self/super/Self are path-relative qualifiers that do NOT identify a
+            // non-reqwest crate — `crate::ClientBuilder::new()` must still be flagged.
             let preceded_by_non_reqwest = i >= 3
                 && matches_double_colon(flat, i - 2)
                 && if let FlatToken::Ident(prev, _) = &flat[i - 3] {
                     prev != "reqwest"
+                        && !matches!(prev.as_str(), "crate" | "self" | "super" | "Self")
                 } else {
                     false
                 };
@@ -471,15 +479,21 @@ fn scan_flat_for_timeout_violations(flat: &[FlatToken], path: &str, findings: &m
             && matches_ident(flat, i + 3, "builder")
         {
             // Only flag bare Client::builder() — not SomeOtherClient::builder()
-            // Check it's not preceded by a non-reqwest qualifier
+            // Check it's not preceded by a non-reqwest qualifier.
+            // crate/self/super/Self are path-relative qualifiers that do NOT identify a
+            // non-reqwest crate — `crate::Client::builder()` must still be flagged.
             let preceded_by_non_reqwest = i >= 3
                 && matches_double_colon(flat, i - 2)
                 && if let FlatToken::Ident(prev, _) = &flat[i - 3] {
                     prev != "reqwest"
+                        && !matches!(prev.as_str(), "crate" | "self" | "super" | "Self")
                 } else {
                     false
                 };
-            // Also skip if preceded by reqwest:: (handled in the reqwest block above)
+            // Defense-in-depth: this guard catches `reqwest::Client::builder()` if the reqwest
+            // block's cursor advance ever changes in a way that leaves it unconsumed. Currently
+            // unreachable because the reqwest block's find_chain_end consumes the full path,
+            // but kept to make the scanner robust against future refactoring.
             let preceded_by_reqwest = i >= 3
                 && matches_double_colon(flat, i - 2)
                 && matches_ident(flat, i - 3, "reqwest");
@@ -1558,6 +1572,93 @@ pub fn build_client() -> reqwest::Client {
         assert!(
             findings.is_empty(),
             "KNOWN-LIMITATION 4: parenthesized base subexpression is a known false negative; \
+             if this test fails, the limitation has been fixed and this test should be updated"
+        );
+    }
+
+    /// F-P22-MED-004 — `crate::Client::new()` must be flagged (Pattern 2).
+    ///
+    /// `crate` is a path-relative qualifier, not a third-party crate name. The
+    /// `preceded_by_non_reqwest` guard must NOT suppress detection when the qualifier
+    /// is `crate`, `self`, `super`, or `Self`.
+    #[test]
+    fn test_timeout_scanner_crate_qualified_client_new_is_flagged() {
+        let src = r#"
+            fn f() {
+                crate::Client::new()
+                    .build()
+                    .unwrap();
+            }
+        "#;
+        let findings = scan_for_timeout_violations_in_source(src, "f.rs");
+        assert!(
+            !findings.is_empty(),
+            "crate::Client::new() must be flagged; got: {:?}",
+            findings
+        );
+    }
+
+    /// F-P22-MED-004 — `crate::ClientBuilder::new()` must be flagged (Pattern 3).
+    ///
+    /// `crate` is a path-relative qualifier, not a third-party crate name. The
+    /// `preceded_by_non_reqwest` guard must NOT suppress detection for Pattern 3.
+    #[test]
+    fn test_timeout_scanner_crate_qualified_client_builder_new_is_flagged() {
+        let src = r#"
+            fn f() {
+                crate::ClientBuilder::new()
+                    .build()
+                    .unwrap();
+            }
+        "#;
+        let findings = scan_for_timeout_violations_in_source(src, "f.rs");
+        assert!(
+            !findings.is_empty(),
+            "crate::ClientBuilder::new() must be flagged; got: {:?}",
+            findings
+        );
+    }
+
+    /// F-P22-MED-004 — `crate::Client::builder()` must be flagged (Pattern 4).
+    ///
+    /// `crate` is a path-relative qualifier, not a third-party crate name. The
+    /// `preceded_by_non_reqwest` guard must NOT suppress detection for Pattern 4.
+    #[test]
+    fn test_timeout_scanner_crate_qualified_client_builder_is_flagged() {
+        let src = r#"
+            fn f() {
+                crate::Client::builder()
+                    .build()
+                    .unwrap();
+            }
+        "#;
+        let findings = scan_for_timeout_violations_in_source(src, "f.rs");
+        assert!(
+            !findings.is_empty(),
+            "crate::Client::builder() must be flagged; got: {:?}",
+            findings
+        );
+    }
+
+    /// F-P22-LOW-006 — KNOWN-LIMITATION 4 braced form: braced base subexpression is a known
+    /// false negative.
+    ///
+    /// `{ reqwest::ClientBuilder::new() }.build()` causes a depth-0 `BraceGroupEnd` to fire
+    /// before the terminal `.build()`, so the violation is not reported. This test pins the
+    /// accepted false-negative behavior for the braced form alongside the parenthesized form.
+    #[test]
+    fn test_timeout_scanner_braced_base_subexpr_known_limitation() {
+        // KNOWN-LIMITATION 4: braced base subexpression — { reqwest::ClientBuilder::new() }.build()
+        // The depth-0 BraceGroupEnd fires before the terminal .build(), so the violation is not reported.
+        let src = r#"
+            fn f() {
+                let c = { reqwest::ClientBuilder::new() }.build().unwrap();
+            }
+        "#;
+        let findings = scan_for_timeout_violations_in_source(src, "f.rs");
+        assert!(
+            findings.is_empty(),
+            "KNOWN-LIMITATION 4: braced base subexpression is a known false negative; \
              if this test fails, the limitation has been fixed and this test should be updated"
         );
     }

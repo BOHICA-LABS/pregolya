@@ -29,6 +29,22 @@
 //!
 //! Files under `tests/` directories, files ending in `_test.rs`/`_tests.rs`,
 //! and files ending in `/tests.rs` are fully exempt (BC-2.14.003 {INV-004}).
+//!
+//! # Known Limitations
+//!
+//! **KNOWN-LIMITATION 1 — exemption-blind macro token scan:** `scan_method_calls_in_tokens`
+//! is called unconditionally for every macro invocation's token stream. On this path,
+//! exemption logic (cfg(test), `# Panics` doc, arm-context) is NOT applied — panic-family
+//! macros nested in macro arguments are flagged unconditionally even when the outer match
+//! arm would qualify for Exemption 1 or Exemption 2. This is intentional: macro arguments
+//! are opaque to the AST visitor.
+//!
+//! **KNOWN-LIMITATION 2 — turbofish comma counting in `syn_macro_has_bc_id`:** The
+//! top-level comma scan counts turbofish generic-argument commas (e.g. `Vec::<A, B>`)
+//! as argument-separator commas, because `<`/`>` lex as `Punct` and are not grouped by
+//! `proc_macro2`. A condition operand containing a comma-separated turbofish can shift
+//! the message-argument index. This pattern does not occur in the current `crates/`
+//! production code. Sound fix: track angle-bracket depth when collecting top-level commas.
 
 use std::process::exit;
 
@@ -365,7 +381,7 @@ fn check_bc_id_shape(s: &str) -> bool {
 /// would be a false negative — Exemption-2 granted when the BC-ID is in the comparand.
 /// With arity awareness, the 2nd comma is required, so the call is correctly flagged.
 ///
-/// **KNOWN-LIMITATION N:** The top-level comma scan counts turbofish generic-argument
+/// **KNOWN-LIMITATION 2:** The top-level comma scan counts turbofish generic-argument
 /// commas (e.g. `Vec::<A, B>`) as argument-separator commas, because `<`/`>` lex as
 /// `Punct` and are not grouped by `proc_macro2`. A condition operand containing a
 /// comma-separated turbofish can shift the message-argument index. This pattern does
@@ -842,7 +858,7 @@ pub(crate) fn scan_for_panics_in_source(src: &str, path: &str) -> Vec<String> {
 /// belongs to the outer AST visitor (`PanicVisitor`), not to the token stream contents of
 /// macro arguments.
 ///
-/// KNOWN-LIMITATION 4: Because this scan is exemption-blind, callers on path (a) will
+/// KNOWN-LIMITATION 1: Because this scan is exemption-blind, callers on path (a) will
 /// flag panic-family macros nested in macro arguments unconditionally — even when the
 /// outer match arm would otherwise qualify for Exemption 1 or Exemption 2. This is
 /// intentional: macro arguments are opaque to the AST visitor, so the exemption state of

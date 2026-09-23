@@ -16,6 +16,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+### Fixed (fix-burst-23, 2026-09-22)
+- F-P21-MED-001: Pattern 3 (`ClientBuilder::new()`) gained a `preceded_by_non_reqwest` qualifier guard matching Patterns 2 and 4; suppresses false positives for non-reqwest types named `ClientBuilder`.
+- F-P21-MED-002: Added KNOWN-LIMITATION 4 to `has_build_without_timeout` documenting the parenthesized/braced base subexpression false negative (`(reqwest::ClientBuilder::new()).build()` is not flagged); added pinning test.
+- F-P21-LOW-001: Removed dead `_end: usize` parameter from `has_build_without_timeout`; all 5 call sites updated (TD-VSDD-059).
+
 ### Fixed (fix-burst-22, 2026-09-22)
 - F-P20-HIGH-001: `find_chain_end` bounded forward scan to base-call ident path; function-reference base call no longer skips following statements
 - F-P20-HIGH-002: `has_build_without_timeout` `*GroupEnd` at depth-0 now terminates scan (`break`) instead of clamping (`saturating_sub`); inner builder no longer claims outer chain's `.build()`
