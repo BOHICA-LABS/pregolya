@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.004
-version: "1.14"
+version: "1.15"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -29,6 +29,7 @@ changelog:
   - "1.12 (F-PC006-scoped-coverage/2026-09-22, product-owner): {PC-006} scoped-coverage note added; conjunctive connect_timeout≤timeout constraint is review-enforced, not gate-enforced; gate extension deferred to first connect_timeout call site."
   - "1.13 (EC-006-disambiguate/2026-09-23, product-owner): EC-006 description disambiguated — the 200-char cap applies to the sanitized `<reason>` substring only (the string extracted from the underlying `build()` Err and redacted by `sanitize_error_message`); the full PregolyaError message field ('HttpClientBuildFailed: failed to build HTTP client: <reason>') is not itself capped. Aligns with `sanitize_error_message` behavior. No behavioral change."
   - "1.14 (VP-DI009-02-method-fix/2026-09-23, product-owner): VP-DI009-02 Method corrected from 'CI custom clippy lint' to 'CI cargo xtask check-client-timeout'; the v1.4 sibling sweep missed this row."
+  - "1.15 (INV-003-exemption-perimeter/2026-09-23, product-owner): {INV-003} expanded to enumerate the full test-code exemption perimeter as implemented by the `cargo xtask check-client-timeout` gate: (a) test files (path contains `tests/` or `test/` directory component), (b) `#[cfg(test)]`-attributed items (items, impl blocks, functions, trait functions, item macros carrying `#[cfg(test)]`), and (c) `#[test]`-family function attributes (any attribute whose final path segment is `test`, including `#[tokio::test]`, `#[async_std::test]`, `#[rstest]`, `#[parameterized_test]`). Prior text cited only 'test files', which was narrower than the code and narrower than the CLAUDE.md rule ('forbidden in all code paths outside `#[cfg(test)]` blocks')."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-009
@@ -124,8 +125,17 @@ Connection Timeout) uniformly.
   path that produces an outbound HTTP call must have a timeout enforced at the client level.
 - {INV-002} **NE-04 enforcement:** The specific counter-example (adk-rust 8+ `Client::new()` sites) is
   the prototype for this CI gate.
-- {INV-003} Zero-argument `Client::new()` in test files is explicitly permitted — tests may use default
-  clients against local mock servers.
+- {INV-003} Zero-argument `Client::new()` is explicitly permitted in the following test-code contexts:
+  (a) **Test files** — source files whose path contains a `tests/` or `test/` directory component;
+  (b) **`#[cfg(test)]`-attributed items** — any item, `impl` block, function, trait function, or
+  item macro that carries a `#[cfg(test)]` attribute (directly or via an enclosing `#[cfg(test)]`
+  module);
+  (c) **`#[test]`-family function attributes** — any function whose attribute list includes an
+  attribute whose final path segment is `test` (e.g., `#[test]`, `#[tokio::test]`,
+  `#[async_std::test]`, `#[rstest]`, `#[parameterized_test]`, and any future `#[*::test]`
+  variants).
+  Test code in any of these contexts may use default clients against local mock servers without
+  setting a timeout.
 - {INV-004} A timeout of `None` (unlimited) is never the default in any pregolya config struct, even
   if the HTTP crate supports it.
 
