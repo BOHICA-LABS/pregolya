@@ -16,6 +16,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+### Fixed (fix-burst-25)
+
+- **F-P23-HIGH-001** (`xtask/src/check_client_timeout.rs`) — Added `scan_reqwest_blocking_pattern` helper to detect `reqwest::blocking::Client::new()`, `reqwest::blocking::ClientBuilder::new().build()`, and `reqwest::blocking::Client::builder().build()` without `.timeout()`; previously evaded detection via `preceded_by_non_reqwest` treating `blocking` as non-reqwest. Added four pinning tests (three positive, one negative for `other_sdk::blocking`).
+- **F-P23-MED-005** (`xtask/src/check_client_timeout.rs`) — Added three qualifier pinning tests for `self::Client::new()`, `super::ClientBuilder::new().build()`, and `Self::Client::builder().build()`; confirms `crate|self|super|Self` exclusion flags all four qualifier forms.
+- **F-P23-LOW-006** (`xtask/src/check_client_timeout.rs`) — Updated KNOWN-LIMITATION 4 paragraph to name both `ParenGroupEnd` and `BraceGroupEnd` terminators and cite both pinning tests.
+- **F-P23-LOW-007** (`xtask/src/check_client_timeout.rs`) — Rewrote Pattern 4 comment to accurately describe de-duplication (not catching); added matching `preceded_by_reqwest` de-dup guard to Patterns 2 and 3 for symmetry.
+
+### Fixed (fix-burst-24)
+
+- **F-P22-MED-001** (`CHANGELOG.md`) — Added missing fix-burst-23 section documenting F-P21-MED-001, F-P21-MED-002, and F-P21-LOW-001; reordered `### Fixed` sections to descending fix-burst order.
+- **F-P22-MED-002** (`docs/demo-evidence/S-1.02/evidence-report.md`) — Corrected fix-burst-23 attestation paragraph wording; accurately describes KNOWN-LIMITATION 4 (`ParenGroupEnd` depth-0 break) and Pattern 3 label.
+- **F-P22-MED-003** (`xtask/src/check_client_timeout.rs`) — Updated KNOWN-LIMITATION 1 scope statement to cover Patterns 2, 3, and 4 (was previously scoped to Pattern 2 only).
+- **F-P22-MED-004** (`xtask/src/check_client_timeout.rs`) — Extended `preceded_by_non_reqwest` guard in Patterns 2, 3, and 4 to exclude `"crate" | "self" | "super" | "Self"` from suppression; path-relative qualifiers now treated as ambiguous and flagged conservatively. Added three `crate::`-qualifier pinning tests.
+- **F-P22-MED-005** (`xtask/src/check_no_panic.rs`) — Renumbered KNOWN-LIMITATION labels: KL-1 (`scan_method_calls_in_tokens` exemption-blind macro-arg scan) and KL-2 (`syn_macro_has_bc_id` turbofish comma counting); added `# Known Limitations` module-doc index.
+- **F-P22-LOW-006** (`xtask/src/check_client_timeout.rs`) — Added `test_timeout_scanner_braced_base_subexpr_known_limitation` pinning test for KNOWN-LIMITATION 4 braced form.
+- **F-P22-LOW-007** (`xtask/src/check_client_timeout.rs`) — Added defense-in-depth comment to Pattern 4's `preceded_by_reqwest` guard; guard is currently unreachable but intentional as future-proofing.
+
 ### Fixed (fix-burst-23, 2026-09-22)
 - F-P21-MED-001: Pattern 3 (`ClientBuilder::new()`) gained a `preceded_by_non_reqwest` qualifier guard matching Patterns 2 and 4; suppresses false positives for non-reqwest types named `ClientBuilder`.
 - F-P21-MED-002: Added KNOWN-LIMITATION 4 to `has_build_without_timeout` documenting the parenthesized/braced base subexpression false negative (`(reqwest::ClientBuilder::new()).build()` is not flagged); added pinning test.
