@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.004
-version: "1.12"
+version: "1.13"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -27,6 +27,7 @@ changelog:
   - "1.10 (S-1.02-adv-pass-15/F-P15-M04/2026-09-22, product-owner): EC-006 <reason> redefined to include mandatory credential-redaction and 200-char cap per DI-010 / BC-2.14.005 {INV-001} (CWE-209). The raw build() error string MUST NOT appear verbatim in the structured error; sanitize_error_message (or equivalent) must be applied before constructing the PregolyaError message field. Reference to BC-2.14.005 {INV-001} added to EC-006 Reference line."
   - "1.11 (F-P16-MED-004/2026-09-22, product-owner): EC-001 scoped-coverage note added: 'documented' qualifier enforced by {PC-002}/review, not by the mechanical gate (gate is comment-blind per token-stream parsing)."
   - "1.12 (F-PC006-scoped-coverage/2026-09-22, product-owner): {PC-006} scoped-coverage note added; conjunctive connect_timeout≤timeout constraint is review-enforced, not gate-enforced; gate extension deferred to first connect_timeout call site."
+  - "1.13 (EC-006-disambiguate/2026-09-23, product-owner): EC-006 description disambiguated — the 200-char cap applies to the sanitized `<reason>` substring only (the string extracted from the underlying `build()` Err and redacted by `sanitize_error_message`); the full PregolyaError message field ('HttpClientBuildFailed: failed to build HTTP client: <reason>') is not itself capped. Aligns with `sanitize_error_message` behavior. No behavioral change."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-009
@@ -38,7 +39,7 @@ inputs:
   - .factory/semport/core/rust-translation-strategy.md
 input-hash: "a8775d1"
 extracted_from: null
-modified: []
+modified: ["2026-09-23"]
 deprecated: null
 deprecated_by: null
 replacement: null
@@ -182,9 +183,13 @@ loaded.
 message: "HttpClientBuildFailed: failed to build HTTP client: <reason>", .. })`
 where `<reason>` is the display string from the `build()` Err return, sanitized per
 DI-010 / BC-2.14.005 {INV-001}: URL-embedded credentials redacted to `://***@host` and the
-message capped at 200 characters to prevent credential leakage (CWE-209). The raw `build()`
-error string MUST NOT appear verbatim in the structured error — `sanitize_error_message`
-(or equivalent) must be applied before constructing the `PregolyaError` message field.
+sanitized `<reason>` substring capped to 200 Unicode scalar values (Rust `char`s) to prevent
+credential leakage (CWE-209). The full `PregolyaError` message field (which includes the static
+prefix "HttpClientBuildFailed: failed to build HTTP client: " prepended to `<reason>`) is NOT
+itself subject to the 200-character cap — only the `<reason>` portion extracted from the
+underlying `build()` Err is truncated. The raw `build()` error string MUST NOT appear verbatim
+in the structured error — `sanitize_error_message` (or equivalent) must be applied to the
+extracted reason string before constructing the `PregolyaError` message field.
 No `Client` is constructed; the operation fails before any outbound connection is attempted.
 **RetryHint:** Never — the same `ClientBuilder` configuration will reproduce the build failure
 immediately on retry; recovery requires fixing the TLS or proxy configuration.
