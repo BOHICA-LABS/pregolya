@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.02
 epic_id: E-01
-version: "1.20"
+version: "1.21"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -29,6 +29,7 @@ changelog:
   - "1.18 (fix-burst-34/F-P32-MED-002/2026-09-23): check_client_timeout.rs description corrected from proc_macro2 token-stream scan to syn::visit::Visit-based AST visitor (TimeoutChecker); Tasks item 7, Purity Classification row, and Library & Framework Requirements syn row all updated to reflect actual implementation introduced in fix-burst-26."
   - "1.19 (fix-burst-36/F-P34-MED-001-MED-002-MED-003/2026-09-23): MED-001: deny_bare_api_key.rs Purity Classification updated to walkdir; MED-002: walkdir dep row added to Library Requirements; MED-003: VP-DI010-02 and VP-DI010-03 added to verification_properties frontmatter"
   - "1.20 (fix-burst-38/F-P36-LOW-001/2026-09-23): LOW-001 (F-P36-LOW-001): walkdir Library Requirements row precision fix — 'five of seven gates (six call sites)' replaces imprecise 'all six gates'"
+  - "1.21 (fix-burst-46/F-P44-MED-006/2026-09-23): AC-009 Verified-by corrected: phantom compile-fail cite removed, AnthropicApiKey added, stale .as_str() removed (F-P44-MED-006)"
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.001.md
@@ -125,7 +126,7 @@ The `reqwest::Client` produced by `build_client()` has a positive total `.timeou
 `format!("{:?}", OpenAiApiKey("sk-real".to_string()))` returns exactly `"<redacted>"` — no substring of the key value. `format!("{:?}", AnthropicApiKey("sk-ant-real".to_string()))` returns exactly `"<redacted>"`. Verified by `test_BC_2_14_005_openai_debug_emits_redacted_sentinel()` and `test_BC_2_14_005_anthropic_debug_emits_redacted_sentinel()`.
 
 ### AC-009 (traces to BC-2.14.005 PC-003 and PC-004)
-No `#[derive(Serialize)]` on API key newtypes (they must not appear in API responses). No `impl Deref<Target=str>` or `impl AsRef<str>` that exposes the inner value (the `.as_str()` or `.expose_secret()` method is the only intentional exposure path). Verified by compile-fail test or `static_assertions::assert_not_impl_any!(OpenAiApiKey: AsRef<str>)`.
+No `#[derive(Serialize)]` on API key newtypes (they must not appear in API responses). No `impl Deref<Target=str>` or `impl AsRef<str>` that exposes the inner value (the `.expose_secret()` method is the only intentional exposure path). Verified by `static_assertions::assert_not_impl_any!(OpenAiApiKey: AsRef<str>)` and `static_assertions::assert_not_impl_any!(AnthropicApiKey: AsRef<str>)` (compile-time enforcement, no dedicated runtime test — matches pattern at AC-007 and AC-013).
 
 ### AC-010 (traces to BC-2.14.005 PC-006)
 `cargo xtask deny-bare-api-key` performs STRUCTURAL detection: it scans `crates/` for public structs whose names contain a credential sentinel (`key`, `token`, `secret`, `credential`, `auth`, `bearer`, `password`, `passphrase` — case-insensitive, 8 sentinels) and flags any that (1) `#[derive(Debug)]` without a manual `impl Debug` (auto-derived Debug would emit the raw inner value), (2) `#[derive(Serialize)]` (credentials must not appear in serialized artifacts per PC-003), (3) `#[derive(Deserialize)]` (credentials must not be reconstructed from untrusted data), (4) `impl Display for NAME` (Display exposes the inner value via `{}` formatting), or (5) `impl Deref for NAME { type Target = str; }` or `impl Deref for NAME { type Target = String; }` (Deref coercion silently exposes the inner value). The gate does NOT scan for string literals matching key prefixes such as `sk-` or `sk-ant-`. Files under `tests/` directories and `#[cfg(test)]` blocks are exempt. Exits non-zero when any structural violation is found; exits 0 on a clean scan. Verified by `test_BC_2_14_005_flags_derive_debug_on_token_struct()`, `test_BC_2_14_005_flags_serialize_on_secret_struct()`, `test_BC_2_14_005_flags_deref_str_on_credential_struct()`, `test_BC_2_14_005_compliant_credential_struct_not_flagged()`, `test_BC_2_14_005_deny_bare_api_key_subprocess_exits_nonzero_on_violation()`, `test_BC_2_14_005_impl_display_flagged()`, `test_BC_2_14_005_derive_deserialize_flagged()`, and `test_BC_2_14_005_pub_crate_debug_derive_fixture_detected()`.
