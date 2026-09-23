@@ -16,6 +16,70 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-57 (2026-09-23)
+
+Addresses adversary pass-55 findings. **Pass-55 finding tally: 1 HIGH + 3 MED + 3 LOW + 3 OBS**
+
+### HIGH-001: Unreachable pass-token guards deleted from check-burst-records-parity.sh
+
+**Finding:** Two guards added in fix-burst-56 (`[ -n "$cl_tally" ] && [ -z "$cl_pass" ]` / `[ -n "$er_tally" ] && [ -z "$er_pass" ]`) were structurally unreachable: `cl_tally` is extracted by a regex that requires `Pass-<digits>`, so non-empty `cl_tally` implies non-empty `cl_pass`. Format drift removing the pass token also makes `cl_tally` empty, already caught by the pre-existing empty-tally fail-closed guard.
+
+**What was fixed:** Deleted both unreachable guards. Updated the pass-number comparison comment to accurately describe why the guards are redundant. Load-bearing artifact: empty-tally fail-closed guard in `check_pass_number_agreement` (the pre-existing guard that catches un-extractable tally lines).
+
+### HIGH-001 records: CHANGELOG fix-burst-56 MED-002 and ER F-P54-MED-002 corrected
+
+**Finding:** fix-burst-56 CHANGELOG MED-002 and ER F-P54-MED-002 row both cited the unreachable guards as load-bearing artifacts. This was a false closure record.
+
+**What was fixed:** Both records updated to cite the pre-existing empty-tally fail-closed guard as the actual load-bearing artifact; unreachable-guard deletion described accurately.
+
+### MED-001: EXT-001 fabrication removed from two records sites
+
+**Finding:** AC-006 body in evidence-report and fix-burst-56 MED-004 body in CHANGELOG both cited `EXT-001 — requires mock HTTP server`; the actual `#[ignore]` tag is `PERF-BC214004`.
+
+**What was fixed:** Both sites updated to: `PERF-BC214004 — ~30 s wall-clock (client timeout fires at 30 s; inline stall server sleeps 35 s on a detached thread); ungated in CI when S-2.07 integration suite runs with timing budget`.
+
+### MED-002: AC-006 SID-1 substitute corrected to test_BC_2_14_004_default_timeout_applied
+
+**Finding:** AC-006 body named `test_BC_2_14_004_build_client_ok_and_build_failure_ec006` and `test_BC_2_14_004_build_client_returns_ok` as SID-1 substitutes for "timeout configured at construction" (PC-002). These tests verify Ok-return and build-failure shape, not timeout value. The http.rs SID-1 note identifies `test_BC_2_14_004_default_timeout_applied` as the authoritative PC-002 substitute.
+
+**What was fixed:** AC-006 body updated: SID-1 PC-002 substitute is `test_BC_2_14_004_default_timeout_applied` (asserts `"30s"` in client Debug output); `test_BC_2_14_004_build_client_ok_and_build_failure_ec006` and `test_BC_2_14_004_build_client_returns_ok` are additional Ok-return/DI-009 evidence, not the PC-002 substitute.
+
+### MED-003: Ambiguous Frozen HEAD annotation in fix-burst-56 re-verification corrected
+
+**Finding:** Single `[Frozen HEAD: 7643e0e...]` annotation was ambiguous — it was the adversary-pass-54 reviewed HEAD, not the post-fix-burst-56 commit HEAD (26384d58).
+
+**What was fixed:** Replaced with two labeled lines distinguishing the reviewed HEAD (adversary pass 54) from the re-verification HEAD (post-fix-burst-56).
+
+### LOW-001: lefthook.yml burst-parity comments updated
+
+**Finding:** Comments for `check-burst-records-parity` and `burst-parity-self-probe` did not describe the gate's four probes.
+
+**What was fixed:** Both comments updated to enumerate: ID-mismatch, tally-divergent, tally-sum≠id-count, pass-number-divergent.
+
+### LOW-002 + OBS-002: Per-AC Demo Recordings table completed and reordered
+
+**Finding:** AC-001, AC-012, AC-014 had no rows in the Per-AC Demo Recordings table (LOW-002); row order was non-monotonic (OBS-002).
+
+**What was fixed:** Added rows for AC-001, AC-012, AC-014 (same recording as AC-008); reordered entire table to monotonic AC number order.
+
+### LOW-003: #[ignore] reason wall-clock corrected to ~30 s
+
+**Finding:** `test_BC_2_14_004_timeout_fires_against_mock_server` `#[ignore]` reason stated `~35 s wall-clock` but the test fires when the client times out at 30 s.
+
+**What was fixed:** `#[ignore]` reason updated to `~30 s wall-clock (client timeout fires at 30 s; inline stall server sleeps 35 s on a detached thread)`.
+
+### OBS-001: head -1 added to cl_pass/er_pass extractions
+
+**Finding:** `cl_pass`/`er_pass` extractions lacked `| head -1`.
+
+**What was fixed:** `| head -1` appended to both extraction pipelines in `check-burst-records-parity.sh`.
+
+### OBS-003: Duplicate clause-walk text removed from fix-burst-55 re-verification
+
+**Finding:** Clause-walk text appeared verbatim twice in fix-burst-55 re-verification.
+
+**What was fixed:** Duplicate removed from `Gate output` bullet; replaced with cross-reference to `Test count` above.
+
 ## fix-burst-56 (pass-54 findings)
 
 **Pass-54 finding tally: 1 HIGH + 5 MED + 2 LOW + 3 OBS**
@@ -30,7 +94,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### MED-002: pass-token extraction overclaimed as fail-closed — actually fail-open when tally line present but token un-extractable
 
-**What was fixed:** Added two fail-closed guards after `cl_pass`/`er_pass` extraction: if `cl_tally` is non-empty but `cl_pass` is empty (format drift), gate emits `[BURST-PARITY FAIL] fix-burst-N: tally line present but CHANGELOG pass number not extractable — cannot certify pass-number agreement` and exits 1; symmetrically for `er_pass`. Corrected CHANGELOG `## fix-burst-55` → `### LOW-001` "What was fixed" text to accurately describe the fail-closed behavior. See `check-burst-records-parity.sh`.
+**What was fixed:** The claimed fix (unreachable guards) was dead code — the `cl_tally`/`er_tally` regex requires `Pass-<digits>` so non-empty tally always implies extractable pass token. Format drift making the pass token absent also makes the tally line un-extractable, already caught by the pre-existing empty-tally fail-closed guard. The unreachable guards were deleted; the load-bearing artifact for un-extractable pass-token format drift is the empty-tally guard.
 
 ### MED-003: incomplete sibling sweep of old test name — two un-swept sites not annotated
 
@@ -38,7 +102,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### MED-004: AC-006 tri-directionally mis-anchored — header describes Ok-return, PC-005 cites timeout-fires, code-labeled artifact (#[ignore]'d) absent from entry
 
-**What was fixed:** Corrected `### AC-006` in §AC Coverage Map. Header changed to: "timeout configured at construction; build_client() succeeds (BC-2.14.004 PC-005; DI-009 scope; E-PROV-002 firing deferred to S-2.07)". Entry now names primary code-labeled artifact `test_BC_2_14_004_timeout_fires_against_mock_server` (labeled AC-006, `#[ignore]`'d per EXT-001) and SID-1 non-ignored substitutes `test_BC_2_14_004_build_client_ok_and_build_failure_ec006` (formerly `test_BC_2_14_004_timeout_error_shape`; verifies `build_client()` returns Ok per DI-009) and `test_BC_2_14_004_build_client_returns_ok`. Story spec adjudication: AC-006 rescoped in spec v1.6 (pass-4/F-06) to S-1.02 DI-009 scope only; PC-005 E-PROV-002 shape deferred to S-2.07.
+**What was fixed:** Corrected `### AC-006` in §AC Coverage Map. Header changed to: "timeout configured at construction; build_client() succeeds (BC-2.14.004 PC-005; DI-009 scope; E-PROV-002 firing deferred to S-2.07)". Entry now names primary code-labeled artifact `test_BC_2_14_004_timeout_fires_against_mock_server` (labeled AC-006, `#[ignore]`'d per PERF-BC214004 — ~30 s wall-clock (client timeout fires at 30 s; inline stall server sleeps 35 s on a detached thread); ungated in CI when S-2.07 integration suite runs with timing budget) and SID-1 non-ignored substitutes `test_BC_2_14_004_build_client_ok_and_build_failure_ec006` (formerly `test_BC_2_14_004_timeout_error_shape`; verifies `build_client()` returns Ok per DI-009) and `test_BC_2_14_004_build_client_returns_ok`. Story spec adjudication: AC-006 rescoped in spec v1.6 (pass-4/F-06) to S-1.02 DI-009 scope only; PC-005 E-PROV-002 shape deferred to S-2.07.
 
 ### MED-005: `{PC-003}` cited for timeout-value property where `{PC-002}` is correct
 

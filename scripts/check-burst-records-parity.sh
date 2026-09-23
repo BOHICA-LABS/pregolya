@@ -139,24 +139,16 @@ do_parity_check() {
         | grep -oE '\*\*Adversary pass [0-9]+ result:\*\*.*' | head -1 || true)
 
     # ── Pass-number agreement between CHANGELOG and evidence-report ─────────────
-    # Fires when BOTH pass-numbers are extractable and they disagree.
-    # Fail-closed: if the tally line is present but the pass token cannot be
-    # extracted (format drift), emit FAIL immediately — do not fall through.
-    # If the tally line itself is absent, the existing empty-tally guard fires below.
+    # Both cl_pass and er_pass are always non-empty when cl_tally/er_tally are
+    # non-empty (the tally regex requires Pass-<N>). Format drift that makes the
+    # pass token absent will also make the tally line un-extractable, caught by
+    # the empty-tally fail-closed guard. This guard fires only when both
+    # extractions succeed and they disagree.
     local cl_pass er_pass
     cl_pass=$(printf '%s\n' "$cl_tally" \
-        | grep -oE 'Pass-[0-9]+' | grep -oE '[0-9]+' || true)
+        | grep -oE 'Pass-[0-9]+' | grep -oE '[0-9]+' | head -1 || true)
     er_pass=$(printf '%s\n' "$er_tally" \
-        | grep -oE 'pass [0-9]+' | grep -oE '[0-9]+' || true)
-
-    if [ -n "$cl_tally" ] && [ -z "$cl_pass" ]; then
-        echo "[BURST-PARITY FAIL] fix-burst-${newest_burst}: tally line present but CHANGELOG pass number not extractable — cannot certify pass-number agreement"
-        return 1
-    fi
-    if [ -n "$er_tally" ] && [ -z "$er_pass" ]; then
-        echo "[BURST-PARITY FAIL] fix-burst-${newest_burst}: tally line present but evidence-report pass number not extractable — cannot certify pass-number agreement"
-        return 1
-    fi
+        | grep -oE 'pass [0-9]+' | grep -oE '[0-9]+' | head -1 || true)
 
     if [ -n "$cl_pass" ] && [ -n "$er_pass" ] && [ "$cl_pass" != "$er_pass" ]; then
         echo "[BURST-PARITY FAIL] fix-burst-${newest_burst}: CHANGELOG cites Pass-${cl_pass} but evidence-report cites Adversary pass ${er_pass}"

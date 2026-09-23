@@ -297,10 +297,11 @@ mod tests {
     /// GREEN: `build_client()` is implemented — the client is constructed and the timeout
     /// fires as expected against a stalled server.
     #[tokio::test]
-    #[ignore = "PERF-BC214004: ~35 s wall-clock (inline stall server sleeps 35 s to trigger \
-                timeout); unit substitute that verifies timeout is configured without the live \
-                wait: test_BC_2_14_004_default_timeout_applied (BC-2.14.004 {PC-002}); \
-                ungated in CI when S-2.07 integration suite runs with timing budget"]
+    #[ignore = "PERF-BC214004: ~30 s wall-clock (client timeout fires at 30 s; inline stall \
+                server sleeps 35 s on a detached thread); unit substitute that verifies timeout \
+                is configured without the live wait: test_BC_2_14_004_default_timeout_applied \
+                (BC-2.14.004 {PC-002}); ungated in CI when S-2.07 integration suite runs with \
+                timing budget"]
     async fn test_BC_2_14_004_timeout_fires_against_mock_server() {
         use std::io::Read as _;
         use std::net::TcpListener;

@@ -20,15 +20,18 @@ status: complete
 
 | AC | BC | Description | Recording (webm) | Recording (gif) | Tape | Status |
 |----|----|-------------|------------------|-----------------|------|--------|
+| AC-001 | BC-2.14.003 PC-001 | constructor returns Result | same recording as AC-008 | — | — | recorded |
 | AC-002 | BC-2.14.003 PC-004 | `cargo xtask check-no-panic` exits 0 — no unwrap/expect/panic in non-test code | [AC-002-check-no-panic-pass.webm](AC-002-check-no-panic-pass.webm) | [AC-002-check-no-panic-pass.gif](AC-002-check-no-panic-pass.gif) | [tape](AC-002-check-no-panic-pass.tape) | recorded (refreshed 2026-09-22) |
 | AC-003 | BC-2.14.003 INV-003/INV-004 | `debug_assert!` and exhaustive-match `unreachable!` are exempt — gate exits 0 | `test_BC_2_14_003_debug_assert_not_flagged` in `xtask::tests` — places synthetic `debug_assert!` in non-test scope; asserts gate returns Ok with 0 violations; discriminating (would fail if exemption was removed). Gate PASS is not itself load-bearing for the exemption since production tree contains zero `debug_assert!`/`unreachable!` sites. | — | — | covered |
 | AC-005 | BC-2.14.004 PC-003 | `cargo xtask check-client-timeout` exits 0 — no missing `.timeout()` | [AC-005-check-client-timeout-pass.webm](AC-005-check-client-timeout-pass.webm) | [AC-005-check-client-timeout-pass.gif](AC-005-check-client-timeout-pass.gif) | [tape](AC-005-check-client-timeout-pass.tape) | recorded (refreshed 2026-09-22) |
-| AC-010 | BC-2.14.005 PC-006 | `cargo xtask deny-bare-api-key` exits 0 — structural credential scan passes | [AC-010-deny-bare-api-key-pass.webm](AC-010-deny-bare-api-key-pass.webm) | [AC-010-deny-bare-api-key-pass.gif](AC-010-deny-bare-api-key-pass.gif) | [tape](AC-010-deny-bare-api-key-pass.tape) | recorded (refreshed 2026-09-22) |
-| AC-020 | BC-2.14.001 EC-004 / VP-BC214001-01 | `cargo xtask check-error-code-registry` exits 0 — 148 error codes validated, 0 collisions | text evidence (gate stdout) | — | — | captured 2026-09-22 (post-fix-burst-5) |
-| AC-017 | BC-2.14.003 EC-007 | `cargo xtask check-no-panic --fixture-mode` FLAGS violations in 14 of 17 fixture files spanning five violation classes: bare `assert!` (incl. short BC-ID + BC-ID in condition), catch-all `unreachable!()` arms (wildcard `_ =>` and irrefutable-binding forms `other =>`, `ref other =>`, `mut other =>`, guarded `other if ... =>`, `_other =>`), `.unwrap()` in macros, `todo!()` (unimplemented!() covered by inline unit test only), `assert_eq!`/`assert_ne!` with BC-ID in comparand — 14/17 fixture files flagged | [AC-017-check-no-panic-flags-violations.webm](AC-017-check-no-panic-flags-violations.webm) | [AC-017-check-no-panic-flags-violations.gif](AC-017-check-no-panic-flags-violations.gif) | [tape](AC-017-check-no-panic-flags-violations.tape) | recorded (re-recorded 2026-09-22) |
 | AC-008 | BC-2.14.005 PC-002 | `Debug` emits exactly `"<redacted>"` — key material never appears in format output | [AC-008-AC-011-AC-016-credential-validation-redaction.webm](AC-008-AC-011-AC-016-credential-validation-redaction.webm) | [AC-008-AC-011-AC-016-credential-validation-redaction.gif](AC-008-AC-011-AC-016-credential-validation-redaction.gif) | [tape](AC-008-AC-011-AC-016-credential-validation-redaction.tape) | recorded |
+| AC-010 | BC-2.14.005 PC-006 | `cargo xtask deny-bare-api-key` exits 0 — structural credential scan passes | [AC-010-deny-bare-api-key-pass.webm](AC-010-deny-bare-api-key-pass.webm) | [AC-010-deny-bare-api-key-pass.gif](AC-010-deny-bare-api-key-pass.gif) | [tape](AC-010-deny-bare-api-key-pass.tape) | recorded (refreshed 2026-09-22) |
 | AC-011 | BC-2.14.006 PC-001 | `OpenAiApiKey::new("")` → `Err(E-CORE-005 / VAL / Never)` | same recording as AC-008 | — | — | recorded |
+| AC-012 | BC-2.14.006 PC-003 | no silent None/default on invalid inputs | same recording as AC-008 | — | — | recorded |
+| AC-014 | BC-2.14.006 PC-004 | error code E-CORE-005 + message format | same recording as AC-008 | — | — | recorded |
 | AC-016 | BC-2.14.006 EC-006 | `new("   ")` whitespace-only rejected with same `E-CORE-005` error | same recording as AC-008 | — | — | recorded |
+| AC-017 | BC-2.14.003 EC-007 | `cargo xtask check-no-panic --fixture-mode` FLAGS violations in 14 of 17 fixture files spanning five violation classes: bare `assert!` (incl. short BC-ID + BC-ID in condition), catch-all `unreachable!()` arms (wildcard `_ =>` and irrefutable-binding forms `other =>`, `ref other =>`, `mut other =>`, guarded `other if ... =>`, `_other =>`), `.unwrap()` in macros, `todo!()` (unimplemented!() covered by inline unit test only), `assert_eq!`/`assert_ne!` with BC-ID in comparand — 14/17 fixture files flagged | [AC-017-check-no-panic-flags-violations.webm](AC-017-check-no-panic-flags-violations.webm) | [AC-017-check-no-panic-flags-violations.gif](AC-017-check-no-panic-flags-violations.gif) | [tape](AC-017-check-no-panic-flags-violations.tape) | recorded (re-recorded 2026-09-22) |
+| AC-020 | BC-2.14.001 EC-004 / VP-BC214001-01 | `cargo xtask check-error-code-registry` exits 0 — 148 error codes validated, 0 collisions | text evidence (gate stdout) | — | — | captured 2026-09-22 (post-fix-burst-5) |
 
 ---
 
@@ -52,7 +55,7 @@ Recording: `AC-005-check-client-timeout-pass.{webm,gif}` — re-recorded 2026-09
 Shows: `cargo xtask check-client-timeout` — output: `check-client-timeout PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations`
 
 ### AC-006 — timeout configured at construction; build_client() succeeds (BC-2.14.004 PC-005; DI-009 scope; E-PROV-002 firing deferred to S-2.07)
-Primary code-labeled artifact: `test_BC_2_14_004_timeout_fires_against_mock_server` (labeled AC-006 in source, `#[ignore]`'d per EXT-001 — requires mock HTTP server; full E-PROV-002 shape deferred to S-2.07). SID-1 non-ignored substitute: `test_BC_2_14_004_build_client_ok_and_build_failure_ec006` (formerly `test_BC_2_14_004_timeout_error_shape`), which confirms `build_client()` returns Ok (DI-009 compliance). `test_BC_2_14_004_build_client_returns_ok` also verifies the Ok-return. Both SID-1 substitutes are inside `#[cfg(test)]` in `http.rs`.
+Primary code-labeled artifact: `test_BC_2_14_004_timeout_fires_against_mock_server` (labeled AC-006 in source, `#[ignore]`'d per PERF-BC214004 — ~30 s wall-clock (client timeout fires at 30 s; inline stall server sleeps 35 s on a detached thread); ungated in CI when S-2.07 integration suite runs with timing budget; full E-PROV-002 shape deferred to S-2.07). SID-1 non-ignored substitute for "timeout configured at construction" (PC-002): `test_BC_2_14_004_default_timeout_applied` (asserts `"30s"` in client Debug output). Additional Ok-return / DI-009 evidence: `test_BC_2_14_004_build_client_ok_and_build_failure_ec006` (formerly `test_BC_2_14_004_timeout_error_shape`) and `test_BC_2_14_004_build_client_returns_ok` (not the SID-1 substitute — they verify Ok-return and build-failure shape respectively). Both are inside `#[cfg(test)]` in `http.rs`.
 
 ### AC-007 — constructor returns Ok for valid key (BC-2.14.005 PC-001)
 Primary load-bearing tests: `test_BC_2_14_005_openai_new_valid_key_returns_ok` and `test_BC_2_14_005_anthropic_new_valid_key_returns_ok` (both labeled AC-007 in their doc comments in `credentials.rs`). Each asserts that `new()` with a non-empty key string returns `Ok(T)` — covering BC-2.14.005 {PC-001} (constructor returns `Result<T, PregolyaError>`). No compile-time assertion is claimed for this AC; the structural type-exclusion `assert_not_impl_any!` invocations are owned by AC-009 (AsRef/Deref/Display/Serialize/Deserialize) and AC-013 (From conversions).
@@ -238,8 +241,43 @@ Gate outputs remain valid because the syn rewrite finds the same 0 violations on
 
 The fix-burst-26 evidence-report docs commit (this commit) is docs-only and does NOT trigger clause (d).
 
+## fix-burst-57 re-verification (adversary pass-56 streak attempt 1/3)
+
+**Test count:** 92 passed, 2 skipped (unchanged). The `#[ignore]` reason change in `test_BC_2_14_004_timeout_fires_against_mock_server` is text-only; no test logic or production code behavior changed. The script changes to `check-burst-records-parity.sh` are in `scripts/` (not `crates/`). Clauses (a)–(d) of Recording Provenance remain valid: no production code behavior changed, no demo video files changed, test count unchanged, gate output captured below on the actual evidence file after fix-burst-57 CHANGELOG section written.
+
+**Adversary pass 55 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH + 3 MED + 3 LOW + 3 OBS.
+
+**Gate output (burst-parity normal mode):**
+```
+[BURST-PARITY PASS] fix-burst-57: 10 finding IDs matched; tally: 1H+3L+3M+3OBS.
+```
+
+**Gate output (burst-parity self-probe):**
+```
+[SELF-PROBE PASS] probe-1 (ID-mismatch): divergent ID pair correctly detected mismatch
+[SELF-PROBE PASS] probe-2 (tally-divergent): identical IDs with divergent tallies correctly detected mismatch
+[SELF-PROBE PASS] probe-3 (tally-sum≠id-count): declared tally sum 3 vs 2 IDs correctly detected
+[SELF-PROBE PASS] probe-4 (pass-number-divergent): divergent pass numbers (CHANGELOG Pass-94 vs evidence-report pass 93) correctly detected
+```
+
+| Finding | Severity | Disposition | Load-bearing artifact |
+|---------|----------|-------------|----------------------|
+| F-P55-HIGH-001 | HIGH | CLOSED | pre-existing empty-tally fail-closed guard in `check-burst-records-parity.sh`; unreachable guards deleted |
+| F-P55-HIGH-001 | HIGH | CLOSED | CHANGELOG fix-burst-56 MED-002 and ER F-P54-MED-002 row corrected to cite empty-tally guard (records fix) |
+| F-P55-MED-001 | MED | CLOSED | AC-006 body + CHANGELOG MED-004 body corrected to cite `PERF-BC214004` |
+| F-P55-MED-002 | MED | CLOSED | AC-006 body now names `test_BC_2_14_004_default_timeout_applied` as PC-002 SID-1 substitute |
+| F-P55-MED-003 | MED | CLOSED | Two labeled lines distinguish reviewed HEAD (pass 54) from re-verification HEAD (post-fix-burst-56) |
+| F-P55-LOW-001 | LOW | CLOSED | `lefthook.yml` comments updated to enumerate four probes |
+| F-P55-LOW-002 | LOW | CLOSED | Rows added for AC-001, AC-012, AC-014 (same recording as AC-008) in `## Per-AC Demo Recordings`; table reordered to monotonic AC number order (OBS-002 addressed here) |
+| F-P55-LOW-003 | LOW | CLOSED | `#[ignore]` reason on `test_BC_2_14_004_timeout_fires_against_mock_server` corrected to `~30 s wall-clock (client timeout fires at 30 s; inline stall server sleeps 35 s on a detached thread)` |
+| F-P55-OBS-001 | OBS | CLOSED | `| head -1` appended to `cl_pass` and `er_pass` extraction pipelines |
+| F-P55-OBS-003 | OBS | CLOSED | Duplicate clause-walk text removed from fix-burst-55 re-verification `Gate output` bullet |
+
+---
+
 ## fix-burst-56 re-verification
-[Frozen HEAD: 7643e0e141bcae6c769e19ead47bf2c1bdb37bea]
+[Reviewed HEAD (adversary pass 54): 7643e0e141bcae6c769e19ead47bf2c1bdb37bea]
+[Re-verification HEAD (post-fix-burst-56): 26384d58a4df7fd37f6e019b578736212c18ec04]
 
 **Adversary pass 54 result:** 1 HIGH + 5 MED + 2 LOW + 3 OBS (11 findings)
 
@@ -247,7 +285,7 @@ The fix-burst-26 evidence-report docs commit (this commit) is docs-only and does
 |---------|----------|--------|-----------------|-----------------------|
 | F-P54-HIGH-001 | HIGH | CLOSED | False attestation (Recording Provenance) | Clause walk in CHANGELOG `## fix-burst-55` `**Test count:**` and evidence-report `## fix-burst-55 re-verification` `**Gate output:**` — explicitly enumerates `http.rs` inside `#[cfg(test)]`, clauses a–d |
 | F-P54-MED-001 | MED | CLOSED | Unprobed guard path (recurrence of F-P52-MED-002 class) | probe-4 in `run_self_probes` — `do_parity_check` exits non-zero on burst-95 (Pass-94 vs pass 93 divergence); `[SELF-PROBE PASS] probe-4 (pass-number-divergent)` |
-| F-P54-MED-002 | MED | CLOSED | Overclaimed fail-closed | Two `[ -n "$cl_tally" ] && [ -z "$cl_pass" ]` guards in `check-burst-records-parity.sh`; CHANGELOG `### LOW-001` description corrected |
+| F-P54-MED-002 | MED | CLOSED | Overclaimed fail-closed | pre-existing empty-tally fail-closed guard in `check-burst-records-parity.sh` — format drift making pass-token absent also makes tally line un-extractable; empty-tally guard fires (unreachable guards deleted) |
 | F-P54-MED-003 | MED | CLOSED | Incomplete sibling sweep (partial-fix regression) | `test_BC_2_14_004_build_client_ok_and_build_failure_ec006` (formerly `test_BC_2_14_004_timeout_error_shape`) annotation in evidence-report F-P51-MED-002 row and CHANGELOG `### MED-001:` heading |
 | F-P54-MED-004 | MED | CLOSED | AC-006 tri-directional mis-anchor | `### AC-006` header corrected; body now names `test_BC_2_14_004_timeout_fires_against_mock_server` (code-labeled, `#[ignore]`'d) + SID-1 substitutes; adjudicated per story spec v1.6 (pass-4/F-06) |
 | F-P54-MED-005 | MED | CLOSED | Incorrect PC postcondition citation | `### AC-004` header `PC-002/PC-003`; `#[ignore]` reason in `test_BC_2_14_004_timeout_fires_against_mock_server` corrected to `{PC-002}` |
@@ -282,7 +320,7 @@ The fix-burst-26 evidence-report docs commit (this commit) is docs-only and does
 **Test count:** 92 passed, 2 skipped (pregolya-core nextest; 2 `#[ignore]`'d live-network tests). `crates/pregolya-core/src/http.rs` changed — test rename, assertion-message text, doc-comment NOTE blocks; all changes inside `#[cfg(test)]`. Clause (a): no `crates/` files added or deleted — OK. Clause (b): no panic-family, timeout constructs, or credential constructs added or removed — OK. Clause (c): no fixture-directory change — OK. Clause (d): no `xtask/src/**/*.rs` change — OK. Recorded gate outputs remain valid.
 
 **Gate output:**
-- `crates/pregolya-core/src/http.rs` changed — test rename, assertion-message text, doc-comment NOTE blocks; all changes inside `#[cfg(test)]`. Clause (a): no `crates/` files added or deleted — OK. Clause (b): no panic-family, timeout constructs, or credential constructs added or removed — OK. Clause (c): no fixture-directory change — OK. Clause (d): no `xtask/src/**/*.rs` change — OK. Recorded gate outputs remain valid.
+- See Test count above for clause walk.
 - `check-burst-records-parity` → `[BURST-PARITY PASS] fix-burst-55: 9 finding IDs matched; tally: 1L+2H+2OBS+4M.`; `burst-parity-self-probe` → `[SELF-PROBE PASS] probe-1 (ID-mismatch): divergent ID pair correctly detected mismatch`; `[SELF-PROBE PASS] probe-2 (tally-divergent): identical IDs with divergent tallies correctly detected mismatch`; `[SELF-PROBE PASS] probe-3 (tally-sum≠id-count): declared tally sum 3 vs 2 IDs correctly detected`
 - Factory-dispatcher chain: `records-lint.sh` exits 0
 

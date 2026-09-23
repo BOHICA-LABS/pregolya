@@ -19,14 +19,17 @@ pre-push:
     # Fix 5 (F-P48-PROCESS-GAP-001): burst-parity check — verify the newest
     # fix-burst-N section in CHANGELOG.md has a matching re-verification section
     # in evidence-report.md with consistent finding-ID sets and tally counts.
-    # Logic extracted to scripts/check-burst-records-parity.sh for testability
-    # (fixes F-P51-HIGH-001 inert regexes, F-P51-MED-001 PROCESS-GAP support,
-    # F-P51-LOW-001 ID_COUNT doubling, and adds fail-closed empty extraction).
+    # Enforces: ID-set agreement, tally-count agreement,
+    # tally-sum↔ID-count reconciliation, pass-number agreement,
+    # and ER-newest-burst agreement.
+    # Logic extracted to scripts/check-burst-records-parity.sh for testability.
     check-burst-records-parity:
       run: bash scripts/check-burst-records-parity.sh
-    # Self-probe: runs the script's --self-probe mode to verify the regex logic
-    # catches a deliberately-divergent synthetic pair.  Always passes on a
-    # correctly-functioning script; fails if a regex regression is introduced.
+    # Self-probe: runs the script's --self-probe mode to verify the regex logic.
+    # Runs four synthetic probes covering ID-mismatch, tally-divergent,
+    # tally-sum≠id-count, and pass-number-divergent scenarios.
+    # Always passes on a correctly-functioning script; fails if a regex
+    # regression is introduced.
     burst-parity-self-probe:
       run: bash scripts/check-burst-records-parity.sh --self-probe
 
