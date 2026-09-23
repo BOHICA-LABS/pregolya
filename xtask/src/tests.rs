@@ -398,7 +398,10 @@ fn test_timeout_scanner_split_statement_false_negative_known_limitation() {
     // This false negative is acknowledged — the test exists to document it.
     // When/if cross-statement tracking is implemented, this test should be updated
     // to assert `!findings.is_empty()`.
-    let _ = findings; // acknowledged false negative; see KNOWN-LIMITATION 2 in module doc
+    assert!(
+        findings.is_empty(),
+        "KNOWN-LIMITATION 2: split-statement ClientBuilder chain is an accepted false negative; got: {findings:?}"
+    );
 }
 
 // ── S-3 regression tests ─────────────────────────────────────────────────
@@ -3819,7 +3822,7 @@ fn test_check_post_exemption_vacuity_nonzero_analyzed_returns_ok() {
 }
 
 /// F-P9-M04 — post-exemption vacuity: the helper logic returns `Err` with the
-/// correct gate name for each of the five gate name strings.
+/// correct gate name for each of the six gate name strings.
 ///
 /// This test verifies only the pure helper logic — it does NOT verify that each
 /// scanner actually calls `check_post_exemption_vacuity`. For wiring coverage,
@@ -3827,6 +3830,7 @@ fn test_check_post_exemption_vacuity_nonzero_analyzed_returns_ok() {
 #[test]
 fn test_check_post_exemption_vacuity_gate_names_are_distinct() {
     let gates = [
+        "check-file-size",
         "check-no-panic",
         "check-client-timeout",
         "deny-bare-api-key",
@@ -3848,7 +3852,7 @@ fn test_check_post_exemption_vacuity_gate_names_are_distinct() {
 }
 
 /// F-P10-M03 — source-coupling test: verify `check_post_exemption_vacuity(` is
-/// present in each of the five scanner source files.
+/// present for all six guarded gates across four source files.
 ///
 /// This test verifies WIRING — that each scanner actually calls the helper,
 /// not just that the helper logic is correct. If a scanner drops the call,
@@ -3869,13 +3873,17 @@ fn test_check_post_exemption_vacuity_wiring_present_in_all_scanners() {
             "{name} must wire check_post_exemption_vacuity(); if missing the vacuity guard is absent"
         );
     }
-    // Anchor on gate-name literals used at call sites — the definition has no gate name
+    // Anchor on gate-name literals used at call sites in main.rs — the definition has no gate name
     assert!(
-        main_rs.contains("check_post_exemption_vacuity(\"deny-anyhow-in-lib\""),
+        main_rs.contains(r#"check_post_exemption_vacuity("check-file-size""#),
+        "main.rs must wire check_post_exemption_vacuity for check-file-size"
+    );
+    assert!(
+        main_rs.contains(r#"check_post_exemption_vacuity("deny-anyhow-in-lib""#),
         "main.rs must wire check_post_exemption_vacuity for deny-anyhow-in-lib"
     );
     assert!(
-        main_rs.contains("check_post_exemption_vacuity(\"deny-description-cache-key\""),
+        main_rs.contains(r#"check_post_exemption_vacuity("deny-description-cache-key""#),
         "main.rs must wire check_post_exemption_vacuity for deny-description-cache-key"
     );
 }

@@ -172,6 +172,11 @@ fn main() {
 /// Does NOT use `.contains("test")` substring matching, which would
 /// incorrectly suppress production files in crates whose names contain
 /// "test" (e.g. `pregolya-standard-tests`).
+///
+/// Intentionally duplicated from `is_test_class_file` — predicate bodies are identical.
+/// The functions are separate because they gate different subsystems (`BC-2.14.003 {INV-004}`
+/// lint perimeter vs. file-size test-class threshold) that are expected to diverge when
+/// `examples/`/`benches/` exemption policy splits between the two subsystems.
 fn is_test_file(path: &str) -> bool {
     path.ends_with("/tests.rs")
         || path == "tests.rs"
@@ -197,6 +202,9 @@ fn is_lint_exempt_file(path: &str) -> bool {
 /// and NOT benchmarks (which are tuning tools, not test suites).
 ///
 /// Used by: `check_file_size`.
+///
+/// Intentionally duplicated from `is_test_file` — predicate bodies are identical.
+/// See `is_test_file` doc for the divergence rationale.
 fn is_test_class_file(path: &str) -> bool {
     path.ends_with("/tests.rs")
         || path == "tests.rs"

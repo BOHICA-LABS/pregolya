@@ -38,9 +38,9 @@ use std::process::exit;
 pub fn run() {
     // Scan root is "crates/" only — xtask itself is excluded.
     // BC-2.14.003 {PC-004}/{PC-005} binds "non-test library code" in crates/;
-    // xtask is a build-tool binary crate operating outside that scope.
-    // xtask programmer-error guards (assert! in check_file_size etc.) are
-    // intentionally exempt from the no-panic library rule.
+    // xtask is a build-tool binary crate outside that perimeter.
+    // xtask production code currently contains no panic-family constructs;
+    // failures are surfaced via stderr + non-zero exit.
     let output = std::process::Command::new("find")
         .args(["crates/", "-name", "*.rs", "-not", "-path", "*/target/*"])
         .output();
