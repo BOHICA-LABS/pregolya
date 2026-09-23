@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - **No-panic CI enforcement** (`cargo xtask check-no-panic`): AST-based scan of all `crates/` production source files that flags `unwrap()`, `expect()`, bare `assert!` / `assert_eq!` / `assert_ne!` / `assert_matches!` without `# Panics` doc and BC-ID message, `todo!` / `unimplemented!` (unconditionally flagged — no exemption applies; mark incomplete work), `panic!`, named-arm `unreachable!` where the match has an unguarded catch-all sibling, and wildcard `_ => unreachable!()` arms; exempts `debug_assert!`, exhaustive-match `unreachable!` in fully-named arms, and programmer-error guards with compliant doc+message pattern (BC-2.14.003).
-- **HTTP client timeout CI enforcement** (`cargo xtask check-client-timeout`): source scan that flags `reqwest::ClientBuilder` chains missing `.timeout(duration > 0)` before `.build()` and any bare `reqwest::Client::new()` in non-test production code (BC-2.14.004).
+- **HTTP client timeout CI enforcement** (`cargo xtask check-client-timeout`): source scan that flags `reqwest::ClientBuilder` chains missing `.timeout(duration > 0)` before `.build()` and any bare `reqwest::Client::new()` in non-test production code (BC-2.14.004), including `Client::default()` / `ClientBuilder::default()` constructions, UFCS `<reqwest::Client as Default>::default()` forms, `reqwest::blocking::*` surfaces, and macro-body constructions via recursive syn AST parsing.
 - **Credential structural safety CI gate** (`cargo xtask deny-bare-api-key`): structural scanner that flags public structs with credential-sentinel names (`key`, `token`, `secret`, `credential`, `auth`, `bearer`, `password`, `passphrase`) that auto-derive `Debug` (without a manual redacted impl), derive `Serialize`, derive `Deserialize` (bypasses `new()` validation), implement `Display`, or implement `Deref<Target=str/String>` (BC-2.14.005).
 - **Error-code registry CI enforcement** (`cargo xtask check-error-code-registry`): parses `.factory/specs/prd-supplements/error-taxonomy.md` and fails the build if any `E-<COMPONENT>-<NNN>` code appears more than once; exits 1 with a descriptive error if zero codes are extracted (vacuity guard — detects taxonomy format changes); taxonomy path resolved via `FACTORY_DIR` env var (set by CI factory-artifacts checkout step) or `.factory/` relative fallback when `FACTORY_DIR` is absent or empty (BC-2.14.001, VP-BC214001-01).
 - **`OpenAiApiKey` and `AnthropicApiKey` credential newtypes** in `pregolya-core`: private-field newtypes with manually-implemented redacted `Debug` (emits exactly `"<redacted>"`); fallible construction via `new() -> Result<Self, PregolyaError>`; infallible `From<String>`/`From<&str>` conversions are structurally forbidden and pinned by `static_assertions::assert_not_impl_any!` (BC-2.14.006 EC-005); no `Serialize`, `Deserialize`, `Display`, `Deref`, or `AsRef<str>`; compile-time `static_assertions` enforce all exclusions (BC-2.14.005, BC-2.14.006).
@@ -36,7 +36,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 | ID | Description | Status |
 |----|-------------|--------|
-| KL-1 | Bare `Client::new()` imported via `use reqwest::Client` — false negative (cannot resolve without type info). Workaround: use fully-qualified `reqwest::Client::new()` | Preserved |
+| KL-1 | Bare `Client::new()` without a qualifying module path — **conservative false positive**: the gate cannot determine whether `Client` refers to `reqwest::Client` or another SDK's client, so it flags conservatively. (Qualifying with a non-reqwest head segment suppresses the alarm.) Workaround: qualify with owning-crate path (e.g., `other_sdk::Client::new()`); reqwest-qualified forms are unconditional violations. | Conservative false positive |
 | KL-2 | Split-statement builder chains (builder on line 1, `.build()` on line N via variable) | Preserved |
 | KL-3 | `.timeout(SOME_CONST_ZERO)` — constant-valued zero not detected | Preserved |
 | KL-macro | Macro bodies failing all four parse strategies (not valid as item sequence, wrapped-fn, expression, or initializer extraction) are skipped | Preserved (narrowed scope from fix-burst-27) |
@@ -65,7 +65,7 @@ Test count: 222 passing (xtask), 5 skipped (pre-existing ignored tests requiring
 
 | ID | Description | Status |
 |----|-------------|--------|
-| KL-1 | Bare `Client::new()` imported via `use reqwest::Client` — false negative (cannot resolve without type info) | Preserved |
+| KL-1 | Bare `Client::new()` without a qualifying module path — **conservative false positive**: the gate cannot determine whether `Client` refers to `reqwest::Client` or another SDK's client, so it flags conservatively. (Qualifying with a non-reqwest head segment suppresses the alarm.) | Conservative false positive |
 | KL-2 | Split-statement builder chains (builder on line 1, `.build()` on line N) | Preserved |
 | KL-3 | `.timeout(SOME_CONST_ZERO)` — constant-valued zero not detected (inline `Duration::ZERO` now caught by OBS-001 fix) | Preserved |
 | KL-macro | Macro token stream scanning is best-effort flat-token; deeply nested or aliased macro constructions may evade detection | New |
