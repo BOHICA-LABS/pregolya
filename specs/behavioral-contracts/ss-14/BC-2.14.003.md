@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.003
-version: "1.5"
+version: "1.6"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -20,6 +20,7 @@ changelog:
   - "1.3 (story-anchor-backfill/2026-08-22): §Story Anchor backfilled to S-1.02 from STORY-INDEX forward map (CANONICAL PRINCIPLE Rule 6; no behavioral change)."
   - "1.4 (M1/ADR-027/2026-08-23): stable clause anchors {PC/INV/PRE-NNN} added; purely additive, no content change."
   - "1.5 (S-1.02-adv-pass-2/CRITICAL-F-A+F-B/2026-09-22, product-owner): CRITICAL-F-A — BC↔BC contradiction adjudicated (Option A: fail-fast governs). {PC-005} revised to carve a narrow programmer-error-guard exception; EC-006 added defining the programmer-error-guard-assertion policy and the precise boundary between programmer-error (panic) and runtime-data-error (Result). {PC-006} revised to enumerate both permitted panic paths and to explicitly state that an unconditional unreachable!() exemption does NOT exist in this contract. EC-004 clarified: the _other => unreachable!() wildcard form is NOT the exempt form; only the fully-enumerated no-wildcard form is exempt. F-B — EC-007 added specifying the exact check-no-panic gate discipline for the two narrow exemptions (exhaustive-match unreachable! and programmer-error-guard assert); records the implementer error-of-record (an unconditional unreachable! exemption was falsely cited as BC-2.14.003 product-owner guidance; no such guidance exists in this BC)."
+  - "1.6 (INV-004-sibling-sweep/2026-09-23, product-owner): {INV-004} expanded to enumerate the full test-code exemption perimeter, sibling-swept from BC-2.14.004 §{INV-003} (INV-003-clause-a-predicate-fix). Both BCs share the same `is_test_file` predicate in `cargo xtask check-no-panic`. Prior text cited only '#[cfg(test)] and tests/ directory', omitting the filename forms (tests.rs, _test.rs, _tests.rs) and the #[test]-family attribute exemption. Corrected to three-clause enumeration matching the gate implementation: (a) test files by path/filename, (b) #[cfg(test)]-attributed items, (c) #[test]-family function attributes. No behavioral change to the xtask gate — spec corrected to match code per Source-of-Truth Precedence Rule 7."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-008
@@ -31,7 +32,7 @@ inputs:
   - .factory/semport/core/rust-translation-strategy.md
 input-hash: "a8775d1"
 extracted_from: null
-modified: []
+modified: ["2026-09-23"]
 deprecated: null
 deprecated_by: null
 replacement: null
@@ -93,8 +94,18 @@ implements DI-008 (Library Constructor Result Contract) uniformly.
   is the prototype for this CI gate. Any code path reachable from a public API surface that
   contains `.expect` or `.unwrap` is a violation.
 - {INV-003} `debug_assert!` is exempt from the lint (release builds do not execute it).
-- {INV-004} Test files (`#[cfg(test)]` and `tests/` directory) are fully exempt — tests may use
-  `.unwrap()` and `assert!` freely.
+- {INV-004} `.unwrap()`, `.expect()`, and `assert!` / `assert_eq!` are fully exempt in the
+  following test-code contexts:
+  (a) **Test files** — source files whose path contains a `/tests/` directory component, or whose
+  filename is exactly `tests.rs`, or whose filename ends with `_test.rs` or `_tests.rs`;
+  (b) **`#[cfg(test)]`-attributed items** — any item, `impl` block, function, trait function, or
+  item macro that carries a `#[cfg(test)]` attribute (directly or via an enclosing `#[cfg(test)]`
+  module);
+  (c) **`#[test]`-family function attributes** — any function whose attribute list includes an
+  attribute whose final path segment is `test` (e.g., `#[test]`, `#[tokio::test]`,
+  `#[async_std::test]`, `#[rstest]`, `#[parameterized_test]`, and any future `#[*::test]`
+  variants).
+  Test code in any of these contexts may use `.unwrap()` and `assert!` freely.
 
 ## Edge Cases
 
