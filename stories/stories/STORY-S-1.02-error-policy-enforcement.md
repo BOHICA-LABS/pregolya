@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.02
 epic_id: E-01
-version: "1.19"
+version: "1.20"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -28,6 +28,7 @@ changelog:
   - "1.17 (add-VP-DI008-01-VP-DI009-01-VP-DI009-02/2026-09-23): Added VP-DI008-01 (check-no-panic gate, BC-2.14.003), VP-DI009-01 and VP-DI009-02 (check-client-timeout gate, BC-2.14.004) to verification_properties frontmatter."
   - "1.18 (fix-burst-34/F-P32-MED-002/2026-09-23): check_client_timeout.rs description corrected from proc_macro2 token-stream scan to syn::visit::Visit-based AST visitor (TimeoutChecker); Tasks item 7, Purity Classification row, and Library & Framework Requirements syn row all updated to reflect actual implementation introduced in fix-burst-26."
   - "1.19 (fix-burst-36/F-P34-MED-001-MED-002-MED-003/2026-09-23): MED-001: deny_bare_api_key.rs Purity Classification updated to walkdir; MED-002: walkdir dep row added to Library Requirements; MED-003: VP-DI010-02 and VP-DI010-03 added to verification_properties frontmatter"
+  - "1.20 (fix-burst-38/F-P36-LOW-001/2026-09-23): LOW-001 (F-P36-LOW-001): walkdir Library Requirements row precision fix — 'five of seven gates (six call sites)' replaces imprecise 'all six gates'"
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.001.md
@@ -256,7 +257,7 @@ Pattern established in S-1.01: pure-core modules (`error.rs`, `credentials.rs`) 
 | `tokio` | workspace pin (dev) | Async test runtime for timeout test |
 | `syn = { version = "2", features = ["full", "visit"] }` | workspace pin (xtask) | AST parsing for `check_no_panic.rs` PanicVisitor and `check_client_timeout.rs` TimeoutChecker (both require `syn/visit` feature) — MANDATORY |
 | `proc-macro2 = { version = "1", features = ["span-locations"] }` | workspace pin (xtask) | Token-stream scanning and diagnostic spans — MANDATORY |
-| `walkdir = "2"` | workspace pin (xtask) | Cross-platform recursive Rust-file discovery for all six xtask lint gates via `collect_rust_files()` — replaces POSIX `find`; **MANDATORY** |
+| `walkdir = "2"` | workspace pin (xtask) | Cross-platform recursive Rust-file discovery for five of seven xtask lint gates via `collect_rust_files()` (six call sites — `check-no-panic` invokes it for both normal scan and `--fixture-mode`); replaces POSIX `find`; **MANDATORY** |
 
 ## File Structure Requirements (MANDATORY)
 
