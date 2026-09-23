@@ -132,8 +132,14 @@ enum FlatToken {
     Ident(String, usize),
     /// A punctuation character and line.
     Punct(char, usize),
-    /// A paren group (call-site arguments) — represented as a marker with line.
+    /// A paren group open marker — emitted before inlining the group's contents.
+    /// Pairs with `ParenGroupEnd` so chain scanners can track nesting depth and skip
+    /// `;` tokens inside paren-typed method arguments (e.g. the `vec!(addr; 2)` macro
+    /// repeat expression inside `.resolve_to_addrs("host", &vec!(addr; 2))`)
+    /// without terminating the chain scan before `.build()` is reached.
     ParenGroup(usize),
+    /// A paren group close marker — emitted after inlining the group's contents.
+    ParenGroupEnd(usize),
     /// A brace group open marker — emitted before inlining the group's contents.
     /// Pairs with `BraceGroupEnd` so chain scanners can track nesting depth and skip
     /// `;` tokens inside brace-typed method arguments without terminating the chain scan.
@@ -160,6 +166,7 @@ impl FlatToken {
             FlatToken::Ident(_, l)
             | FlatToken::Punct(_, l)
             | FlatToken::ParenGroup(l)
+            | FlatToken::ParenGroupEnd(l)
             | FlatToken::BraceGroup(l)
             | FlatToken::BraceGroupEnd(l)
             | FlatToken::BracketGroup(l)
@@ -251,6 +258,7 @@ fn flatten_tokens_no_test(
                     let line = g.span().start().line;
                     let is_brace = g.delimiter() == Delimiter::Brace;
                     let is_bracket = g.delimiter() == Delimiter::Bracket;
+                    let is_paren = g.delimiter() == Delimiter::Parenthesis;
                     match g.delimiter() {
                         Delimiter::Parenthesis => out.push(FlatToken::ParenGroup(line)),
                         Delimiter::Brace => out.push(FlatToken::BraceGroup(line)),
@@ -259,9 +267,13 @@ fn flatten_tokens_no_test(
                     }
                     // Recurse into all groups for nested calls
                     flatten_tokens_no_test(g.stream().into_iter(), out, in_test_depth);
-                    // Emit close markers after brace and bracket groups so chain scanners
-                    // can track nesting depth and skip ';' tokens inside method arguments
-                    // (e.g. `.default_headers({ … })` or `.resolve_to_addrs("h", &vec![v; n])`).
+                    // Emit close markers after paren, brace, and bracket groups so chain
+                    // scanners can track nesting depth and skip ';' tokens inside method
+                    // arguments (e.g. `.default_headers({ … })`,
+                    // `.resolve_to_addrs("h", &vec![v; n])`, or `vec!(addr; 2)`).
+                    if is_paren {
+                        out.push(FlatToken::ParenGroupEnd(line));
+                    }
                     if is_brace {
                         out.push(FlatToken::BraceGroupEnd(line));
                     }
@@ -517,25 +529,31 @@ fn find_chain_end(flat: &[FlatToken], start: usize) -> usize {
 /// Check if a chain from `start` calls `.build()` without a prior valid `.timeout()`.
 ///
 /// Scans forward from `start` in the full `flat` list, stopping at the first top-level
-/// `;` (a statement boundary at brace depth 0). The `_end` hint produced by
+/// `;` (a statement boundary at all depths zero). The `_end` hint produced by
 /// `find_chain_end` is intentionally ignored: when method arguments are present,
 /// `find_chain_end` truncates at the first argument token (which is inlined by
 /// `flatten_tokens_no_test` immediately after the `ParenGroup` marker), placing
 /// the subsequent `.build()` call beyond the `_end` boundary.
 ///
-/// Brace-typed method arguments (e.g. `.default_headers({...})`) and
-/// bracket-typed method arguments (e.g. `.resolve_to_addrs("host", &vec![addr; 2])`)
-/// are transparent: `BraceGroup`/`BraceGroupEnd` and `BracketGroup`/`BracketGroupEnd`
-/// depth counters suppress `;` tokens inside those argument bodies from terminating
-/// the scan prematurely (a `vec![v; n]` array-repeat expression contains a `;` that
-/// must not be treated as a statement boundary).
+/// **Terminates at the first `.build()` encountered at nesting depth zero.**
+/// `.build()` calls at depth > 0 (inside method arguments) are attributed to inner
+/// builders and ignored. This prevents cross-chain verdict leakage: a compliant second
+/// chain in a `match` arm cannot credit an uncompliant first chain's `.build()`.
 ///
-/// Returns `true` if `.build()` is present and no valid `.timeout(d)` where
+/// Brace-typed method arguments (e.g. `.default_headers({...})`),
+/// bracket-typed method arguments (e.g. `.resolve_to_addrs("host", &vec![addr; 2])`), and
+/// paren-typed method arguments (e.g. `.resolve_to_addrs("host", &vec!(addr; 2))`)
+/// are transparent: `BraceGroup`/`BraceGroupEnd`, `BracketGroup`/`BracketGroupEnd`,
+/// and `ParenGroup`/`ParenGroupEnd` depth counters suppress `;` tokens inside those
+/// argument bodies from terminating the scan prematurely (a `vec![v; n]` or
+/// `vec!(v; n)` array-repeat expression contains a `;` that must not be treated as
+/// a statement boundary).
+///
+/// Returns `true` if `.build()` is present at depth zero and no valid `.timeout(d)` where
 /// `d > Duration::ZERO` precedes it. `.timeout(Duration::ZERO)` is treated as
 /// absent (BC-2.14.004 {PC-001}, {INV-004}).
 fn has_build_without_timeout(flat: &[FlatToken], start: usize, _end: usize) -> bool {
     let n = flat.len();
-    let mut found_build = false;
     let mut found_timeout_before_build = false;
     // Track brace nesting so that ';' tokens inside brace-typed method arguments
     // (e.g. `.default_headers({ let mut h = Header::new(); h })`) do NOT terminate
@@ -544,9 +562,13 @@ fn has_build_without_timeout(flat: &[FlatToken], start: usize, _end: usize) -> b
     let mut brace_depth = 0u32;
     // Track bracket nesting so that ';' tokens inside bracket-typed method arguments
     // (e.g. `&vec![addr; 2]` — the array-repeat ';' inside the bracket group) do NOT
-    // terminate the chain scan.  A ';' is a chain terminator only when BOTH
-    // brace_depth == 0 AND bracket_depth == 0 (top-level statement boundary).
+    // terminate the chain scan.
     let mut bracket_depth = 0u32;
+    // Track paren nesting so that ';' tokens inside paren-typed method arguments
+    // (e.g. `&vec!(addr; 2)` — the array-repeat ';' inside the paren group) do NOT
+    // terminate the chain scan.  A ';' is a chain terminator only when ALL three
+    // depths are zero (top-level statement boundary).
+    let mut paren_depth = 0u32;
     let mut i = start;
     while i < n {
         match &flat[i] {
@@ -558,11 +580,15 @@ fn has_build_without_timeout(flat: &[FlatToken], start: usize, _end: usize) -> b
             FlatToken::BracketGroupEnd(_) => {
                 bracket_depth = bracket_depth.saturating_sub(1);
             }
+            FlatToken::ParenGroup(_) => paren_depth += 1,
+            FlatToken::ParenGroupEnd(_) => {
+                paren_depth = paren_depth.saturating_sub(1);
+            }
             FlatToken::Punct(c, _) if *c == ';' => {
-                if brace_depth == 0 && bracket_depth == 0 {
+                if brace_depth == 0 && bracket_depth == 0 && paren_depth == 0 {
                     break; // top-level statement boundary — terminate scan
                 }
-                // Inner ';' inside a brace or bracket argument — do not break.
+                // Inner ';' inside a brace, bracket, or paren argument — do not break.
             }
             FlatToken::Punct(c, _) if *c == '.' => {
                 if let Some(FlatToken::Ident(name, _)) = flat.get(i + 1) {
@@ -574,11 +600,14 @@ fn has_build_without_timeout(flat: &[FlatToken], start: usize, _end: usize) -> b
                     } else if name == "build"
                         && matches!(flat.get(i + 2), Some(FlatToken::ParenGroup(_)))
                     {
-                        // build() call found — was there a valid timeout before it?
-                        found_build = true;
-                        if found_timeout_before_build {
-                            return false; // compliant
+                        // At nesting depth zero: this is the chain's terminal .build() call.
+                        // Terminate immediately — a compliant chain later in the same
+                        // statement (e.g. a match arm) must NOT credit this chain's build.
+                        if brace_depth == 0 && bracket_depth == 0 && paren_depth == 0 {
+                            return !found_timeout_before_build;
                         }
+                        // At depth > 0: this .build() belongs to an inner builder
+                        // (e.g. inside a closure or method argument) — ignore it.
                     }
                 }
             }
@@ -586,7 +615,8 @@ fn has_build_without_timeout(flat: &[FlatToken], start: usize, _end: usize) -> b
         }
         i += 1;
     }
-    found_build && !found_timeout_before_build
+    // No .build() was encountered at depth zero — not a violation.
+    false
 }
 
 /// Returns `true` if the literal string `s` represents the value zero under Rust literal
@@ -1132,6 +1162,69 @@ pub fn build_client() -> reqwest::Client {
         assert!(
             !findings.is_empty(),
             "builder chain with vec![..;n] arg and no .timeout() must be flagged"
+        );
+    }
+
+    #[test]
+    fn test_timeout_scanner_paren_group_in_builder_chain_does_not_break_scan() {
+        // BC-2.14.004 PC-001: paren-delimited vec! repeat must not terminate the scan.
+        let src = r#"
+        use std::net::SocketAddr;
+        fn build_client(addr: SocketAddr) -> reqwest::Client {
+            reqwest::ClientBuilder::new()
+                .resolve_to_addrs("host", &vec!(addr; 2))
+                .build()
+                .unwrap()
+        }
+    "#;
+        let findings = scan_for_timeout_violations_in_source(src, "test.rs");
+        assert!(
+            !findings.is_empty(),
+            "builder chain with vec!(..;n) arg and no .timeout() must be flagged"
+        );
+    }
+
+    #[test]
+    fn test_timeout_scanner_match_arms_violation_first_is_flagged() {
+        // BC-2.14.004 PC-001: a violating chain in a match arm must be flagged even
+        // when a later arm has a compliant chain (cross-chain verdict leakage).
+        let src = r#"
+        fn build_client(fast: bool) -> reqwest::Client {
+            match fast {
+                true  => reqwest::ClientBuilder::new().build().unwrap(),
+                false => reqwest::ClientBuilder::new()
+                    .timeout(std::time::Duration::from_secs(30))
+                    .build()
+                    .unwrap(),
+            }
+        }
+    "#;
+        let findings = scan_for_timeout_violations_in_source(src, "test.rs");
+        assert!(
+            !findings.is_empty(),
+            "violating chain in first match arm must be flagged even when second arm is compliant"
+        );
+    }
+
+    #[test]
+    fn test_timeout_scanner_match_arms_compliant_first_is_not_flagged() {
+        // The reverse ordering: compliant chain first, violating chain second.
+        // The scan should still flag the violating arm.
+        let src = r#"
+        fn build_client(fast: bool) -> reqwest::Client {
+            match fast {
+                true  => reqwest::ClientBuilder::new()
+                    .timeout(std::time::Duration::from_secs(30))
+                    .build()
+                    .unwrap(),
+                false => reqwest::ClientBuilder::new().build().unwrap(),
+            }
+        }
+    "#;
+        let findings = scan_for_timeout_violations_in_source(src, "test.rs");
+        assert!(
+            !findings.is_empty(),
+            "violating chain in second match arm must be flagged even when first arm is compliant"
         );
     }
 }
