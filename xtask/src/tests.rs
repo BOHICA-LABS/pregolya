@@ -4182,3 +4182,25 @@ fn test_timeout_checker_unparseable_macro_body_known_limitation() {
          got: {findings:?}"
     );
 }
+
+#[test]
+fn test_timeout_checker_cfg_test_item_trait_exempt() {
+    // LOAD-BEARING for MED-001 (fix-burst-34): #[cfg(test)] on the enclosing ItemTrait
+    // must exempt the entire trait body in TimeoutChecker. Deleting visit_item_trait guard
+    // causes this test to FAIL (returns 1 violation instead of 0).
+    let source = r#"
+        #[cfg(test)]
+        trait TimeoutTestHelper {
+            fn build_client() -> reqwest::Client {
+                reqwest::Client::new() // should be exempt: trait has #[cfg(test)]
+            }
+        }
+    "#;
+    let findings = scan_for_timeout_violations_in_source(source, "src/production.rs");
+    assert_eq!(
+        findings.len(),
+        0,
+        "#[cfg(test)] on enclosing ItemTrait must exempt all methods in TimeoutChecker; \
+         if this fails, visit_item_trait guard was removed or broken (fix-burst-34 MED-001)"
+    );
+}

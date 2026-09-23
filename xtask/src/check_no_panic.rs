@@ -1776,4 +1776,30 @@ fn check_build_plain() {
              CHANGELOG KL table, and evidence-report KL table"
         );
     }
+
+    #[test]
+    fn test_no_panic_cfg_test_item_trait_exempt() {
+        // LOAD-BEARING for MED-001 (fix-burst-34): #[cfg(test)] on the enclosing ItemTrait
+        // must exempt the entire trait body. Deleting the visit_item_trait guard causes
+        // this test to FAIL (returns 1 violation instead of 0).
+        let source = r#"
+            #[cfg(test)]
+            trait TestHelper {
+                fn helper_method() {
+                    let x: Option<i32> = Some(1);
+                    let _ = x.unwrap(); // should be exempt: trait has #[cfg(test)]
+                }
+                fn another_helper(opt: Option<&str>) -> &str {
+                    opt.expect("should have value") // also exempt
+                }
+            }
+        "#;
+        let findings = scan_for_panics_in_source(source, "src/production.rs");
+        assert_eq!(
+            findings.len(),
+            0,
+            "#[cfg(test)] on enclosing ItemTrait must exempt all methods; \
+             if this fails, visit_item_trait guard was removed or broken (fix-burst-34 MED-001)"
+        );
+    }
 }
