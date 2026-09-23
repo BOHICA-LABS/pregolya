@@ -820,6 +820,17 @@ impl<'ast> Visit<'ast> for TimeoutChecker<'_> {
 
 // ── Zero literal normalisation ────────────────────────────────────────────────
 
+/// Integer type suffixes valid on hex, binary, and octal literals.
+///
+/// Float suffixes (`f64`, `f32`) are intentionally excluded: they are not valid
+/// on non-decimal radix literals (e.g. `0x0f64` is a hex literal with digits
+/// `f`, `6`, `4` — not a zero with an `f64` suffix). Longest suffixes first to
+/// avoid stripping only the shared trailing characters of a longer suffix (e.g.
+/// `usize` must precede `u8`).
+const INT_SUFFIXES: &[&str] = &[
+    "usize", "isize", "u128", "i128", "u64", "u32", "u16", "i64", "i32", "i16", "u8", "i8",
+];
+
 /// Returns `true` when a literal string representation is numerically zero.
 ///
 /// Handles: underscore separators (`0_u64`), type suffixes (`0f64`), hex (`0x0`),
@@ -839,9 +850,6 @@ fn is_zero_literal(s: &str) -> bool {
     // (hex literal with digit `f` and digits `6`, `4`) as zero.
     if let Some(hex_digits_raw) = s.strip_prefix("0x").or_else(|| s.strip_prefix("0X")) {
         // Hex: only integer suffixes are valid (f64/f32 are not valid on hex literals).
-        const INT_SUFFIXES: &[&str] = &[
-            "usize", "isize", "u128", "i128", "u64", "u32", "u16", "i64", "i32", "i16", "u8", "i8",
-        ];
         let hex_digits = INT_SUFFIXES
             .iter()
             .find_map(|&sfx| hex_digits_raw.strip_suffix(sfx))
@@ -850,9 +858,6 @@ fn is_zero_literal(s: &str) -> bool {
     }
     if let Some(bin_digits_raw) = s.strip_prefix("0b").or_else(|| s.strip_prefix("0B")) {
         // Binary: only integer suffixes are valid.
-        const INT_SUFFIXES: &[&str] = &[
-            "usize", "isize", "u128", "i128", "u64", "u32", "u16", "i64", "i32", "i16", "u8", "i8",
-        ];
         let bin_digits = INT_SUFFIXES
             .iter()
             .find_map(|&sfx| bin_digits_raw.strip_suffix(sfx))
@@ -861,9 +866,6 @@ fn is_zero_literal(s: &str) -> bool {
     }
     if let Some(oct_digits_raw) = s.strip_prefix("0o").or_else(|| s.strip_prefix("0O")) {
         // Octal: only integer suffixes are valid.
-        const INT_SUFFIXES: &[&str] = &[
-            "usize", "isize", "u128", "i128", "u64", "u32", "u16", "i64", "i32", "i16", "u8", "i8",
-        ];
         let oct_digits = INT_SUFFIXES
             .iter()
             .find_map(|&sfx| oct_digits_raw.strip_suffix(sfx))
@@ -1039,6 +1041,34 @@ pub fn build_client() -> reqwest::Client {
         assert!(
             !findings.is_empty(),
             "from_secs(0x00) must be flagged as zero-duration timeout; got: {findings:?}"
+        );
+    }
+
+    /// fix-burst-36 OBS-001 — radix parity: binary zero literal must be flagged.
+    ///
+    /// `0b0` is the binary representation of zero; `is_zero_literal` must recognise
+    /// it via the same INT_SUFFIXES path used for hex and octal radix forms.
+    #[test]
+    fn test_timeout_checker_bin_zero_literal_flagged() {
+        let src = "pub fn f() -> reqwest::Client { reqwest::ClientBuilder::new().timeout(Duration::from_secs(0b0)).build().unwrap() }";
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "from_secs(0b0) must be flagged as zero-duration timeout (binary zero is zero); got: {findings:?}"
+        );
+    }
+
+    /// fix-burst-36 OBS-001 — radix parity: octal zero literal must be flagged.
+    ///
+    /// `0o0` is the octal representation of zero; `is_zero_literal` must recognise
+    /// it via the same INT_SUFFIXES path used for hex and binary radix forms.
+    #[test]
+    fn test_timeout_checker_oct_zero_literal_flagged() {
+        let src = "pub fn f() -> reqwest::Client { reqwest::ClientBuilder::new().timeout(Duration::from_secs(0o0)).build().unwrap() }";
+        let findings = scan_for_timeout_violations_in_source(src, "crates/lib.rs");
+        assert!(
+            !findings.is_empty(),
+            "from_secs(0o0) must be flagged as zero-duration timeout (octal zero is zero); got: {findings:?}"
         );
     }
 
