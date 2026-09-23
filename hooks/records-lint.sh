@@ -374,7 +374,12 @@ probe_must_not_fail() {
 
 run_self_probes() {
   PROBE_TMP="$(mktemp -d)"
-  trap 'rm -rf "$PROBE_TMP"' EXIT
+  # _PROBE_G_CLEANUP_REF: sentinel for probe G throwaway git ref cleanup.
+  # Initialized to empty so the EXIT trap is safe from any exit point (before probe G runs,
+  # the ref does not exist). Set to $PROBE_G_REF immediately after successful ref creation.
+  # Fix 1 (F-P48-LOW-002): ensures stray ref is deleted even if probe G exits mid-run.
+  _PROBE_G_CLEANUP_REF=""
+  trap 'rm -rf "$PROBE_TMP"; [ -n "$_PROBE_G_CLEANUP_REF" ] && git -C "${FACTORY_DIR}/.." update-ref -d "$_PROBE_G_CLEANUP_REF" 2>/dev/null || true' EXIT
 
   # ── L1 self-probe: version > 1.0 with no changelog ───────────────────────
   # Synthetic violation: frontmatter version: "1.2" but no changelog entry.
@@ -863,6 +868,9 @@ EOF
   _L13G_SETUP=0
   if git -C "${FACTORY_DIR}/.." update-ref "$PROBE_G_REF" HEAD 2>/dev/null; then
     _L13G_SETUP=1
+    # Fix 1 (F-P48-LOW-002): arm the EXIT trap sentinel immediately after ref creation
+    # so the ref is always cleaned up if probe G exits before reaching its own cleanup.
+    _PROBE_G_CLEANUP_REF="$PROBE_G_REF"
   fi
 
   PROBE_L13G="$PROBE_TMP/l13-live-head.md"
@@ -889,6 +897,15 @@ EOF
 
   if [ "$_L13G_SETUP" -eq 1 ]; then
     _L13G_OUT="$(check_l13 "$PROBE_L13G" 2>&1 || true)"
+    # Fix 2 (F-P48-LOW-003): primary assertion — positive check that the FAIL text
+    # specific to the live-HEAD mismatch path is present. A silent return (empty output
+    # or unexpected text) would satisfy the old negative-only guard; this closes that gap.
+    if ! echo "$_L13G_OUT" | grep -q "does not match live"; then
+      echo "[SELF-PROBE FAIL] L13-probe-G: live-HEAD mismatch check did not emit expected FAIL text ('does not match live')"
+      git -C "${FACTORY_DIR}/.." update-ref -d "$PROBE_G_REF" 2>/dev/null || true
+      exit 2
+    fi
+    # Secondary assertion (belt-and-suspenders): PASS must NOT appear
     if echo "$_L13G_OUT" | grep -q "\[PASS\]"; then
       echo "[SELF-PROBE FAIL] L13-probe-G: live-HEAD mismatch check false-green — check_l13 emitted PASS when checkpoint SHA != live branch HEAD"
       git -C "${FACTORY_DIR}/.." update-ref -d "$PROBE_G_REF" 2>/dev/null || true
@@ -1175,7 +1192,9 @@ PYEOF
 # proof_file_hash:, etc.) are exempt — those are structured fields, not prose.
 
 check_l10() {
-  DIFF_OUTPUT="$(git -C "$FACTORY_DIR" diff HEAD -- '*.md' 2>/dev/null || true)"
+  # Fix 4 (F-P48-OBS-002): add ':!hooks/**' exclusion to match check_l9 boundary.
+  # Hook scripts are code, not records — consistent with the L9/L11 hooks-excluded stance.
+  DIFF_OUTPUT="$(git -C "$FACTORY_DIR" diff HEAD -- '*.md' ':!hooks/**' 2>/dev/null || true)"
 
   if [ -z "$DIFF_OUTPUT" ]; then
     emit UNVERIFIED "L10 [ADVISORY]: no diff relative to HEAD — checks are UNVERIFIED on a clean tree (not checked, not passed)"
@@ -1240,7 +1259,9 @@ check_l10() {
 # Known scope boundary: uppercase hex is out of scope (see Config section).
 
 check_l11() {
-  DIFF_OUTPUT="$(git -C "$FACTORY_DIR" diff HEAD -- '*.md' 2>/dev/null || true)"
+  # Fix 4 (F-P48-OBS-002): add ':!hooks/**' exclusion to match check_l9 boundary.
+  # Hook scripts are code, not records — consistent with the L9/L10 hooks-excluded stance.
+  DIFF_OUTPUT="$(git -C "$FACTORY_DIR" diff HEAD -- '*.md' ':!hooks/**' 2>/dev/null || true)"
 
   if [ -z "$DIFF_OUTPUT" ]; then
     emit UNVERIFIED "L11: no diff relative to HEAD — checks are UNVERIFIED on a clean tree (not checked, not passed)"
@@ -1420,9 +1441,16 @@ check_l13() {
   # `| IN FLIGHT |` to `| COMPLETE |` AND the checkpoint is updated to match;
   # the two writes land in the same atomic commit (TD-VSDD-053).
   local MAX_D_NUM
+  # Fix 3 (F-P48-OBS-001): anchor extraction on the first pipe-delimited column only.
+  # The prior grep -oE 'D-[0-9]+' scanned the entire row and could be inflated by D-NNN
+  # tokens in narrative columns (notes, descriptions). awk -F'|' '{print $2}' isolates the
+  # leading column (between the first two '|' chars), so only the canonical `D-NNN/YYYY-MM-DD`
+  # row-key token contributes to MAX_D — never a D-NNN mentioned incidentally in prose.
   MAX_D_NUM=$(grep -E '^\| D-[0-9]+/[0-9]{4}-[0-9]{2}-[0-9]{2}' "$STATE_MD" 2>/dev/null \
     | grep '| COMPLETE |' \
-    | grep -oE 'D-[0-9]+' \
+    | awk -F'|' '{print $2}' \
+    | grep -oE '^[[:space:]]*D-[0-9]+' \
+    | tr -d ' ' \
     | grep -oE '[0-9]+' | sort -n | tail -1 || true)
 
   if [ -z "$MAX_D_NUM" ]; then

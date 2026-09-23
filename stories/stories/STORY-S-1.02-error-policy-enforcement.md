@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.02
 epic_id: E-01
-version: "1.25"
+version: "1.26"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -34,6 +34,7 @@ changelog:
   - "1.23 (fix-burst-48/F-P46-MED-004/2026-09-23): AC-008 parenthetical corrected — false claim that tuple-struct construction is unavailable replaced with accurate Rust semantics (#[non_exhaustive] is external-only; private field is in-crate accessible; tests use from_raw_for_tests() for explicit bypass-validation semantics, not because tuple form doesn't compile)"
   - "1.24 (fix-burst-49/F-P47-LOW-003+LOW-004/2026-09-23): AC-008 field-visibility claim narrowed to module-scoped; 3 missing §File Structure Requirements rows added (pass fixtures + non_exhaustive_external_gate MODIFY)"
   - "1.25 (fix-burst-49/F-P47-MED-002-spec/2026-09-23): §File Structure Requirements: 4 old _match_without_dots fail-fixture rows replaced with _external_field_access_blocked names (E0532 naming); pass fixture descriptions corrected from 'match with (..) wildcard' to expose_secret() external API (field privacy blocks ALL destructuring including (..); test-writer confirmed E0532 fires for (..) too)"
+  - "1.26 (fix-burst-50/F-P48-MED-003+LOW-004/2026-09-23): pass fixture rows renamed to _expose_secret_passes (E0532 semantic naming); 3 §File Structure Requirements rows normalized from crate-relative to repo-relative crates/ paths"
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.001.md
@@ -268,9 +269,9 @@ Pattern established in S-1.01: pure-core modules (`error.rs`, `credentials.rs`) 
 
 | File | Action | Purpose |
 |------|--------|---------|
-| `pregolya-core/src/credentials.rs` | CREATE | `OpenAiApiKey`, `AnthropicApiKey` newtypes |
-| `pregolya-core/src/http.rs` | CREATE | `build_client()` returning `reqwest::Client` with 30s timeout |
-| `pregolya-core/src/lib.rs` | MODIFY | Add `pub mod credentials;`, `pub mod http;` |
+| `crates/pregolya-core/src/credentials.rs` | CREATE | `OpenAiApiKey`, `AnthropicApiKey` newtypes |
+| `crates/pregolya-core/src/http.rs` | CREATE | `build_client()` returning `reqwest::Client` with 30s timeout |
+| `crates/pregolya-core/src/lib.rs` | MODIFY | Add `pub mod credentials;`, `pub mod http;` |
 | `xtask/src/check_no_panic.rs` | CREATE | CI xtask: no-panic AST gate (`unwrap`, `expect`, `panic!`, `assert*!`, `todo!`, `unimplemented!`, wildcard-`unreachable!`) |
 | `xtask/src/check_client_timeout.rs` | CREATE | CI xtask: reqwest timeout gate |
 | `xtask/src/deny_bare_api_key.rs` | CREATE | CI xtask: structural credential-struct safety scan (8 sentinels × 5 patterns; no string-literal matching) |
@@ -281,6 +282,6 @@ Pattern established in S-1.01: pure-core modules (`error.rs`, `credentials.rs`) 
 | `crates/pregolya-core/tests/ui/open_ai_api_key_external_field_access_blocked.stderr` | CREATE | Expected rustc E0532 diagnostic output for `OpenAiApiKey` external-field-access compile-fail gate |
 | `crates/pregolya-core/tests/ui/anthropic_api_key_external_field_access_blocked.rs` | CREATE | E0532 compile-fail gate for `AnthropicApiKey` — field privacy blocks all external pattern destructuring (BC-2.14.006 {INV-003} / CLAUDE.md `#[non_exhaustive]` mandate; `#[non_exhaustive]` is pinned by inventory/glob gates) |
 | `crates/pregolya-core/tests/ui/anthropic_api_key_external_field_access_blocked.stderr` | CREATE | Expected rustc E0532 diagnostic output for `AnthropicApiKey` external-field-access compile-fail gate |
-| `crates/pregolya-core/tests/ui/open_ai_api_key_match_with_dots_passes.rs` | CREATE | Positive-control fixture for `OpenAiApiKey` — demonstrates `expose_secret()` is the correct external API; field privacy (E0532) blocks all pattern destructuring from external code, including `(..)` (BC-2.14.005 {PC-003}) |
-| `crates/pregolya-core/tests/ui/anthropic_api_key_match_with_dots_passes.rs` | CREATE | Positive-control fixture for `AnthropicApiKey` — demonstrates `expose_secret()` is the correct external API; field privacy (E0532) blocks all pattern destructuring from external code, including `(..)` (BC-2.14.005 {PC-003}) |
+| `crates/pregolya-core/tests/ui/open_ai_api_key_expose_secret_passes.rs` | CREATE | Positive-control fixture for `OpenAiApiKey` — demonstrates `expose_secret()` is the correct external API for credential access; field privacy (E0532) blocks all pattern destructuring from external code including `(..)` (BC-2.14.005 {PC-003}) |
+| `crates/pregolya-core/tests/ui/anthropic_api_key_expose_secret_passes.rs` | CREATE | Positive-control fixture for `AnthropicApiKey` — demonstrates `expose_secret()` is the correct external API for credential access; field privacy (E0532) blocks all pattern destructuring from external code including `(..)` (BC-2.14.005 {PC-003}) |
 | `crates/pregolya-core/tests/non_exhaustive_external_gate.rs` | MODIFY | EXPECTED_NON_EXHAUSTIVE_COUNT raised to 7; both credential symbols (`OpenAiApiKey`, `AnthropicApiKey`) added; both pass-fixture pairs added in S-1.02 |
