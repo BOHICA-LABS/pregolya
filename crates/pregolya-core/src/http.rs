@@ -64,7 +64,8 @@ pub fn build_client() -> Result<reqwest::Client, PregolyaError> {
 ///
 /// The `reason` string is sanitized before inclusion in the error message —
 /// URL-embedded credentials (e.g. proxy `://user:password@host`) are redacted to
-/// `://***@host`, and the message is capped at 200 characters for defense-in-depth
+/// `://***@host`. The sanitized reason portion is capped at 200 characters (see
+/// `sanitize_error_message`) for defense-in-depth
 /// (BC-2.14.004 {EC-006}, BC-2.14.005 {INV-001} DI-010, CWE-209).
 ///
 /// # Returns

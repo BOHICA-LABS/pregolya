@@ -409,10 +409,10 @@ fn test_timeout_scanner_stored_reqwest_builder_without_build_does_not_contaminat
 ///
 /// The pattern `let b = reqwest::ClientBuilder::new();\nlet c = b.build()?;\n` SHOULD
 /// produce a finding (missing `.timeout()` before `.build()`) but currently does NOT because
-/// `has_build_without_timeout` terminates chain scanning at `;`. Full cross-statement
-/// binding-flow analysis is required to detect this shape (see KNOWN-LIMITATION 2 in the
-/// `scan_flat_for_timeout_violations` doc). This test documents the false negative without
-/// asserting it is correct behavior.
+/// `analyze_build_chain` walks only the syntactic receiver chain of the `.build()` call; it
+/// cannot trace bindings across statement boundaries. Full cross-statement binding-flow
+/// analysis is required to detect this shape (KNOWN-LIMITATION 2). This test documents the
+/// false negative without asserting it is correct behavior.
 #[test]
 fn test_timeout_scanner_split_statement_false_negative_known_limitation() {
     let src = "let b = reqwest::ClientBuilder::new();\nlet c = b.build()?;\n";
@@ -1776,9 +1776,10 @@ pub fn color_name(c: &Color) -> &'static str {
 /// `scan_for_timeout_violations_in_source` must FLAG `.timeout(Duration::ZERO)`
 /// as a violation — {PC-001} requires the timeout duration to be > Duration::ZERO.
 ///
-/// Red-gate provenance: authored when `has_build_without_timeout` only checked for PRESENCE of
+/// Red-gate provenance: authored when `analyze_build_chain` only checked for PRESENCE of
 /// `.timeout()` and did not verify the argument was non-zero. A chain with
-/// `.timeout(Duration::ZERO)` was accepted as compliant; now GREEN after zero-duration detection was added.
+/// `.timeout(Duration::ZERO)` was accepted as compliant; now GREEN after zero-duration
+/// detection was added to `analyze_build_chain`.
 #[test]
 fn test_BC_2_14_004_flags_timeout_zero() {
     let src = r#"let c = reqwest::ClientBuilder::new().timeout(Duration::ZERO).build()?;"#;
