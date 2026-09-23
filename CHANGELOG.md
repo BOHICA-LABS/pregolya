@@ -16,6 +16,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-41 (pass-39 findings)
+
+### xtask main / check_no_panic — Windows path-separator normalization in exemption predicates; STATE.md checkpoint staleness
+
+**HIGH-001 (F-P39-HIGH-001) — Windows path-separator normalization gap in exemption predicates:** The `walkdir` refactor (fix-burst-35) replaced POSIX `find` subprocess for file *discovery* but did not extend Windows portability to file *classification*. The exemption predicates `is_test_file`, `is_test_class_file` (in `main.rs`) and the `fixtures/violations` guard in `scan_for_panics_in_source` (in `check_no_panic.rs`) matched exclusively on POSIX forward-slash forms. On Windows, `WalkDir` and `Path::push` yield OS-native backslash-separated paths, so the exemptions silently failed: test-file `unwrap()`/`expect()` calls would be flagged as violations and `check-file-size` would apply the 750-line production gate to `xtask/src/tests.rs`. Contradicted by `AllowList::is_allowed` in the same file, which explicitly normalizes with `replace('\\', "/")`.
+
+Fix: added `let path = path.replace('\\', "/");` as the first statement in `is_test_file` and `is_test_class_file`; added `let normalized_path = path.replace('\\', "/");` and updated the fixture guard in `scan_for_panics_in_source` to use `normalized_path`. Nine load-bearing test assertions added: five new cases in `test_is_test_file_patterns`, three in `test_is_test_class_file_patterns`, and one new function `test_scan_for_panics_exempt_fixture_windows`. False "Windows portability restored" attestation in fix-burst-35 MED-002 corrected.
+
+`is_lint_exempt_file` was inspected and requires no change — it delegates entirely to `is_test_file`, which now normalizes.
+
+**MED-001 (F-P39-MED-001) — STATE.md checkpoint staleness:** §Session Resume Checkpoint, §Convergence Status, and §Phase Progress Finding Progression not propagated at D-405. Fixed by state-manager (D-406): checkpoint updated to D-405/pass-39 state; Convergence Status extended through D-405; Phase Progress extended D-401–D-405; PGAP-RECORDS-LINT-FIXBURST-PARITY scope extended to include STATE.md checkpoint freshness.
+
+**Test count:** 249 run: 249 passed, 5 skipped (was 248 run before fix-burst-41; +1 new test function `test_scan_for_panics_exempt_fixture_windows`).
+
+### Known limitations after fix-burst-41
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED** in fix-burst-26 | Parenthesized/braced base subexpression — eliminated by syn AST visitor |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+Test count: 249 run: 249 passed, 5 skipped. Gate output unchanged: 25 analyzed / 16 exempt / 0 violations per scanning gate; fixture-mode 14/17; 148 codes / 0 collisions.
+
 ## fix-burst-40 (pass-38 findings)
 
 ### Multi-site gate-count stale-phrase correction; fix-burst-39 OBS records added
@@ -161,7 +192,7 @@ Test count: 246 xtask tests pass, 5 skipped. Gate output unchanged: 25 analyzed 
 
 **MED-001 — `{INV-004}` mis-cited as authority for zero-duration timeout rule in `check_client_timeout.rs` and `tests.rs`:** `{INV-004}` governs config-struct defaults with `None` (unlimited), not the builder-chain zero-duration rule. Approximately 24 sites corrected to cite `{PC-001}` (builder-chain rule: "`.timeout(duration)` with `duration > Duration::ZERO` before `.build()`"). Six `{INV-004}` sites in `tests.rs` were correctly preserved — they appear in `BC-2.14.003` test-file exemption context.
 
-**MED-002 — Six `collect_rust_files()` call sites across five of seven xtask lint gates used POSIX `find` subprocess for Rust file discovery (`check-no-panic` has two call sites — normal scan and `--fixture-mode`):** Windows `find.exe` is a text-search utility, not a filesystem traversal tool. Story spec required `walkdir`. Replaced all `find` subprocess calls (`Command::new("find")`) with in-process `walkdir` traversal via shared `collect_rust_files()` helper in `main.rs`. Added `walkdir = "2"` to `xtask/Cargo.toml`. Gate behavior unchanged; Windows portability restored.
+**MED-002 — Six `collect_rust_files()` call sites across five of seven xtask lint gates used POSIX `find` subprocess for Rust file discovery (`check-no-panic` has two call sites — normal scan and `--fixture-mode`):** Windows `find.exe` is a text-search utility, not a filesystem traversal tool. Story spec required `walkdir`. Replaced all `find` subprocess calls (`Command::new("find")`) with in-process `walkdir` traversal via shared `collect_rust_files()` helper in `main.rs`. Added `walkdir = "2"` to `xtask/Cargo.toml`. Gate behavior unchanged. File *discovery* portability restored (six `collect_rust_files()` call sites across five of seven xtask lint gates). File *classification* — the exemption predicates (`is_test_file`, `is_test_class_file`, `is_lint_exempt_file`, and the `scan_for_panics_in_source` fixture guard) — retained POSIX-only forward-slash matching at this stage; that gap was closed in fix-burst-41 (F-P39-HIGH-001).
 
 **MED-003 — fix-burst-34 `## fix-burst-34 re-verification` clause (d) discharge cited a pre-change SHA instead of post-change HEAD:** Demo-recorder re-ran all 8 gates and recorded counts in the evidence-report. Subsequently, the TD-VSDD-091 de-SHA sweep (see below) removed the SHA-pinned gate re-attestation subsection and updated clause (d) to record gate counts by gate name and count value without SHA pins.
 
