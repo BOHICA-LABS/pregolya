@@ -80,6 +80,26 @@ pub fn test_helper() -> i32 {
     );
 }
 
+/// F-P39-HIGH-001: Windows-style fixture path must be handled without error.
+///
+/// `scan_for_panics_in_source` normalizes backslash separators before the fixture
+/// guard check. A path like `r"xtask\src\fixtures\violations\test.rs"` contains
+/// `fixtures\violations` — after normalization the `fixtures/violations` substring is
+/// present, so the path is not early-exempted and is scanned normally. Passing
+/// violation-free source content must produce no findings (not a lex error, not a
+/// false positive from a mis-parsed Windows path).
+#[test]
+fn test_scan_for_panics_exempt_fixture_windows() {
+    // Clean source: no unwrap, no expect, no panic! — no violations regardless of path.
+    let src = "pub fn clean() -> i32 { 42 }\n";
+    let findings = scan_for_panics_in_source(src, r"xtask\src\fixtures\violations\test.rs");
+    assert!(
+        findings.is_empty(),
+        "Windows-style fixture path must produce no findings for violation-free src; \
+         got: {findings:?}"
+    );
+}
+
 /// Production code after an inline cfg(test) block (which DOES have braces)
 /// must still be scanned after the block closes.
 #[test]
@@ -302,6 +322,30 @@ fn test_is_test_file_patterns() {
     assert!(!is_test_file(
         "crates/pregolya-graph/examples/basic_graph.rs"
     ));
+
+    // F-P39-HIGH-001: Windows backslash separator paths must be recognized
+    // (the normalize-once replace('\\', "/") in is_test_file must be load-bearing).
+    assert!(
+        is_test_file(r"crates\pregolya-core\tests\integration.rs"),
+        r"Windows-sep tests\ directory component → test file"
+    );
+    assert!(
+        is_test_file(r"crates\pregolya-core\src\tests.rs"),
+        r"Windows-sep tests.rs filename → test file"
+    );
+    assert!(
+        is_test_file(r"xtask\src\tests.rs"),
+        r"Windows-sep xtask tests.rs → test file"
+    );
+    assert!(
+        is_test_file(r"crates\foo\tests\helpers.rs"),
+        r"Windows-sep tests\ dir in crates\foo → test file"
+    );
+    // Negative control: a regular src file with backslash separators must NOT be flagged.
+    assert!(
+        !is_test_file(r"crates\pregolya-core\src\lib.rs"),
+        r"Windows-sep src\lib.rs → NOT a test file"
+    );
 }
 
 // ── B-2 regression tests ─────────────────────────────────────────────────
@@ -1168,6 +1212,22 @@ fn test_is_test_class_file_patterns() {
     assert!(
         !is_test_class_file("crates/pregolya-standard-tests/src/lib.rs"),
         "crate name contains 'test' but path is under src/ → NOT test class"
+    );
+
+    // F-P39-HIGH-001: Windows backslash separator paths must be recognized
+    // (the normalize-once replace('\\', "/") in is_test_class_file must be load-bearing).
+    assert!(
+        is_test_class_file(r"crates\pregolya-core\tests\integration.rs"),
+        r"Windows-sep tests\ directory component → test class"
+    );
+    assert!(
+        is_test_class_file(r"crates\pregolya-core\src\tests.rs"),
+        r"Windows-sep tests.rs filename → test class"
+    );
+    // Negative control: a regular src file with backslash separators must NOT be test class.
+    assert!(
+        !is_test_class_file(r"crates\pregolya-core\src\lib.rs"),
+        r"Windows-sep src\lib.rs → NOT test class"
     );
 }
 
