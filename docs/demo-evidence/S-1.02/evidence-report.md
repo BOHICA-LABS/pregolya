@@ -214,13 +214,32 @@ Re-verified at fix-burst-24 HEAD `1abc3335636d07fd6903b6aa401f7a9ff42f7d8e` (202
 
 Re-verified at fix-burst-25 code commit `d688830263cd9d5990645803d2774c06cf53edd7` (2026-09-22): scanner-logic clause (d) triggered by `xtask/src/check_client_timeout.rs` changes — new `scan_reqwest_blocking_pattern` helper added to detect `reqwest::blocking::Client::new()`, `reqwest::blocking::ClientBuilder::new().build()`, and `reqwest::blocking::Client::builder().build()` without `.timeout()`, and matching `preceded_by_reqwest` de-dup guards added to Patterns 2 and 3. Clause (a): no `crates/` files added or deleted — OK. Clause (b): no `crates/` code changes — OK. Clause (c): no fixture directory changes; `CREDENTIAL_FIXTURE_COUNT` unchanged — OK. Clause (d): TRIGGERED — scanner logic changed in `xtask/src/check_client_timeout.rs`. Gate outputs remain valid because the new detection (reqwest::blocking surface) does not apply to the existing workspace: no `crates/` code uses `reqwest::blocking::*` (the `blocking` feature is not enabled in `[workspace.dependencies]`). The scan counts are unchanged: `check-client-timeout PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations`. All other gate counts unchanged from prior attestation. Implementer run (fix-burst-25): 205 tests pass, 5 skipped. Clippy clean (`-D warnings`).
 
-Re-verified at fix-burst-26 syn rewrite commit `ebea3e1b22b6fe788008296d38236bc7853d0b23` (2026-09-23): scanner-logic clause (d) triggered — `xtask/src/check_client_timeout.rs` completely rewritten from proc_macro2 flat-token scanner to `syn::visit::Visit`-based `TimeoutChecker` AST visitor (−499 lines). Coordinator-directed structural intervention after 7 passes finding new syntactic forms in the manual token scanner. KNOWN-LIMITATION 4 eliminated — parenthesized and braced base subexpression forms are now properly detected; their pinning tests were inverted from `is_empty()` to detection assertions. KL-1 (bare name via `use` import) and KL-3 (constant-valued zero timeout) preserved.
+Re-verified at fix-burst-26 syn rewrite commit `ebea3e1b22b6fe788008296d38236bc7853d0b23` (2026-09-23): scanner-logic clause (d) triggered — `xtask/src/check_client_timeout.rs` completely rewritten from proc_macro2 flat-token scanner to `syn::visit::Visit`-based `TimeoutChecker` AST visitor (−499 lines). Coordinator-directed structural intervention after 7 passes finding new syntactic forms in the manual token scanner. KNOWN-LIMITATION 4 eliminated — parenthesized and braced base subexpression forms are now properly detected; their pinning tests were inverted from `is_empty()` to detection assertions. KL-1 (bare name via `use` import), KL-2 (split-statement builder chains), and KL-3 (constant-valued zero timeout) preserved. Post-attestation correction (F-P25-MED-002): the syn rewrite introduced two additional behavioral gaps not disclosed in this attestation — macro token stream blindness (no `visit_expr_macro` / `visit_stmt_macro` / `visit_item_macro` overrides) and `Client::default()` / `ClientBuilder::default()` unclassified. Both were found as HIGH findings by adversarial pass 25 and closed in fix-burst-27.
 
 Clause (a): no `crates/` production files added or deleted — the multibyte test added to `crates/pregolya-core/src/http.rs` (point-patch commit `5d50f79`) is inside `#[cfg(test)]` and does not affect the gate scan target. Clause (b): `crates/pregolya-core/src/http.rs` changed — `sanitize_error_message` now uses char-count cap (`chars().take(200)`); this production code change has no reqwest client usage and does not alter check-client-timeout gate outputs. Clause (c): no fixture directory changes; `CREDENTIAL_FIXTURE_COUNT` unchanged — OK. Clause (d): TRIGGERED — scanner completely rewritten.
 
 Gate outputs remain valid because the syn rewrite finds the same 0 violations on the workspace: no `crates/` code uses `reqwest::Client::new()` without `.timeout()`, and the pre-push hook confirmed all xtask gates PASSED (check-client-timeout, check-no-panic, check-error-code-registry, deny-bare-api-key, deny-anyhow, deny-description-cache-key). Counts: `check-client-timeout PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations` (unchanged). All other gate counts unchanged from prior attestation. Implementer run (fix-burst-26): 300 tests pass, 7 skipped. KL-4 tests now assert detection (was: known-limitation zero-finding, is: positive finding assertion). All other gate tests pass unchanged.
 
 The fix-burst-26 evidence-report docs commit (this commit) is docs-only and does NOT trigger clause (d).
+
+## fix-burst-27 re-verification
+
+**Clause (d) analysis:** `check_client_timeout.rs` was modified (new `visit_expr_macro`/`visit_stmt_macro`/`visit_item_macro` methods, `scan_macro_tokens_for_timeout_violations` function, `classify_client_new` and `classify_builder_constructor` extended, `analyze_build_chain` OBS-001 fix). Evidence-report validity requires per-detection-class test attestation for scanner logic changes.
+
+**Per-detection-class test attestation (commit `356ee3b`):**
+
+| Detection class | Representative tests | Pass |
+|----------------|----------------------|------|
+| Pattern A — direct `Client::new` / `Client::builder` | `test_timeout_checker_detects_client_new_qualified`, `test_timeout_checker_detects_client_builder_qualified` | 8/8 |
+| Pattern A — `Client::default` / UFCS | `test_timeout_checker_detects_client_default_qualified`, `test_timeout_checker_detects_client_default_bare` | 4/4 |
+| Pattern B — builder chain via `analyze_build_chain` | `test_timeout_checker_detects_builder_no_timeout`, `test_timeout_checker_detects_builder_with_timeout` | 10/10 |
+| Macro scanning — `scan_macro_tokens_for_timeout_violations` | `test_timeout_checker_detects_reqwest_client_in_thread_local`, `test_timeout_checker_detects_builder_in_lazy_static`, `test_timeout_checker_detects_builder_with_timeout_in_lazy_static` | 3/3 |
+| Test context suppression (including `#[tokio::test]`) | `test_timeout_checker_ignores_tokio_test_fns` | 5/5 |
+| Monotonic-OR / zero-timeout semantics | `test_timeout_checker_last_zero_timeout_overrides_valid` | 2/2 |
+
+Total: 309 pass, 7 skipped (pre-existing `#[ignore]` tests requiring live API keys).
+
+**Known limitations after fix-burst-27:** KL-1 (bare name via use import), KL-2 (split-statement builder chains), KL-3 (constant-valued ZERO timeout), KL-macro (best-effort flat-token macro scanning for complex nested bodies).
 
 ---
 

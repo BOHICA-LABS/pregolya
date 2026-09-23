@@ -16,6 +16,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-27 (pass-25 findings, commit `356ee3b`)
+
+### xtask check_client_timeout — macro scanning and Default constructor
+
+**F-P25-HIGH-001 — macro token stream scanning:** Added `visit_expr_macro`, `visit_stmt_macro`, and `visit_item_macro` overrides to `TimeoutChecker`. Each override delegates to `scan_macro_tokens_for_timeout_violations`, a flat-token scanner that detects `reqwest::Client::new`, `reqwest::Client::builder`, `reqwest::blocking::Client::new`, and `reqwest::ClientBuilder::new` constructions inside macro invocation bodies. Reqwest client constructions inside `thread_local!{}`, `lazy_static!{}`, and arbitrary macro bodies are now detected. Three new pinning tests cover this path.
+
+**F-P25-HIGH-002 — `Client::default()` / `ClientBuilder::default()` unclassified:** `classify_client_new` extended to match `Client::default` in addition to `Client::new` and `Client::builder`; `classify_builder_constructor` extended to include `ClientBuilder::default`. The UFCS qself form `<reqwest::Client as Default>::default()` is handled conservatively in the `ExprCall` visitor path. Four new pinning tests cover qualified and bare forms.
+
+**F-P25-MED-001 — stale doc comments:** 16 doc-comment sites in `check_client_timeout` and `tests` referencing deleted symbols (`scan_reqwest_blocking_pattern`, `preceded_by_non_reqwest`, `has_build_without_timeout`, flat-index notation, Pattern 1/2/3/4 numbering) updated to reference current symbols and Pattern A/B terminology.
+
+**F-P25-LOW-001 — `has_cfg_test_attr` divergence rationale:** Divergence-rationale doc added explaining intentional separation from `check_no_panic::syn_has_cfg_test`.
+
+**F-P25-LOW-002 — `map_build_failure` doc:** Doc comment updated to cite `sanitize_error_message` for the 200-char cap.
+
+**F-P25-LOW-003 — `#[tokio::test]` not recognized:** Test-attribute detection changed from `is_ident("test")` to last-path-segment matching, covering `#[tokio::test]`, `#[async_std::test]`, `#[rstest]`, etc.
+
+**F-P25-OBS-001 — monotonic-OR in `analyze_build_chain`:** Fixed — `has_valid_timeout` now reflects the last `.timeout()` call rather than any previous valid call, matching reqwest's own last-wins semantics.
+
+### Known limitations after fix-burst-27
+
+| ID | Description | Status |
+|----|-------------|--------|
+| KL-1 | Bare `Client::new()` imported via `use reqwest::Client` — false negative (cannot resolve without type info) | Preserved |
+| KL-2 | Split-statement builder chains (builder on line 1, `.build()` on line N) | Preserved |
+| KL-3 | `.timeout(SOME_CONST_ZERO)` — constant-valued zero not detected (inline `Duration::ZERO` now caught by OBS-001 fix) | Preserved |
+| KL-macro | Macro token stream scanning is best-effort flat-token; deeply nested or aliased macro constructions may evade detection | New |
+
+Test count: 309 passing, 7 skipped (pre-existing ignored tests requiring live API keys).
+
 ### Fixed (fix-burst-26)
 
 - **F-P24-HIGH-001** (`xtask/src/check_client_timeout.rs`) — Head-anchored blocking detection: `blocking::Client::new()` (use-imported form where `blocking` is the path head) now flagged conservatively; `other_sdk::blocking::Client::new()` still suppressed (head `other_sdk` is non-reqwest). Implemented via `preceded_by_non_reqwest_qualifier` helper (point-patch commit `5d50f79`), then structurally eliminated by the syn rewrite below.
