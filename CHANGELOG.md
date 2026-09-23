@@ -16,6 +16,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-34 (pass-32 findings)
+
+### xtask check_no_panic / deny_bare_api_key — KL registry restore, `#[cfg(test)]` ItemTrait guard, story spec correction, TYPE_SUFFIXES order, process gap
+
+**HIGH-001 (F-P32-HIGH-001) — KL registry corrupted in fix-burst-33:** `NP-KL-1` and `BAK-KL-1` descriptions in CHANGELOG and evidence-report were replaced with wrong text from a mislabelled dispatch prompt (inverted fix of pass-31 OBS-001). Technical-writer restored correct module-doc descriptions in both artifacts (commit `4c3ea72`):
+- NP-KL-1 restored: "Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan"
+- BAK-KL-1 restored: "`#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate"
+
+**MED-001 (F-P32-MED-001) — `#[cfg(test)]` on enclosing `ItemTrait` not exempted in either syn gate:** Trait is an item per BC-2.14.003 `{INV-004}`(b) and BC-2.14.004 `{INV-003}`(b); sibling-sweep miss. Implementer added `visit_item_trait` override to both `PanicVisitor` and `TimeoutChecker` (commit `74e5a63`). Load-bearing tests: `test_no_panic_cfg_test_item_trait_exempt` and `test_timeout_checker_cfg_test_item_trait_exempt` (commit `7184a97`).
+
+**MED-002 (F-P32-MED-002) — Story spec stale: still described `check_client_timeout.rs` as `proc_macro2` token-stream scan:** Stale since fix-burst-26 syn AST rewrite. Story-writer amended three sites (§Tasks item 7, §Purity Classification, §Library & Framework Requirements) and bumped story to v1.18 (commit `4fa94af` on factory-artifacts).
+
+**LOW-001 (F-P32-LOW-001) — `is_zero_literal` `TYPE_SUFFIXES` comment claimed "longest first" but array was not sorted longest-first:** Reordered: `"usize"`, `"isize"`, `"u128"`, `"i128"`, then 3-char entries, then `"u8"`, `"i8"` (commit `74e5a63`).
+
+**OBS-001 (F-P32-OBS-001) — Process gap: no mechanism to source adversary dispatch KL list from evidence-report:** Closure narrative for pass-31 OBS-001 contradicted the actual diff. Partially addressed by HIGH-001 restore; orchestrator cycle-closing checklist follow-up required.
+
+### Known limitations after fix-burst-34
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED** in fix-burst-26 | Parenthesized/braced base subexpression — eliminated by syn AST visitor |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+Test count: 242 xtask tests pass, 5 skipped.
+
 ## fix-burst-33 (pass-31 findings)
 
 ### xtask check_no_panic — `#[test]`-family attribute exemption sibling-sweep, path-call form known gap, gate output re-attestation
