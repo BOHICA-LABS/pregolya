@@ -122,8 +122,9 @@
 #        Genuine skip (no assertion): §Convergence Status section absent or
 #        containing no `**D-NNN` bold entry (pre-convergence state — check emits
 #        a SKIPPED label, not FAIL).
-#        Self-probes: five probes exercise this check (A: checkpoint-stale,
-#        B: convergence-stale, C: clean-pass, D: checkpoint-absent, E: convergence-absent).
+#        Self-probes: six probes exercise this check (A: checkpoint-stale,
+#        B: convergence-stale, C: clean-pass, D: checkpoint-absent, E: convergence-absent,
+#        F: frozen-head-not-in-complete).
 #        Routing: state-manager (propagate newest D-NNN to §Session Resume
 #                 Checkpoint and §Convergence Status).
 #
@@ -739,6 +740,22 @@ EOF
         echo 1; return
       fi
     fi
+    # Step 3.5: Frozen-HEAD SHA currency check.
+    # Extract frozen HEAD SHA from §Session Resume Checkpoint; verify it appears
+    # in at least one §Current Phase Steps COMPLETE row.
+    local frozen_head_sha=""
+    frozen_head_sha=$(echo "$cp_section" \
+      | grep -oE 'frozen HEAD [0-9a-f]{7,40}' \
+      | grep -oE '[0-9a-f]{7,40}' | head -1 || true)
+    if [ -n "$frozen_head_sha" ]; then
+      local frozen_in_complete
+      frozen_in_complete=$(grep -E '^\| D-[0-9]+/[0-9]{4}-[0-9]{2}-[0-9]{2}' "$state_file" 2>/dev/null \
+        | grep '| COMPLETE |' \
+        | grep -F "$frozen_head_sha" || true)
+      if [ -z "$frozen_in_complete" ]; then
+        echo 1; return
+      fi
+    fi
     echo 0
   }
 
@@ -862,6 +879,34 @@ EOF
     exit 2
   fi
   unset _L13E_OUT
+
+  # Probe F: frozen HEAD SHA in §Session Resume Checkpoint but absent from all COMPLETE rows → CAUGHT
+  # Exercises the frozen-HEAD currency check added to detect false-green L13 when the
+  # newest fix-burst row remains IN FLIGHT (MAX_D downgrades to an older COMPLETE row yet
+  # checkpoint/convergence still agree with the older D-NNN, masking an incomplete closure).
+  PROBE_L13F="$PROBE_TMP/l13-frozen-head.md"
+  cat > "$PROBE_L13F" <<'EOF'
+## Current Phase Steps
+
+| D-201/2026-09-23 — latest decision without the frozen HEAD SHA. | orchestrator | COMPLETE | STATE.md D-201. |
+
+## Convergence Status
+
+**D-201 (burst-N done)**: trajectory.
+
+## Session Resume Checkpoint
+
+<!-- D-200 checkpoint archived. D-201 checkpoint is current. Keep ONLY the latest checkpoint here. -->
+
+3-CLEAN streak 0/3 on frozen HEAD deadbeef1234567.
+
+### RESUME NEXT-ACTIONS (S-1.02 — post-D-201 state)
+EOF
+
+  PROBE_EXIT=$(_L13_CHECK "$PROBE_L13F")
+  probe_must_fail "L13-probe-F" "frozen HEAD deadbeef1234567 in §Session Resume Checkpoint not found in any COMPLETE §Current Phase Steps row"
+
+  rm -f "$PROBE_L13F"
 
   unset -f _L13_CHECK
 
@@ -1351,8 +1396,13 @@ check_l12() {
 # Check reads STATE.md directly (not git diff) — the file is always present
 # for any commit that touches the factory-artifacts branch.
 #
-# Positive-coverage log on PASS: "STATE.md D-NNN parity: newest=D-NNN,
-# checkpoint=D-NNN, convergence=D-NNN — 3/3 surfaces in sync".
+# Positive-coverage log on PASS:
+#   When §Convergence Status is present:
+#     "STATE.md D-NNN parity: newest=D-NNN, checkpoint=D-NNN, convergence=D-NNN
+#      — 3/3 surfaces in sync"
+#   When §Convergence Status is absent (genuine skip):
+#     "STATE.md D-NNN parity: newest=D-NNN, checkpoint=D-NNN, convergence=SKIPPED
+#      — 2/2 surfaces asserted (convergence SKIPPED)"
 # On FAIL: identifies which surface is stale and routes to state-manager.
 
 check_l13() {
@@ -1431,6 +1481,30 @@ check_l13() {
     else
       # Section exists but no **D-NNN bold entries — skip
       CONVERGENCE_SKIPPED=true
+    fi
+  fi
+
+  # Step 3.5: Frozen-HEAD SHA currency check.
+  # Extract the frozen HEAD SHA from §Session Resume Checkpoint (pattern: `frozen HEAD <sha>`).
+  # If found, verify the SHA appears in at least one §Current Phase Steps COMPLETE row.
+  # Guards against false-green when the newest fix-burst row is left IN FLIGHT: MAX_D
+  # downgrades to the previous COMPLETE row and may still satisfy checkpoint/convergence
+  # parity while referencing a stale frozen HEAD.
+  local FROZEN_HEAD_SHA=""
+  if [ -n "$CHECKPOINT_SECTION" ]; then
+    FROZEN_HEAD_SHA=$(echo "$CHECKPOINT_SECTION" \
+      | grep -oE 'frozen HEAD [0-9a-f]{7,40}' \
+      | grep -oE '[0-9a-f]{7,40}' | head -1 || true)
+  fi
+
+  if [ -n "$FROZEN_HEAD_SHA" ]; then
+    local FROZEN_HEAD_IN_COMPLETE
+    FROZEN_HEAD_IN_COMPLETE=$(grep -E '^\| D-[0-9]+/[0-9]{4}-[0-9]{2}-[0-9]{2}' "$STATE_MD" 2>/dev/null \
+      | grep '| COMPLETE |' \
+      | grep -F "$FROZEN_HEAD_SHA" || true)
+    if [ -z "$FROZEN_HEAD_IN_COMPLETE" ]; then
+      emit FAIL "L13: frozen HEAD ${FROZEN_HEAD_SHA} (from §Session Resume Checkpoint) not found in any COMPLETE §Current Phase Steps row — burst closure incomplete; update STATE.md to record the fix-burst COMPLETE with this SHA before running the adversary pass"
+      return
     fi
   fi
 

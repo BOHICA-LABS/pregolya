@@ -3,7 +3,7 @@ document_type: story
 level: ops
 story_id: S-1.02
 epic_id: E-01
-version: "1.21"
+version: "1.22"
 status: draft
 producer: story-writer
 timestamp: 2026-08-24T00:00:00Z
@@ -30,6 +30,7 @@ changelog:
   - "1.19 (fix-burst-36/F-P34-MED-001-MED-002-MED-003/2026-09-23): MED-001: deny_bare_api_key.rs Purity Classification updated to walkdir; MED-002: walkdir dep row added to Library Requirements; MED-003: VP-DI010-02 and VP-DI010-03 added to verification_properties frontmatter"
   - "1.20 (fix-burst-38/F-P36-LOW-001/2026-09-23): LOW-001 (F-P36-LOW-001): walkdir Library Requirements row precision fix — 'five of seven gates (six call sites)' replaces imprecise 'all six gates'"
   - "1.21 (fix-burst-46/F-P44-MED-006/2026-09-23): AC-009 Verified-by corrected: phantom compile-fail cite removed, AnthropicApiKey added, stale .as_str() removed (F-P44-MED-006)"
+  - "1.22 (fix-burst-47/F-P45-LOW-002/2026-09-23): AC-008 construction form corrected from non-compiling tuple-struct call to from_raw_for_tests() — phantom-construct class (matches fix at AC-009 in fix-burst-46)"
 phase: 2
 inputs:
   - .factory/specs/behavioral-contracts/ss-14/BC-2.14.001.md
@@ -123,7 +124,7 @@ The `reqwest::Client` produced by `build_client()` has a positive total `.timeou
 `OpenAiApiKey`, `AnthropicApiKey`, and any other API key types in `pregolya-core` are newtypes (`pub struct FooApiKey(String)`), NOT type aliases. `derive(Clone)` is allowed for config snapshots but `Deref<Target=str>` and `std::ops::Deref` are NOT allowed. Verified by `static_assertions::assert_not_impl_any!(OpenAiApiKey: std::ops::Deref)` and `static_assertions::assert_not_impl_any!(AnthropicApiKey: std::ops::Deref)` — compile-time enforcement; no dedicated runtime test exists for newtype-vs-alias distinction since this is a structural property enforced at compile time.
 
 ### AC-008 (traces to BC-2.14.005 PC-002)
-`format!("{:?}", OpenAiApiKey("sk-real".to_string()))` returns exactly `"<redacted>"` — no substring of the key value. `format!("{:?}", AnthropicApiKey("sk-ant-real".to_string()))` returns exactly `"<redacted>"`. Verified by `test_BC_2_14_005_openai_debug_emits_redacted_sentinel()` and `test_BC_2_14_005_anthropic_debug_emits_redacted_sentinel()`.
+`format!("{:?}", OpenAiApiKey::from_raw_for_tests("sk-real"))` returns exactly `"<redacted>"` — no substring of the key value. `format!("{:?}", AnthropicApiKey::from_raw_for_tests("sk-ant-real"))` returns exactly `"<redacted>"` (direct tuple-struct construction is unavailable — `#[non_exhaustive]` + private field; tests use `from_raw_for_tests()` which is `#[cfg(test)]`-gated). Verified by `test_BC_2_14_005_openai_debug_emits_redacted_sentinel()` and `test_BC_2_14_005_anthropic_debug_emits_redacted_sentinel()`.
 
 ### AC-009 (traces to BC-2.14.005 PC-003 and PC-004)
 No `#[derive(Serialize)]` on API key newtypes (they must not appear in API responses). No `impl Deref<Target=str>` or `impl AsRef<str>` that exposes the inner value (the `.expose_secret()` method is the only intentional exposure path). Verified by `static_assertions::assert_not_impl_any!(OpenAiApiKey: AsRef<str>)` and `static_assertions::assert_not_impl_any!(AnthropicApiKey: AsRef<str>)` (compile-time enforcement, no dedicated runtime test — matches pattern at AC-007 and AC-013).
