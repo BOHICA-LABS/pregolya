@@ -16,6 +16,45 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-35 (pass-33 findings)
+
+### xtask check_client_timeout / check_no_panic — BC authority correction, walkdir portability, clause-(d) re-attestation de-SHA sweep, hex-radix fix, doc-comment count correction, cross-reference label fix
+
+**MED-001 — `{INV-004}` mis-cited as authority for zero-duration timeout rule in `check_client_timeout.rs` and `tests.rs`:** `{INV-004}` governs config-struct defaults with `None` (unlimited), not the builder-chain zero-duration rule. Approximately 24 sites corrected to cite `{PC-001}` (builder-chain rule: "`.timeout(duration)` with `duration > Duration::ZERO` before `.build()`"). Six `{INV-004}` sites in `tests.rs` were correctly preserved — they appear in `BC-2.14.003` test-file exemption context.
+
+**MED-002 — All 6 xtask gate `run()` functions used POSIX `find` subprocess for Rust file discovery, not portable to Windows:** Windows `find.exe` is a text-search utility, not a filesystem traversal tool. Story spec required `walkdir`. Replaced all `find` subprocess calls (`Command::new("find")`) with in-process `walkdir` traversal via shared `collect_rust_files()` helper in `main.rs`. Added `walkdir = "2"` to `xtask/Cargo.toml`. Gate behavior unchanged; Windows portability restored.
+
+**MED-003 — fix-burst-34 `## fix-burst-34 re-verification` clause (d) discharge cited a pre-change SHA instead of post-change HEAD:** Demo-recorder re-ran all 8 gates and recorded counts in the evidence-report. Subsequently, the TD-VSDD-091 de-SHA sweep (see below) removed the SHA-pinned gate re-attestation subsection and updated clause (d) to record gate counts by gate name and count value without SHA pins.
+
+**LOW-001 — `is_zero_literal` in `check_client_timeout.rs` stripped type suffix before detecting radix prefix, causing non-zero hex literals to be falsely classified as zero-duration:** Hex literal `0x0f64` (decimal 3940, non-zero) would strip the `f64` suffix to produce `0x0`, which was then interpreted as zero. Fixed by detecting hex/bin/oct radix prefix BEFORE stripping type suffix; non-decimal literals no longer have suffixes stripped. Load-bearing tests: `test_timeout_checker_hex_literal_with_f64_suffix_not_zero` (non-zero hex not flagged — LOAD-BEARING: fails without radix-first fix) and `test_timeout_checker_hex_zero_literal_flagged` (hex zero still detected — negative control).
+
+**LOW-002 — Two test doc-comments in `check_no_panic.rs` stated "causes this test to FAIL (returns 1 violation instead of 0)" but each fixture has 2 panic sites:** Each fixture file contains both an `.unwrap()` and an `.expect()` call. Corrected to "2 violations instead of 0". Tests: `test_no_panic_tokio_test_attr_fn_exempt` and `test_no_panic_cfg_test_item_trait_exempt`.
+
+**LOW-003 — Evidence-report cross-reference in `## fix-burst-34 re-verification` referred to "fix-burst-32 gate output re-attestation section" but the referenced subsection was added retroactively under the fix-burst-32 heading at fix-burst-33 HEAD:** Cross-reference corrected to unambiguously identify the subsection's heading text.
+
+**OBS-001 — Process gap: no enforced mechanism to source adversary dispatch KL list from evidence-report; pass-31 OBS-001 closure narrative contradicted the actual diff:** Orchestrator cycle-closing checklist follow-up required.
+
+**Orchestrator-directed TD-VSDD-091 compliance sweep:** Evidence-report.md contained approximately 59 volatile commit SHA and "frozen HEAD" citations (TD-VSDD-091 violation: records must cite behavioral anchors only). Removed all volatile SHA citations from evidence-report.md, including: "Implementation commits" rows, per-fix-burst "Recorded at HEAD" phrases, "Gate output re-attestation at frozen HEAD" subsections, and per-AC "frozen HEAD" pins. Updated Recording Provenance clause (d) to anchor gate counts by gate name and count value, not SHA. Post-sweep grep: 0 SHA citations remaining.
+
+**Test count: 244 xtask tests pass, 5 skipped.** Gate output unchanged: 25 analyzed / 16 exempt / 0 violations per scanning gate; fixture-mode 14/17; 148 codes / 0 collisions.
+
+### Known limitations after fix-burst-35
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED** in fix-burst-26 | Parenthesized/braced base subexpression — eliminated by syn AST visitor |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+Test count: 244 xtask tests pass, 5 skipped.
+
 ## fix-burst-34 (pass-32 findings)
 
 ### xtask check_no_panic / deny_bare_api_key — KL registry restore, `#[cfg(test)]` ItemTrait guard, story spec correction, TYPE_SUFFIXES order, process gap
@@ -48,6 +87,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 | BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
 
 Test count: 242 xtask tests pass, 5 skipped.
+
+Note: the `## fix-burst-34 re-verification` section's "Gate output re-attestation" subsection was subsequently removed by the TD-VSDD-091 de-SHA sweep (fix-burst-35). Gate counts (25 analyzed / 16 exempt / 0 violations; 14/17 fixture-mode; 148 codes / 0 collisions) are attested in the evidence-report by gate name and count value without SHA pins.
 
 ## fix-burst-33 (pass-31 findings)
 

@@ -538,6 +538,58 @@ Total: 242 xtask tests pass, 5 skipped.
 
 ---
 
+## fix-burst-35 re-verification
+
+**Adversary pass 33 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 0 CRIT + 0 HIGH + 3 MED + 3 LOW + 1 OBS findings.
+
+All pass-33 findings closed. See CHANGELOG fix-burst-35 for details.
+
+**Test count: 244 xtask tests pass, 5 skipped.**
+
+**Gate output (stable counts, unchanged from prior bursts):**
+
+| Gate | Output |
+|------|--------|
+| `check-no-panic` | PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations |
+| `check-client-timeout` | PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations |
+| `deny-bare-api-key` | PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations |
+| `check-error-code-registry` | PASSED: 148 codes validated, 0 collisions |
+| `deny-anyhow-in-lib` | PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations |
+| `deny-description-cache-key` | PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations |
+| `check-file-size` | PASSED (2 warnings, 45 files measured, 2 allowlisted) |
+| `check-no-panic --fixture-mode` | fixture-mode: 14/17 fixture files had findings |
+
+**Per-detection-class attestation:**
+
+- MED-001 (`{PC-001}` re-citation): behavioral anchor correction only — text change, no load-bearing test needed
+- MED-002 (`walkdir` portability): behavioral change in file-discovery path (`collect_rust_files()` helper replaces `Command::new("find")`); gate output counts unchanged (25 analyzed / 16 exempt / 0 violations per scanning gate)
+- MED-003 (clause (d) re-attestation): gate output recorded (see gate output table above); SHA-pin removed by TD-VSDD-091 sweep
+- LOW-001 (hex radix fix): `test_timeout_checker_hex_literal_with_f64_suffix_not_zero` — NOT flagged (non-zero hex with `f64` suffix; LOAD-BEARING: fails without radix-first fix); `test_timeout_checker_hex_zero_literal_flagged` — flagged (hex zero still detected; negative control)
+- LOW-002 (doc-comment count fix): `test_no_panic_tokio_test_attr_fn_exempt` and `test_no_panic_cfg_test_item_trait_exempt` doc-comments corrected; no behavioral change
+- LOW-003 (cross-reference label fix): records-only; no behavioral change
+- OBS-001: process gap — orchestrator follow-up required
+
+**Clause-(d) analysis:** MED-002 (`walkdir` refactor) is a scanner-infrastructure change — clause (d) fires; gate output counts unchanged (25 analyzed / 16 exempt / 0 violations per gate output table above). Gate counts recorded by gate name and count value without SHA pins (per updated Recording Provenance clause (d)).
+
+**Updated known limitations (10 entries, same as fix-burst-34):**
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED in fix-burst-26** | Parenthesized/braced base subexpression — eliminated by syn AST visitor; see `test_timeout_scanner_parenthesized_base_subexpr_handled_by_syn` and `test_timeout_scanner_braced_base_subexpr_handled_by_syn` |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+No new KL entries. `walkdir` portability fix (MED-002) closes the Windows-portability gap — not a KL, fully resolved.
+
+---
+
 ## Notes
 
 - All recordings produced with VHS 0.11.0 using `FiraCode Nerd Font Mono`, Catppuccin Mocha theme, 1200×600 or 1200×700 resolution.
