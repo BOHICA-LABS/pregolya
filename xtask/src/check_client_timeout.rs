@@ -493,35 +493,29 @@ fn matches_ident(flat: &[FlatToken], idx: usize, name: &str) -> bool {
     matches!(flat.get(idx), Some(FlatToken::Ident(n, _)) if n == name)
 }
 
-/// Find the end of a method chain starting at `start`.
+/// Returns the index just past the opening [`ParenGroup`] of the base call
+/// (e.g., `new()` or `builder()`).
 ///
-/// A chain continues as long as we see `.`, ident, paren-group sequences.
-/// Returns the index just past the last token in the chain.
+/// This is a conservative hint used by callers to avoid re-scanning the base call.
+/// The return value intentionally does not span the full chain — callers that need
+/// the full chain end must scan forward from this index.
+///
+/// Note: because [`flatten_tokens_no_test`] emits a [`FlatToken::ParenGroupEnd`]
+/// marker immediately after the inlined paren-group contents, the token at the
+/// returned index is always a `ParenGroupEnd` — not a `.method(` continuation.
+/// Callers that used to rely on a chain-step loop here should use
+/// [`has_build_without_timeout`] directly, which scans forward to `;` or `.build()`.
 fn find_chain_end(flat: &[FlatToken], start: usize) -> usize {
     let n = flat.len();
     let mut i = start;
-    // Skip past any initial token sequence for the base (e.g. reqwest::Client::builder())
-    // We just advance until we can't see a `.method(` continuation.
-    // First skip past the initial expression up to and including the first `()`
+    // Advance past the base call's identifier tokens (e.g. `reqwest :: ClientBuilder :: new`)
+    // until the opening ParenGroup of the base call is found, then step past it.
     while i < n {
         if matches!(flat[i], FlatToken::ParenGroup(_)) {
             i += 1;
             break;
         }
         i += 1;
-    }
-    // Now consume `.method(args)` chains
-    loop {
-        // A chain step: `.` ident `(` `)` — the paren group
-        if i + 2 < n
-            && matches!(&flat[i], FlatToken::Punct('.', _))
-            && matches!(&flat[i + 1], FlatToken::Ident(_, _))
-            && matches!(&flat[i + 2], FlatToken::ParenGroup(_))
-        {
-            i += 3;
-        } else {
-            break;
-        }
     }
     i
 }
@@ -539,6 +533,12 @@ fn find_chain_end(flat: &[FlatToken], start: usize) -> usize {
 /// `.build()` calls at depth > 0 (inside method arguments) are attributed to inner
 /// builders and ignored. This prevents cross-chain verdict leakage: a compliant second
 /// chain in a `match` arm cannot credit an uncompliant first chain's `.build()`.
+///
+/// Both `.timeout()` crediting and `.build()` recognition are depth-gated: tokens
+/// inside nested paren/brace/bracket groups (depth > 0) are attributed to inner
+/// builders and not credited to the outer chain. A `.timeout()` call belonging to
+/// a nested inner builder (e.g. inside a `.proxy(make_proxy(…))` argument) is
+/// therefore NOT credited to the outer chain.
 ///
 /// Brace-typed method arguments (e.g. `.default_headers({...})`),
 /// bracket-typed method arguments (e.g. `.resolve_to_addrs("host", &vec![addr; 2])`), and
@@ -593,9 +593,14 @@ fn has_build_without_timeout(flat: &[FlatToken], start: usize, _end: usize) -> b
             FlatToken::Punct(c, _) if *c == '.' => {
                 if let Some(FlatToken::Ident(name, _)) = flat.get(i + 1) {
                     if name == "timeout" {
-                        // Only credit a timeout whose argument is not Duration::ZERO.
-                        if !is_zero_duration_timeout_arg(flat, i) {
-                            found_timeout_before_build = true;
+                        if brace_depth == 0 && bracket_depth == 0 && paren_depth == 0 {
+                            // Only credit a timeout at top-level depth (depth 0).
+                            // A .timeout() inside a nested paren/brace/bracket argument
+                            // (depth > 0) belongs to an inner builder and must NOT be
+                            // credited to the outer chain (F-P19-HIGH-001 depth-asymmetry fix).
+                            if !is_zero_duration_timeout_arg(flat, i) {
+                                found_timeout_before_build = true;
+                            }
                         }
                     } else if name == "build"
                         && matches!(flat.get(i + 2), Some(FlatToken::ParenGroup(_)))
@@ -1225,6 +1230,120 @@ pub fn build_client() -> reqwest::Client {
         assert!(
             !findings.is_empty(),
             "violating chain in second match arm must be flagged even when first arm is compliant"
+        );
+    }
+
+    // ── Depth-asymmetry false-negative regression tests ──────────────────────
+    //
+    // Fix-burst-20 made `.build()` recognition depth-aware (only the depth-0
+    // `.build()` terminates the outer chain scan) but left `.timeout()` crediting
+    // depth-blind.  If a *nested inner* builder (inside a paren/brace/bracket
+    // argument) calls `.timeout()`, that credit is wrongly attributed to the
+    // *outer* chain, causing the outer chain's missing `.timeout()` to go
+    // unreported.  Tests 1 and 2 pin this false-negative; Test 3 pins the
+    // complementary true-negative (outer with depth-0 `.timeout()` must not be
+    // falsely flagged after the depth-aware fix).
+
+    /// Depth-asymmetry false-negative — paren-nested inner builder.
+    ///
+    /// Outer chain has no `.timeout()`.  Inner chain (inside `.proxy(make_proxy(…))`)
+    /// has `.timeout()`.  Under the bug, `has_build_without_timeout` credits the
+    /// inner timeout to the outer chain and returns `false` (no violation).
+    /// After the fix the credit is rejected (inner timeout is at paren depth > 0)
+    /// and the outer chain is correctly flagged.
+    ///
+    /// FAILS before fix, PASSES after fix.
+    #[test]
+    fn test_timeout_scanner_nested_inner_builder_in_paren_outer_missing_timeout_is_flagged() {
+        let src = r#"
+            fn build_client() -> reqwest::Client {
+                reqwest::ClientBuilder::new()
+                    .proxy(make_proxy(
+                        reqwest::ClientBuilder::new()
+                            .timeout(std::time::Duration::from_secs(30))
+                            .build()
+                            .unwrap()
+                    ))
+                    .build()
+                    .unwrap()
+            }
+        "#;
+        let findings =
+            scan_for_timeout_violations_in_source(src, "crates/pregolya-core/src/http.rs");
+        assert!(
+            !findings.is_empty(),
+            "outer chain with no .timeout() should be flagged even when a nested inner builder \
+             has .timeout(); inner timeout must not credit the outer chain"
+        );
+    }
+
+    /// Depth-asymmetry false-negative — brace-nested inner builder.
+    ///
+    /// Outer chain has no `.timeout()`.  Inner chain inside a brace-group argument
+    /// (`.default_headers({{ … }})`) has `.timeout()`.  Under the bug the inner
+    /// timeout (at brace depth > 0) is wrongly credited to the outer chain.
+    /// After the fix the credit is rejected and the outer chain is correctly flagged.
+    ///
+    /// FAILS before fix, PASSES after fix.
+    #[test]
+    fn test_timeout_scanner_nested_inner_builder_in_brace_outer_missing_timeout_is_flagged() {
+        let src = r#"
+            fn build_client() -> reqwest::Client {
+                reqwest::ClientBuilder::new()
+                    .default_headers({
+                        let _ = reqwest::ClientBuilder::new()
+                            .timeout(std::time::Duration::from_secs(30))
+                            .build()
+                            .unwrap();
+                        Default::default()
+                    })
+                    .build()
+                    .unwrap()
+            }
+        "#;
+        let findings =
+            scan_for_timeout_violations_in_source(src, "crates/pregolya-core/src/http.rs");
+        assert!(
+            !findings.is_empty(),
+            "outer chain with no .timeout() should be flagged even when a brace-nested inner \
+             builder has .timeout(); inner timeout must not credit the outer chain"
+        );
+    }
+
+    /// Depth-asymmetry stability test — outer depth-0 `.timeout()` is still credited
+    /// after the depth-aware fix.
+    ///
+    /// Outer chain has `.timeout()` at depth 0 (before any paren/brace nesting).
+    /// Inner chain inside `.proxy(make_proxy(…))` has NO `.timeout()`.
+    /// `has_build_without_timeout` is called directly here so that the inner
+    /// chain's independent non-compliance does not pollute the outer-chain verdict.
+    ///
+    /// Expected: `has_build_without_timeout` returns `false` (outer is compliant).
+    /// The depth-aware fix must not accidentally un-credit depth-0 `.timeout()` calls.
+    ///
+    /// PASSES both before and after fix (no regression introduced by the fix).
+    #[test]
+    fn test_timeout_scanner_outer_has_depth_zero_timeout_inner_missing_is_not_flagged() {
+        // Source contains only the builder expression (no fn wrapper) so that
+        // flat[0] is the outer `reqwest` token and start = 0 is correct.
+        let src = r#"
+            reqwest::ClientBuilder::new()
+                .timeout(std::time::Duration::from_secs(30))
+                .proxy(make_proxy(
+                    reqwest::ClientBuilder::new()
+                        .build()
+                        .unwrap()
+                ))
+                .build()
+                .unwrap()
+        "#;
+        let ts: proc_macro2::TokenStream = src.parse().unwrap();
+        let mut flat = Vec::new();
+        super::flatten_tokens_no_test(ts.into_iter(), &mut flat, &mut 0u32);
+        assert!(
+            !super::has_build_without_timeout(&flat, 0, flat.len()),
+            "outer chain with depth-0 .timeout() should NOT be flagged regardless of inner \
+             builder state; depth-aware fix must not un-credit a valid depth-0 timeout"
         );
     }
 }
