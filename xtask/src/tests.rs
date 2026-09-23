@@ -1112,6 +1112,35 @@ fn test_validate_allowlist_entry_rejects_wrong_prefix() {
     assert!(validate_allowlist_entry_path("src/error.rs").is_err());
 }
 
+/// F-P41-LOW-002 regression pin: Windows backslash paths must normalize to forward-slash
+/// before validation.
+///
+/// Logic trace (load-bearing):
+/// - With `replace('\\', "/")`: `crates\pregolya-core\src\error.rs` normalizes to
+///   `crates/pregolya-core/src/error.rs` → `starts_with("crates/")` = TRUE → passes.
+/// - Without normalization: `starts_with("crates/")` on backslash string = FALSE →
+///   rejected → `is_ok()` assertion FAILS.
+///
+/// This test FAILS if the `let path = path.replace('\\', "/")` normalization call is
+/// removed from `validate_allowlist_entry_path`.
+#[test]
+fn test_validate_allowlist_entry_path_windows_separator() {
+    // Windows backslash paths must normalize to forward-slash before validation.
+    assert!(
+        validate_allowlist_entry_path(r"crates\pregolya-core\src\error.rs").is_ok(),
+        "backslash crates path should pass validation after normalization"
+    );
+    assert!(
+        validate_allowlist_entry_path(r"xtask\src\main.rs").is_ok(),
+        "backslash xtask path should pass validation after normalization"
+    );
+    // Negative control: still rejects invalid form (non-crates, non-xtask root)
+    assert!(
+        validate_allowlist_entry_path(r"src\main.rs").is_err(),
+        "non-crates/non-xtask backslash path should still be rejected"
+    );
+}
+
 // ── count_cfg_test_lines unit tests ──────────────────────────────────────────
 
 /// FIX-C: Verifies count_cfg_test_lines skips blank lines and comment-only lines
