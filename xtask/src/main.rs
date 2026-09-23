@@ -912,6 +912,7 @@ impl AllowList {
 /// - Path MUST start with `"crates/"` or `"xtask/"` (prevents over-broad bare-filename matches).
 /// - Path MUST have at least 2 slashes (at least 3 components: prefix/crate/file.rs).
 fn validate_allowlist_entry_path(path: &str) -> Result<(), String> {
+    let path = path.replace('\\', "/");
     if !path.starts_with("crates/") && !path.starts_with("xtask/") {
         return Err(format!(
             "path {path:?} must start with 'crates/' or 'xtask/' (bare filenames match multiple crates)"
