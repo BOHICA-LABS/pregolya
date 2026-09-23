@@ -2,7 +2,7 @@
 document_type: behavioral-contract
 level: L3
 bc_id: BC-2.14.004
-version: "1.9"
+version: "1.10"
 status: active
 lifecycle_status: active
 introduced: v1.0.0-greenfield
@@ -24,6 +24,7 @@ changelog:
   - "1.7 (S-1.02-adv-pass-1/F-02+F-06/2026-09-22, product-owner): F-02 — EC-006 added for `ClientBuilder::build()` failure path citing E-CORE-012 (HttpClientBuildFailed, TRANSPORT, Never); E-CORE-012 minted in error-taxonomy.md §E-CORE-012 same burst. F-06 — Wave-0 scoped-coverage note added to {PRE-001} and §Description documenting that the xtask mechanical gate enforces the reqwest `ClientBuilder` surface only; non-reqwest HTTP clients (hyper, async-openai, etc.) are enforced by code-convention and adversarial review until a later wave introduces them and the gate is extended."
   - "1.8 (S-1.02-adv-pass-2/F-D/2026-09-22, product-owner): {PC-006} clarified — reqwest's total .timeout(duration) covers the full elapsed time including the TCP connection-establishment phase, so it satisfies DI-009 ('no indefinite hang') without requiring a separate .connect_timeout() call. Setting .connect_timeout() is recommended for faster failure-detection on providers with unreliable network paths, but is not required when a total .timeout(duration > 0) is already set. The prior text 'both must be set' was ambiguous about reqwest's semantics; the amended text aligns with the S-1.01 implementation (which sets .timeout() only) and the fundamental DI-009 guarantee."
   - "1.9 (S-1.02-adv-pass-4/F-06/2026-09-22, product-owner): {PC-005} pregolya-core scoping clarification added — build_client() satisfies DI-009 by setting .timeout(d > 0); the E-PROV-002 error-shape conversion is the provider adapter's responsibility (pregolya-openai/anthropic/ollama), verified in S-2.07 (unary invoke() path traces to this {PC-005}; streaming stall path is BC-2.08.007/AC-022 in S-2.07). TV-004 illustrative-path note added below Canonical Test Vectors table. pregolya-core does NOT produce E-PROV-002 directly."
+  - "1.10 (S-1.02-adv-pass-15/F-P15-M04/2026-09-22, product-owner): EC-006 <reason> redefined to include mandatory credential-redaction and 200-char cap per DI-010 / BC-2.14.005 {INV-001} (CWE-209). The raw build() error string MUST NOT appear verbatim in the structured error; sanitize_error_message (or equivalent) must be applied before constructing the PregolyaError message field. Reference to BC-2.14.005 {INV-001} added to EC-006 Reference line."
 traces_to:
   - domain-spec/capabilities-p0.md#CAP-016
   - domain-spec/invariants.md#DI-009
@@ -165,11 +166,15 @@ loaded.
 **Expected behavior:** The HTTP client factory function propagates the build error as
 `Err(PregolyaError { category: TRANSPORT, code: "E-CORE-012",
 message: "HttpClientBuildFailed: failed to build HTTP client: <reason>", .. })`
-where `<reason>` is the display string from the `build()` Err return.
+where `<reason>` is the display string from the `build()` Err return, sanitized per
+DI-010 / BC-2.14.005 {INV-001}: URL-embedded credentials redacted to `://***@host` and the
+message capped at 200 characters to prevent credential leakage (CWE-209). The raw `build()`
+error string MUST NOT appear verbatim in the structured error — `sanitize_error_message`
+(or equivalent) must be applied before constructing the `PregolyaError` message field.
 No `Client` is constructed; the operation fails before any outbound connection is attempted.
 **RetryHint:** Never — the same `ClientBuilder` configuration will reproduce the build failure
 immediately on retry; recovery requires fixing the TLS or proxy configuration.
-**Reference:** error-taxonomy.md E-CORE-012.
+**Reference:** error-taxonomy.md E-CORE-012; BC-2.14.005 {INV-001} (DI-010 Credential Opacity).
 
 ## Canonical Test Vectors
 
