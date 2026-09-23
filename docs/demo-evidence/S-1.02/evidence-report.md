@@ -747,6 +747,43 @@ All pass-37 findings closed. See CHANGELOG fix-burst-39 for details.
 
 ---
 
+## fix-burst-45 re-verification
+
+**Adversary pass 43 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 0 CRIT + 1 HIGH + 1 MED + 1 LOW.
+
+All pass-43 findings closed. See CHANGELOG fix-burst-45 for details.
+
+**Test count: 343 run: 343 passed (workspace; no scanner logic changes).**
+
+**Clause (d) analysis:** fix-burst-45 makes NO changes to `xtask/src/**/*.rs` scanner logic. Clause (d) does NOT fire. All changes are records-lint.sh header corrections (factory-artifacts) and CHANGELOG/evidence-report corrections (feature branch).
+
+**Detection-class attestation:**
+
+| Finding | Load-bearing artifact | Verification |
+|---------|----------------------|--------------|
+| HIGH-001 (records-lint.sh header + PGAP label) | `grep "Phase Progress\|Decision Log"` returns zero hits in entire records-lint.sh after devops-engineer fix; PGAP entry verified to read "newest COMPLETE D-NNN in §Current Phase Steps"; `records-lint.sh` exits 0 on current STATE.md | pass |
+| MED-001 (header skip-conditions rewrite) | Header "Skip conditions" paragraph replaced with "Blocking FAIL" / "Genuine skip" taxonomy; `records-lint.sh` exits 0 on current STATE.md | pass |
+| LOW-001 (evidence-report attestation table) | Two-row detection-class table added to `## fix-burst-44 re-verification` naming `L13-probe-D` as load-bearing artifact for MED-005 | pass |
+
+**Gate output:** unchanged (25 analyzed / 16 exempt / 0 violations per gate; 14/17 fixture-mode; 148 codes / 0 collisions).
+
+**KL table:** 10 rows, unchanged.
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED** in fix-burst-26 | Parenthesized/braced base subexpression — eliminated by syn AST visitor |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+---
+
 ## fix-burst-44 re-verification
 
 **Adversary pass 42 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 0 CRIT + 0 HIGH + 5 MED + 1 LOW.
@@ -756,6 +793,13 @@ All pass-42 findings closed. See CHANGELOG fix-burst-44 for details.
 **Test count: 251 run: 251 passed, 5 skipped.**
 
 **Clause (d) analysis:** fix-burst-44 makes NO changes to `xtask/src/**/*.rs` scanner logic. Clause (d) does NOT fire. All changes are CHANGELOG corrections (feature branch) and STATE.md/records-lint.sh updates (factory-artifacts).
+
+### Detection-class attestation
+
+| Finding | Load-bearing artifact | Verification |
+|---------|----------------------|--------------|
+| MED-003 (records-lint.sh L13 labels) | `grep` confirms zero "Phase Progress"/"Decision Log" occurrences inside `check_l13` function body and probe fixtures (15 sites corrected); 2 header-block sites deferred to fix-burst-45 | pass |
+| MED-005 (vacuity FAIL guards) | `L13-probe-D`: synthetic STATE.md with valid §Current Phase Steps COMPLETE row and no §Session Resume Checkpoint section → `_L13_CHECK` returns 1 (empty `cp_max` branch) → `probe_must_fail "L13-probe-D"` asserts FAIL; `records-lint.sh` exits 0 on current STATE.md; four self-probes (A/B/C/D) all pass | pass |
 
 **Gate output:** unchanged (25 analyzed / 16 exempt / 0 violations per gate; 14/17 fixture-mode; 148 codes / 0 collisions).
 

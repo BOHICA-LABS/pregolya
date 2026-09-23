@@ -16,6 +16,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-45 (pass-43 findings)
+
+### records-lint.sh header / STATE.md PGAP / evidence-report — stale source-table labels, skip-conditions rewrite, attestation table
+
+**HIGH-001 (F-P43-HIGH-001) — records-lint.sh header + STATE.md PGAP: stale source-table label persists:**
+The fix-burst-44 sweep corrected 15 sites inside `check_l13` body and probe fixtures but missed two sites in records-lint.sh's top-of-file header inventory block: (1) the L13 entry saying "Decision Log / Phase Progress table rows"; (2) the same entry's PASS-condition text "(Decision Log not yet started)". The STATE.md PGAP entry's additional assertion clause also still cited "newest D-NNN in the Decision Log" instead of "newest COMPLETE D-NNN in §Current Phase Steps". Because the header inventory is the operator-facing specification and the PGAP entry is the live obligation text, a maintainer implementing the remaining PGAP obligation from either document would re-introduce the exact mis-anchor that MED-003 was filed to remove. Fixed by devops-engineer (records-lint.sh header rewrite) and state-manager (PGAP entry correction). CHANGELOG fix-burst-44 MED-003 attestation corrected (above).
+
+**MED-001 (F-P43-MED-001) — records-lint.sh header "Skip conditions" documents pre-fix PASS semantics:**
+The L13 header entry's "Skip conditions (PASS without blocking assertion)" paragraph still listed STATE.md absent, zero rows, and checkpoint absent as PASS-on-absence conditions — the exact semantics that fix-burst-44 MED-005 changed to FAIL. The code was correct; the documentation told maintainers the opposite. Fixed by devops-engineer: "Skip conditions" rewritten to distinguish "Blocking FAIL (vacuity guards)" from "Genuine skip (§Convergence Status absent)" and states the four self-probes.
+
+**LOW-001 (F-P43-LOW-001) — evidence-report fix-burst-44 re-verification missing attestation table:**
+`## fix-burst-44 re-verification` had no per-detection-class attestation table for MED-003 (anchor sweep) or MED-005 (vacuity guards + probe D), unlike the fix-burst-43 section which carried a row for its records-lint change. Fixed by adding a two-row attestation table naming `L13-probe-D` as the load-bearing artifact for MED-005.
+
+**Test count:** 343 run: 343 passed (full workspace; no code or test changes in fix-burst-45 — all records-lint.sh header corrections and CHANGELOG/evidence-report attestation fixes). 10-row KL table (same structure; no new KL entries).
+
+### Known limitations after fix-burst-45
+
+| ID | Gate | Status | Description |
+|----|------|--------|-------------|
+| CT-KL-1 | `check-client-timeout` | Active (conservative FP) | Bare `Client::new()` via `use` import — flagged conservatively; workaround: qualify with owning-crate path |
+| CT-KL-2 | `check-client-timeout` | Active | Split-statement builder chains |
+| CT-KL-3 | `check-client-timeout` | Active | Constant-valued zero timeout |
+| CT-KL-4 | `check-client-timeout` | **RETIRED** in fix-burst-26 | Parenthesized/braced base subexpression — eliminated by syn AST visitor |
+| CT-KL-5 | `check-client-timeout` | Active | Module-alias re-export false negative |
+| CT-KL-macro | `check-client-timeout` | Active | Macro bodies failing all three parse strategies (opaque bodies skip, not flag) |
+| NP-KL-1 | `check-no-panic` | Active | Exemption-blind macro token scan — `scan_method_calls_in_tokens` called unconditionally; exemption logic not applied in macro arg scan |
+| NP-KL-2 | `check-no-panic` | **CONFIRMED RESOLVED** (fix-burst-30/31/32 load-bearing tests) | Multi-argument turbofish `<String, u8>` in `syn_macro_has_bc_id` — angle_depth counter |
+| NP-KL-3 | `check-no-panic` | Active | Path-call form `Result::unwrap(r)`, `Option::expect(o,"m")` — `ExprCall` not detected; requires type inference unavailable at AST level |
+| BAK-KL-1 | `deny-bare-api-key` | Active | `#[cfg_attr(feature=…, derive(…))]` conditional derives not detected by AST walker — feature-gated dangerous derives evade the gate |
+
+Test count: 343 run: 343 passed (full workspace; no code or test changes). Gate output unchanged: 25 analyzed / 16 exempt / 0 violations per scanning gate; fixture-mode 14/17; 148 codes / 0 collisions.
+
 ## fix-burst-44 (pass-42 findings)
 
 ### STATE.md / records-lint.sh / CHANGELOG — Decisions Log misfiling, duplicate D-407, records-lint.sh mis-anchors, CHANGELOG attestation corrections, L13 vacuity paths
@@ -24,7 +56,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 **MED-002 (F-P42-MED-002) — Duplicate D-407 rows + D-406 out of sequence:** Among the misfiled rows, D-407 appeared twice (different text, same ID); D-406 was sandwiched between them. Fixed by state-manager: shorter D-407 removed; sequence restored to monotonic ...D-405, D-406, D-407, D-408.
 
-**MED-003 (F-P42-MED-003) — records-lint.sh L13 mis-anchors source table:** Comments name "Phase Progress" and "Decision Log" but the regex targets §Current Phase Steps. FAIL message routes state-manager to "Decision Log" (terminating at D-384 before fix-burst-44). Fixed by devops-engineer: all six mis-anchored references corrected to "§Current Phase Steps".
+**MED-003 (F-P42-MED-003) — records-lint.sh L13 mis-anchors source table:** Comments name "Phase Progress" and "Decision Log" but the regex targets §Current Phase Steps. FAIL message routes state-manager to "Decision Log" (terminating at D-384 before fix-burst-44). Fixed by devops-engineer: all references inside `check_l13` function body and associated probe fixtures corrected to '§Current Phase Steps' (15 sites). Two sites in the top-of-file header inventory block and one site in the STATE.md PGAP entry were not swept; these are addressed in fix-burst-45 (F-P43-HIGH-001).
 
 **MED-004 (F-P42-MED-004) — CHANGELOG fix-burst-43 OBS-001 false DONE attestation:** CHANGELOG said PGAP marked "IN PROGRESS → DONE" but STATE.md still marks it IN PROGRESS and only the D-NNN parity half (L13) shipped. Corrected in this fix-burst.
 
