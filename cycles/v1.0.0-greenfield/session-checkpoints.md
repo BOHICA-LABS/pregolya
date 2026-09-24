@@ -1,8 +1,9 @@
 ---
 document_type: session-checkpoints
 level: ops
-version: "2.8"
+version: "2.9"
 changelog:
+  - "2.9 (D-440/2026-09-23): D-439 pass-58 COMPLETE checkpoint archived"
   - "2.8 (D-371/2026-09-22): D-370 SPEC fix-burst checkpoint archived"
   - "2.7 (D-368/2026-09-19): D-367 session-wrap checkpoint archived"
   - "2.6 (D-356/DC-40 fix-burst/2026-09-09): D-356/DC-39 checkpoint archived"
@@ -5160,4 +5161,30 @@ Phase 3 TDD Implementation, IN PROGRESS. Wave 1, wave order pregolya-core→preg
 ### BRANCH STATE (at D-429)
 - develop = 086c0dc (origin/develop synced after squash-merge PR #2).
 - feature/S-1.02: frozen HEAD c3ad11f867957790475bdf76e10fb1f6a4363662 (fix-burst-54 push; D-428); adversary pass-53 COMPLETE (D-429); fix-burst-55 dispatched; streak 0/3.
+- feature/S-1.01: DELETED (worktree removed, local + remote branches deleted after merge).
+
+---
+
+## Session Resume Checkpoint — D-439 (archived 2026-09-23; superseded by D-440)
+
+### PIPELINE POSITION
+Phase 3 TDD Implementation, IN PROGRESS. Wave 1, wave order pregolya-core→pregolya-graph→partners (D7). S-1.01 MERGED (PR #2). S-1.02 PR-LEVEL adversary cascade IN PROGRESS: pass-58 COMPLETE CLEAN(strict)=no; fix-burst-60 dispatched; streak 0/3; frozen HEAD 3d511a57884aed1a380b84114b75bda2d659a5c7 UNCHANGED. Census: BC 149 / VP 43 / EC 148 / TV 845 / stories 53 / pts 377 / ADR 31 / SS 24 / crates 22.
+
+### DEVELOP STATE
+- develop = 086c0dc (squash-merge of feature/S-1.01; origin/develop synced). .worktrees/S-1.01 and feature/S-1.01 REMOVED.
+- feature/S-1.02: PR #3; frozen HEAD 3d511a57884aed1a380b84114b75bda2d659a5c7 (fix-burst-59 push; D-438); pass-58 COMPLETE CLEAN(strict)=no; fix-burst-60 dispatched; streak 0/3.
+
+### RESUME NEXT-ACTIONS (S-1.02 — post-D-439 state)
+1. fix-burst-60 IN PROGRESS (dispatched at D-439); 11 findings (2H+4M+3L+2OBS): HIGH-001/002/LOW-001/002/OBS-001/002 → devops-engineer; MED-003 → implementer; MED-001/002/004/LOW-003 → technical-writer; frozen HEAD 3d511a57884aed1a380b84114b75bda2d659a5c7.
+2. After fix-burst-60: push; reset frozen HEAD; dispatch adversary pass-59 (streak attempt 1/3 reset).
+3. If pass-59 CLEAN(strict)=no: dispatch fix-burst-61; push; streak continues RESET 0/3.
+4. If pass-59 CLEAN(strict)=yes: streak 1/3; dispatch adversary pass-60 on SAME frozen HEAD (do NOT push anything between streak passes).
+5. After 3-CLEAN (strict): Step 6 CI + Step 7 deps + Step 8 STOP (MERGE-READY to human per DIRECTIVE 4 — do NOT merge S-1.02 automatically).
+6. HUMAN merge (DIRECTIVE 4 caveat — AI-authored PR; agent-merge BLOCKED).
+7. Post-merge burst: state-manager POL-14 BC auto-promotion (BC-2.14.003/004/005/006 draft→active) + census update.
+8. story-writer opens follow-up story for records-lint.sh hardening (finding-ID parity check).
+
+### BRANCH STATE (at D-439)
+- develop = 086c0dc (origin/develop synced after squash-merge PR #2).
+- feature/S-1.02: PR #3; frozen HEAD 3d511a57884aed1a380b84114b75bda2d659a5c7 (fix-burst-59 push; D-438); pass-58 COMPLETE CLEAN(strict)=no; fix-burst-60 dispatched; streak 0/3.
 - feature/S-1.01: DELETED (worktree removed, local + remote branches deleted after merge).
