@@ -25,7 +25,7 @@
 //! cargo run -p pregolya-core --example error_taxonomy_demo -- rfc7807
 //! ```
 
-#![allow(clippy::print_stdout, clippy::expect_used)]
+#![allow(clippy::print_stdout)]
 
 use std::sync::Arc;
 use std::time::Duration;
@@ -34,7 +34,7 @@ use pregolya_core::error::{
     Category, Component, PROBLEM_JSON_CONTENT_TYPE, PregolyaError, RetryHint,
 };
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     // AC-006: PregolyaError does not implement Default.
     // Verified externally — this example is an external compilation unit, so this assertion
     // proves the guarantee on the external API surface (stronger than in-crate test).
@@ -60,8 +60,9 @@ fn main() {
         demo_enums();
     }
     if run_all || section_str == "rfc7807" {
-        demo_rfc7807();
+        demo_rfc7807()?;
     }
+    Ok(())
 }
 
 // ─── Section 1: Construction & Display & Arc Source Chain ───────────────────
@@ -298,7 +299,7 @@ fn demo_enums() {
 
 // ─── Section 3: RFC-7807 Emission, http_status, Content-Type, Sync, Immutability ─
 
-fn demo_rfc7807() {
+fn demo_rfc7807() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== AC-009 / AC-010 / AC-014: RFC-7807 to_problem() — Validation (Val/Never) ===");
     println!();
 
@@ -310,8 +311,7 @@ fn demo_rfc7807() {
         "Invalid ContentBlock type 'x'",
     );
     let problem_val = val_err.to_problem();
-    let json_val =
-        serde_json::to_string_pretty(&problem_val).expect("ProblemDetail must serialize");
+    let json_val = serde_json::to_string_pretty(&problem_val)?;
     println!("ProblemDetail (Val / Never):");
     println!("{json_val}");
     println!();
@@ -328,8 +328,7 @@ fn demo_rfc7807() {
         "Provider rate limited",
     );
     let problem_rate = rate_err.to_problem();
-    let json_rate =
-        serde_json::to_string_pretty(&problem_rate).expect("ProblemDetail must serialize");
+    let json_rate = serde_json::to_string_pretty(&problem_rate)?;
     println!("ProblemDetail (Rate / Later(30s)):");
     println!("{json_rate}");
     println!();
@@ -347,8 +346,7 @@ fn demo_rfc7807() {
         "CanonicalizationFailed: cannot resolve path '/tmp/link': EACCES: Permission denied",
     );
     let problem_sys = sys_err.to_problem();
-    let json_sys =
-        serde_json::to_string_pretty(&problem_sys).expect("ProblemDetail must serialize");
+    let json_sys = serde_json::to_string_pretty(&problem_sys)?;
     println!("ProblemDetail (Sys / Maybe — title must be \"System\"):");
     println!("{json_sys}");
     println!();
@@ -438,4 +436,5 @@ fn demo_rfc7807() {
     println!("  type_uri:       {}", problem.type_uri);
     println!("  code preserved: {preserved}");
     println!();
+    Ok(())
 }

@@ -3,23 +3,167 @@
 //! Usage: `cargo xtask <subcommand>`
 //!
 //! Subcommands:
-//!   check-file-size   Enforce production file size gates (CLAUDE.md §File size & module splitting)
-//!   check-client-timeout  CI lint gate: reject reqwest Client::new() outside tests
-//!   check-no-panic    CI lint gate: reject .expect()/.unwrap() in library src/
-//!   deny-anyhow-in-lib    CI lint gate: reject anyhow imports in library crates
+//!   check-file-size           Enforce production file size gates (CLAUDE.md §File size & module splitting)
+//!   check-client-timeout      CI lint gate: reject reqwest Client::new() outside tests (BC-2.14.004)
+//!   check-no-panic [--fixture-mode `<dir>`]
+//!                             CI lint gate: reject unwrap/expect/bare-assert/panic!/wildcard-unreachable in non-test library code (BC-2.14.003 §EC-007)
+//!   check-error-code-registry CI lint gate: verify all `E-<COMPONENT>-<NNN>` codes in error-taxonomy.md are unique and at least one code was extracted (BC-2.14.001 EC-004, VP-BC214001-01)
+//!   deny-bare-api-key         CI lint gate: reject credential-sentinel-named public structs that derive Debug/Serialize/Deserialize, impl Display, or impl `Deref<Target=str/String>` (BC-2.14.005 {PC-006})
+//!   deny-anyhow-in-lib        CI lint gate: reject anyhow imports in library crates
 //!   deny-description-cache-key  CI lint gate: reject description-proxy cache-key usage
 
+mod check_client_timeout;
+mod check_error_code_registry;
+mod check_no_panic;
+mod deny_bare_api_key;
+
+// Re-export scanner helpers so xtask unit tests (src/tests.rs) can call them
+// without module-path qualification. Scanners are implemented (S-1.02 GREEN);
+// this re-export provides module-path-free access in unit tests.
+#[cfg(test)]
+pub(crate) use check_client_timeout::scan_for_timeout_violations_in_source;
+#[cfg(test)]
+pub(crate) use check_no_panic::scan_for_panics_in_source;
+#[cfg(test)]
+pub(crate) use deny_bare_api_key::scan_for_bare_api_keys_in_source;
+
 use std::process::{Command, exit};
+
+/// Returns `Ok(())` when `files_analyzed > 0`, or `Err(message)` when all files were
+/// exempted and the gate certified nothing (post-exemption vacuity, F-P9-M04).
+///
+/// Callers should print the error and call `exit(1)` when `Err` is returned.
+/// Extracted as a testable helper so the vacuity condition can be verified by
+/// unit tests without invoking `process::exit`.
+pub(crate) fn check_post_exemption_vacuity(
+    gate_name: &str,
+    files_analyzed: usize,
+) -> Result<(), String> {
+    if files_analyzed == 0 {
+        Err(format!(
+            "ERROR: {gate_name} analyzed 0 non-exempt files — \
+             post-exemption vacuity; gate cannot certify anything"
+        ))
+    } else {
+        Ok(())
+    }
+}
+
+/// Collect all Rust source files under `root_path`, excluding `target/` directories.
+///
+/// Returns `(files_found, unreadable_count)` where `unreadable_count` is the number
+/// of directory entries that WalkDir could not access (permission error, broken symlink,
+/// etc.). The caller should add `unreadable_count` to its `files_unreadable` counter
+/// and fail-closed when it is non-zero.
+///
+/// This replaces POSIX `find crates/ -name "*.rs" -not -path "*/target/*"` across five
+/// of the seven xtask lint gates (six call sites — `check-no-panic` invokes it for both
+/// the normal scan and the `--fixture-mode` path), providing cross-platform portability
+/// (Windows does not have `find`).
+pub(crate) fn collect_rust_files(root_path: &str) -> (Vec<std::path::PathBuf>, usize) {
+    use walkdir::WalkDir;
+    let mut files = Vec::new();
+    let mut unreadable = 0usize;
+    for entry in WalkDir::new(root_path)
+        .follow_links(false)
+        .into_iter()
+        .filter_entry(|e| {
+            // Skip `target/` directories to avoid scanning build artifacts.
+            e.file_name() != "target"
+        })
+    {
+        match entry {
+            Ok(e) if e.file_type().is_file() => {
+                if e.path().extension().is_some_and(|x| x == "rs") {
+                    files.push(e.path().to_path_buf());
+                }
+            }
+            Ok(_) => {}
+            Err(_) => unreadable += 1,
+        }
+    }
+    (files, unreadable)
+}
+
+/// Pure verdict for extra-argument detection. Returns `Err(message)` when `args[2]`
+/// is present (unrecognised argument), or `Ok(())` when no extra argument is present.
+///
+/// Extracted from `reject_extra_args` for testability — the `process::exit(1)`
+/// side-effect lives in `reject_extra_args` (F-P10-L01 fix).
+pub(crate) fn extra_args_verdict(subcommand: &str, args: &[String]) -> Result<(), String> {
+    if let Some(extra) = args.get(2) {
+        Err(format!(
+            "unrecognised argument '{extra}' for {subcommand}\nusage: cargo xtask {subcommand}"
+        ))
+    } else {
+        Ok(())
+    }
+}
+
+/// Reject any extra arguments passed to a subcommand that accepts no arguments.
+///
+/// Prints an error message and exits with code 1 when `args[2]` is present.
+/// Called at the start of each simple (no-argument) subcommand branch so that
+/// mistyped invocations like `cargo xtask check-file-size --fixup` fail loudly
+/// instead of silently ignoring the unknown flag (F-P9-L01 fix).
+///
+/// NOT called for `check-no-panic`, which has its own `--fixture-mode <dir>` handling.
+fn reject_extra_args(subcommand: &str, args: &[String]) {
+    if let Err(msg) = extra_args_verdict(subcommand, args) {
+        eprintln!("error: {msg}");
+        std::process::exit(1);
+    }
+}
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let subcommand = args.get(1).map(String::as_str).unwrap_or("");
     match subcommand {
-        "check-file-size" => check_file_size(),
-        "check-client-timeout" => check_client_timeout(),
-        "check-no-panic" => check_no_panic(),
-        "deny-anyhow-in-lib" => deny_anyhow_in_lib(),
-        "deny-description-cache-key" => deny_description_cache_key(),
+        "check-file-size" => {
+            reject_extra_args("check-file-size", &args);
+            check_file_size();
+        }
+        "check-client-timeout" => {
+            reject_extra_args("check-client-timeout", &args);
+            check_client_timeout::run();
+        }
+        "check-no-panic" => {
+            if args.get(2).map(String::as_str) == Some("--fixture-mode") {
+                let dir = match args.get(3).map(String::as_str) {
+                    Some(d) => d,
+                    None => {
+                        eprintln!("error: --fixture-mode requires a <dir> argument");
+                        eprintln!("usage: cargo xtask check-no-panic [--fixture-mode <dir>]");
+                        std::process::exit(1);
+                    }
+                };
+                check_no_panic::run_fixture_mode(dir);
+            } else if let Some(flag) = args.get(2) {
+                // Unrecognised second argument — fail loudly rather than silently
+                // falling through to `check_no_panic::run()` (F-P8-L03 fix).
+                eprintln!("error: unrecognised argument '{}' for check-no-panic", flag);
+                eprintln!("usage: cargo xtask check-no-panic [--fixture-mode <dir>]");
+                std::process::exit(1);
+            } else {
+                check_no_panic::run();
+            }
+        }
+        "check-error-code-registry" => {
+            reject_extra_args("check-error-code-registry", &args);
+            check_error_code_registry::run();
+        }
+        "deny-bare-api-key" => {
+            reject_extra_args("deny-bare-api-key", &args);
+            deny_bare_api_key::run();
+        }
+        "deny-anyhow-in-lib" => {
+            reject_extra_args("deny-anyhow-in-lib", &args);
+            deny_anyhow_in_lib();
+        }
+        "deny-description-cache-key" => {
+            reject_extra_args("deny-description-cache-key", &args);
+            deny_description_cache_key();
+        }
         _ => {
             eprintln!("Usage: cargo xtask <subcommand>");
             eprintln!("Subcommands:");
@@ -27,10 +171,16 @@ fn main() {
                 "  check-file-size           File size gate (prod 500/750, test 1000/1500 code-lines)"
             );
             eprintln!(
-                "  check-client-timeout      Lint: reqwest Client::new() outside tests is forbidden"
+                "  check-client-timeout      Lint: reqwest Client::new() outside tests is forbidden (BC-2.14.004)"
             );
             eprintln!(
-                "  check-no-panic            Lint: .expect()/.unwrap() in library src/ is forbidden"
+                "  check-no-panic            Lint: no-panic gate: unwrap/expect/bare-assert/panic!/wildcard-unreachable in non-test library code (BC-2.14.003 §EC-007)"
+            );
+            eprintln!(
+                "  check-error-code-registry Lint: error-code-registry uniqueness: verify all E-<COMPONENT>-<NNN> codes in error-taxonomy.md are unique and at least one code was extracted (BC-2.14.001 EC-004, VP-BC214001-01)"
+            );
+            eprintln!(
+                "  deny-bare-api-key         Lint: reject credential-sentinel-named public structs that derive Debug/Serialize/Deserialize, impl Display, or impl Deref<Target=str/String> (BC-2.14.005 {{PC-006}})"
             );
             eprintln!(
                 "  deny-anyhow-in-lib        Lint: anyhow usage (imports or qualified anyhow:: in production code)"
@@ -45,36 +195,43 @@ fn main() {
 // Shared helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// Returns true when `path` identifies a non-production file (tests or examples).
+/// Returns true when `path` identifies a non-production test file.
 ///
 /// Matches:
 /// - Files named `tests.rs` (any directory depth, e.g. `src/tests.rs`)
 /// - Files ending with `_test.rs` or `_tests.rs`
 /// - Files under a `tests/` directory component (e.g. `crates/foo/tests/integration.rs`)
-/// - Files under an `examples/` directory component (demonstration executables, not
-///   library code; permitted to use `.expect()` and `println!` for clarity)
+///
+/// Does NOT exempt `examples/` or `benches/` — those are not enumerated in
+/// BC-2.14.003 {INV-004} as exempt from the no-panic lint gate.
 ///
 /// Does NOT use `.contains("test")` substring matching, which would
 /// incorrectly suppress production files in crates whose names contain
 /// "test" (e.g. `pregolya-standard-tests`).
+///
+/// Intentionally duplicated from `is_test_class_file` — predicate bodies are identical.
+/// The functions are separate because they gate different subsystems (`BC-2.14.003 {INV-004}`
+/// lint perimeter vs. file-size test-class threshold) that are expected to diverge when
+/// `examples/`/`benches/` exemption policy splits between the two subsystems.
 fn is_test_file(path: &str) -> bool {
+    let path = path.replace('\\', "/");
     path.ends_with("/tests.rs")
         || path == "tests.rs"
         || path.contains("/tests/")
         || path.ends_with("_test.rs")
         || path.ends_with("_tests.rs")
-        || path.contains("/examples/")
 }
 
-/// Returns true for files exempt from lint scanners: test files, examples, and benchmarks.
+/// Returns true for files exempt from lint scanners (test files only).
 ///
-/// Extends `is_test_file` to also cover `/benches/` (benchmark harnesses are not
-/// library code). Examples produce standalone binaries and may legitimately use
-/// `.expect()` and `println!` for demonstration clarity.
+/// BC-2.14.003 {INV-004} enumerates only test files as exempt. `examples/` and
+/// `benches/` are NOT exempt — they are not listed in the BC and no crate currently
+/// contains them, so the exclusion was unsanctioned.
 ///
-/// Used by: `check_no_panic`, `check_client_timeout`, `deny_anyhow_in_lib`.
+/// Used by: `check_no_panic`, `check_client_timeout`, `deny_anyhow_in_lib`,
+/// `deny_bare_api_key`, `deny_description_cache_key`.
 fn is_lint_exempt_file(path: &str) -> bool {
-    is_test_file(path) || path.contains("/benches/")
+    is_test_file(path)
 }
 
 /// Returns true for files that qualify for TEST file-size thresholds (1000/1500 code-lines).
@@ -83,7 +240,11 @@ fn is_lint_exempt_file(path: &str) -> bool {
 /// and NOT benchmarks (which are tuning tools, not test suites).
 ///
 /// Used by: `check_file_size`.
+///
+/// Intentionally duplicated from `is_test_file` — predicate bodies are identical.
+/// See `is_test_file` doc for the divergence rationale.
 fn is_test_class_file(path: &str) -> bool {
+    let path = path.replace('\\', "/");
     path.ends_with("/tests.rs")
         || path == "tests.rs"
         || path.contains("/tests/")
@@ -94,6 +255,21 @@ fn is_test_class_file(path: &str) -> bool {
 // ─────────────────────────────────────────────────────────────────────────────
 // check-file-size
 // ─────────────────────────────────────────────────────────────────────────────
+
+/// Returns true if a file path should be excluded from file-size gate measurement.
+///
+/// Exclusions (after Windows path-separator normalization):
+/// - `/target/` directory (build artifacts)
+/// - `OUT_DIR` path component (cargo build output)
+/// - `.gen.rs` suffix (generated code)
+/// - `/tests/fixtures/` path component (test fixture files)
+pub(crate) fn is_size_gate_excluded(name: &str) -> bool {
+    let name_n = name.replace('\\', "/");
+    name_n.contains("/target/")
+        || name_n.contains("OUT_DIR")
+        || name_n.ends_with(".gen.rs")
+        || name_n.contains("/tests/fixtures/")
+}
 
 /// Count code lines (non-blank, non-comment-only) inside `#[cfg(test)] mod` blocks.
 ///
@@ -305,11 +481,7 @@ fn check_file_size() {
             .unwrap_or(0);
 
         // Skip generated code, build artifacts, and fixture data.
-        if name.contains("/target/")
-            || name.contains("OUT_DIR")
-            || name.ends_with(".gen.rs")
-            || name.contains("/tests/fixtures/")
-        {
+        if is_size_gate_excluded(name) {
             continue;
         }
 
@@ -363,241 +535,14 @@ fn check_file_size() {
         exit(1);
     }
 
-    assert!(
-        files_measured > 0,
-        "check-file-size: scanned 0 files — gate is vacuously true; check that crates/ exists and contains Rust source files"
-    );
+    if let Err(msg) = check_post_exemption_vacuity("check-file-size", files_measured) {
+        eprintln!("{msg}");
+        exit(1);
+    }
     println!(
         "check-file-size PASSED ({} warnings, {files_measured} files measured, {files_skipped} allowlisted).",
         warnings.len()
     );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// check-client-timeout (NE-04 / DI-009)
-// ─────────────────────────────────────────────────────────────────────────────
-
-fn check_client_timeout() {
-    // Scan library crate src/ for reqwest Client::new() outside test files.
-    // Uses file-by-file scanning (same as check-no-panic) so that path-based
-    // exclusions are applied correctly — grep line filtering with contains("test")
-    // would incorrectly suppress production code in crates whose path contains
-    // "test" (e.g. pregolya-standard-tests).
-    let output = Command::new("find")
-        .args(["crates/", "-name", "*.rs", "-not", "-path", "*/target/*"])
-        .output();
-
-    let files_output = match output {
-        Ok(o) => o,
-        Err(e) => {
-            eprintln!("find failed: {e}");
-            exit(1);
-        }
-    };
-
-    // F2 fix: check subprocess exit status
-    if !files_output.status.success() {
-        eprintln!(
-            "ERROR: file discovery command failed with status {}",
-            files_output.status
-        );
-        exit(1);
-    }
-
-    let files_str = String::from_utf8_lossy(&files_output.stdout);
-    // F2 fix: count files scanned; exit if zero (gate cannot certify anything)
-    let files_scanned = files_str.lines().count();
-    if files_scanned == 0 {
-        eprintln!("ERROR: check-client-timeout scanned 0 files — gate cannot certify anything");
-        exit(1);
-    }
-
-    let mut all_findings: Vec<String> = Vec::new();
-    let mut files_analyzed = 0usize;
-    let mut files_exempt = 0usize;
-    let mut files_unreadable = 0usize;
-
-    for file_path in files_str.lines() {
-        if is_lint_exempt_file(file_path) {
-            files_exempt += 1;
-            continue;
-        }
-        let content = match std::fs::read_to_string(file_path) {
-            Ok(c) => c,
-            Err(_) => {
-                files_unreadable += 1;
-                continue;
-            }
-        };
-        files_analyzed += 1;
-        let findings = scan_for_timeout_violations_in_source(&content, file_path);
-        all_findings.extend(findings);
-    }
-
-    if files_unreadable > 0 {
-        eprintln!(
-            "ERROR: check-client-timeout could not read {files_unreadable} file(s) — gate cannot certify anything"
-        );
-        exit(1);
-    }
-    if !all_findings.is_empty() {
-        for f in &all_findings {
-            eprintln!("ERROR: reqwest::Client::new() without timeout: {f}");
-        }
-        eprintln!("Use Client::builder().timeout(Duration::from_secs(30)).build() instead.");
-        exit(1);
-    }
-    println!(
-        "check-client-timeout PASSED: {files_analyzed} analyzed, {files_exempt} exempt, 0 unreadable, 0 violations."
-    );
-}
-
-/// Scan `src` for reqwest client timeout violations using `proc_macro2` token-tree walking.
-///
-/// Detects:
-///   - `reqwest::Client::new()` (fully qualified)
-///   - `Client::new()` (unqualified, from `use reqwest::Client`)
-///   - `Client::builder().build()` or `reqwest::Client::builder()...build()` without `.timeout()`
-///
-/// Uses token-level scanning so string literals, comments, and char literals
-/// (which were the source of F-2, B-5, and related false positive/negative bugs)
-/// are handled correctly by the lexer.
-fn scan_for_timeout_violations_in_source(src: &str, path: &str) -> Vec<String> {
-    if is_lint_exempt_file(path) {
-        return Vec::new();
-    }
-
-    use proc_macro2::TokenStream;
-
-    let ts: TokenStream = match src.parse() {
-        Ok(s) => s,
-        Err(e) => return vec![format!("{}:0: FAILED TO LEX FILE: {}", path, e)],
-    };
-
-    let mut findings = Vec::new();
-    walk_timeout_tokens(ts.into_iter(), &mut findings, path);
-    findings
-}
-
-/// Recursive token-tree walker for `scan_for_timeout_violations_in_source`.
-fn walk_timeout_tokens(
-    iter: proc_macro2::token_stream::IntoIter,
-    findings: &mut Vec<String>,
-    path: &str,
-) {
-    use proc_macro2::{Delimiter, TokenTree};
-
-    let tokens: Vec<TokenTree> = iter.collect();
-    let mut i = 0;
-    while i < tokens.len() {
-        // Recurse into any group (brace, paren, bracket).
-        if let TokenTree::Group(g) = &tokens[i] {
-            walk_timeout_tokens(g.stream().into_iter(), findings, path);
-            i += 1;
-            continue;
-        }
-
-        // Try to match: reqwest :: Client :: new ( ... )
-        // Token sequence: Ident("reqwest") Punct(":") Punct(":") Ident("Client")
-        //                 Punct(":") Punct(":") Ident("new") Group(Paren)
-        if matches!(&tokens[i], TokenTree::Ident(id) if id == "reqwest") {
-            if is_double_colon(&tokens, i + 1)
-                && matches!(tokens.get(i + 3), Some(TokenTree::Ident(id)) if id == "Client")
-                && is_double_colon(&tokens, i + 4)
-                && matches!(tokens.get(i + 6), Some(TokenTree::Ident(id)) if id == "new")
-                && matches!(tokens.get(i + 7), Some(TokenTree::Group(g)) if g.delimiter() == Delimiter::Parenthesis)
-            {
-                let line = if let Some(TokenTree::Ident(id)) = tokens.get(i + 6) {
-                    id.span().start().line
-                } else {
-                    0
-                };
-                findings.push(format!("{}:{}: reqwest::Client::new()", path, line));
-                i += 8;
-                continue;
-            }
-            // Also check reqwest :: Client :: builder() chain
-            if is_double_colon(&tokens, i + 1)
-                && matches!(tokens.get(i + 3), Some(TokenTree::Ident(id)) if id == "Client")
-                && is_double_colon(&tokens, i + 4)
-                && matches!(tokens.get(i + 6), Some(TokenTree::Ident(id)) if id == "builder")
-            {
-                if let Some(finding) = check_builder_chain_violation(&tokens, i, path) {
-                    findings.push(finding);
-                }
-                i += 1;
-                continue;
-            }
-            // Check reqwest :: ClientBuilder :: new() — routes through chain check for .timeout()
-            if is_double_colon(&tokens, i + 1)
-                && matches!(tokens.get(i + 3), Some(TokenTree::Ident(id)) if id == "ClientBuilder")
-                && is_double_colon(&tokens, i + 4)
-                && matches!(tokens.get(i + 6), Some(TokenTree::Ident(id)) if id == "new")
-            {
-                if let Some(finding) = check_builder_chain_violation(&tokens, i, path) {
-                    findings.push(finding);
-                }
-                i += 1;
-                continue;
-            }
-        }
-
-        // Try to match standalone Client :: new ( ... ) — NOT preceded by `:`.
-        // Preceding `:` means this Client is part of a qualified path (mcp_sdk::Client),
-        // which must not be flagged.
-        if matches!(&tokens[i], TokenTree::Ident(id) if id == "Client") {
-            let prev_is_colon =
-                i > 0 && matches!(&tokens[i - 1], TokenTree::Punct(p) if p.as_char() == ':');
-            if !prev_is_colon {
-                // Check for Client :: new ( ... )
-                if is_double_colon(&tokens, i + 1)
-                    && matches!(tokens.get(i + 3), Some(TokenTree::Ident(id)) if id == "new")
-                    && matches!(tokens.get(i + 4), Some(TokenTree::Group(g)) if g.delimiter() == Delimiter::Parenthesis)
-                {
-                    let line = if let Some(TokenTree::Ident(id)) = tokens.get(i + 3) {
-                        id.span().start().line
-                    } else {
-                        0
-                    };
-                    findings.push(format!("{}:{}: Client::new()", path, line));
-                    i += 5;
-                    continue;
-                }
-                // Check for Client :: builder chain
-                if is_double_colon(&tokens, i + 1)
-                    && matches!(tokens.get(i + 3), Some(TokenTree::Ident(id)) if id == "builder")
-                {
-                    if let Some(finding) = check_builder_chain_violation(&tokens, i, path) {
-                        findings.push(finding);
-                    }
-                    i += 1;
-                    continue;
-                }
-            }
-        }
-
-        // Try to match standalone ClientBuilder :: new ( ... ) — NOT preceded by `:`.
-        // Preceding `:` means it's part of a qualified path (reqwest::ClientBuilder),
-        // which is handled by the reqwest arm above.
-        if matches!(&tokens[i], TokenTree::Ident(id) if id == "ClientBuilder") {
-            let prev_is_colon =
-                i > 0 && matches!(&tokens[i - 1], TokenTree::Punct(p) if p.as_char() == ':');
-            if !prev_is_colon {
-                // Check for ClientBuilder :: new() — routes through chain check for .timeout()
-                if is_double_colon(&tokens, i + 1)
-                    && matches!(tokens.get(i + 3), Some(TokenTree::Ident(id)) if id == "new")
-                {
-                    if let Some(finding) = check_builder_chain_violation(&tokens, i, path) {
-                        findings.push(finding);
-                    }
-                    i += 1;
-                    continue;
-                }
-            }
-        }
-
-        i += 1;
-    }
 }
 
 /// Returns true when `tokens[idx]` and `tokens[idx+1]` are both `:` puncts.
@@ -605,224 +550,6 @@ fn is_double_colon(tokens: &[proc_macro2::TokenTree], idx: usize) -> bool {
     use proc_macro2::TokenTree;
     matches!(tokens.get(idx), Some(TokenTree::Punct(p)) if p.as_char() == ':')
         && matches!(tokens.get(idx + 1), Some(TokenTree::Punct(p)) if p.as_char() == ':')
-}
-
-/// Scan forward from `start` to find a `.build()` call in a builder chain.
-/// Returns a finding if `.build()` is reached without `.timeout()`.
-/// Stops at `;` (end of statement) without returning a finding.
-fn check_builder_chain_violation(
-    tokens: &[proc_macro2::TokenTree],
-    start: usize,
-    path: &str,
-) -> Option<String> {
-    use proc_macro2::TokenTree;
-    let mut has_timeout = false;
-    let mut i = start;
-    while i < tokens.len() {
-        match &tokens[i] {
-            TokenTree::Punct(p) if p.as_char() == ';' => return None,
-            TokenTree::Punct(p) if p.as_char() == '.' => {
-                if let Some(TokenTree::Ident(id)) = tokens.get(i + 1) {
-                    let name = id.to_string();
-                    if name == "timeout" {
-                        has_timeout = true;
-                    }
-                    if name == "build" {
-                        let line = id.span().start().line;
-                        if !has_timeout {
-                            return Some(format!(
-                                "{}:{}: Client::builder().build() without .timeout()",
-                                path, line
-                            ));
-                        } else {
-                            return None;
-                        }
-                    }
-                }
-            }
-            _ => {}
-        }
-        i += 1;
-    }
-    None
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// check-no-panic (NE-07)
-// ─────────────────────────────────────────────────────────────────────────────
-
-fn check_no_panic() {
-    // Scan library src/ for .unwrap() and .expect() outside #[cfg(test)] blocks.
-    // Uses a file-level scanner to track test-block boundaries via brace depth,
-    // avoiding false positives on legitimate test code (CLAUDE.md §SID-1).
-    let output = Command::new("find")
-        .args(["crates/", "-name", "*.rs", "-not", "-path", "*/target/*"])
-        .output();
-
-    let files_output = match output {
-        Ok(o) => o,
-        Err(e) => {
-            eprintln!("find failed: {e}");
-            exit(1);
-        }
-    };
-
-    // F2 fix: check subprocess exit status
-    if !files_output.status.success() {
-        eprintln!(
-            "ERROR: file discovery command failed with status {}",
-            files_output.status
-        );
-        exit(1);
-    }
-
-    let files_str = String::from_utf8_lossy(&files_output.stdout);
-    // F2 fix: count files scanned; exit if zero (gate cannot certify anything)
-    let files_scanned = files_str.lines().count();
-    if files_scanned == 0 {
-        eprintln!("ERROR: check-no-panic scanned 0 files — gate cannot certify anything");
-        exit(1);
-    }
-
-    let mut all_findings: Vec<String> = Vec::new();
-    let mut files_analyzed = 0usize;
-    let mut files_exempt = 0usize;
-    let mut files_unreadable = 0usize;
-
-    for file_path in files_str.lines() {
-        if is_lint_exempt_file(file_path) {
-            files_exempt += 1;
-            continue;
-        }
-        let content = match std::fs::read_to_string(file_path) {
-            Ok(c) => c,
-            Err(_) => {
-                files_unreadable += 1;
-                continue;
-            }
-        };
-        files_analyzed += 1;
-        let findings = scan_for_panics_in_source(&content, file_path);
-        all_findings.extend(findings);
-    }
-
-    if files_unreadable > 0 {
-        eprintln!(
-            "ERROR: check-no-panic could not read {files_unreadable} file(s) — gate cannot certify anything"
-        );
-        exit(1);
-    }
-    if !all_findings.is_empty() {
-        for f in &all_findings {
-            eprintln!("ERROR: panic-potential in library code: {f}");
-        }
-        eprintln!("Use ? propagation with structured error variants instead.");
-        exit(1);
-    }
-    println!(
-        "check-no-panic PASSED: {files_analyzed} analyzed, {files_exempt} exempt, 0 unreadable, 0 violations."
-    );
-}
-
-/// Scan `src` for `.unwrap()` and `.expect(` patterns outside `#[cfg(test)]` scopes.
-///
-/// Uses `proc_macro2` token-tree walking so that string literals, char literals,
-/// and comments are handled at the lexer level rather than via ad-hoc string
-/// scanning. This eliminates the entire class of F-1/B-2/B-3/B-6/B-7/B-8 edge
-/// cases.
-///
-/// Returns a `Vec<String>` of `"path:line_num: .method()"` findings.
-/// Returns empty when `path` is a test file (per `is_test_file`).
-fn scan_for_panics_in_source(src: &str, path: &str) -> Vec<String> {
-    if is_lint_exempt_file(path) {
-        return Vec::new();
-    }
-
-    use proc_macro2::TokenStream;
-
-    let ts: TokenStream = match src.parse() {
-        Ok(s) => s,
-        Err(e) => return vec![format!("{}:0: FAILED TO LEX FILE: {}", path, e)],
-    };
-
-    let mut findings = Vec::new();
-    walk_panic_tokens(ts.into_iter(), &mut findings, path, &mut 0u32);
-    findings
-}
-
-/// Recursive token-tree walker for `scan_for_panics_in_source`.
-fn walk_panic_tokens(
-    iter: proc_macro2::token_stream::IntoIter,
-    findings: &mut Vec<String>,
-    path: &str,
-    in_test_depth: &mut u32,
-) {
-    use proc_macro2::{Delimiter, TokenTree};
-
-    let tokens: Vec<TokenTree> = iter.collect();
-    let mut i = 0;
-    while i < tokens.len() {
-        match &tokens[i] {
-            // Detect `#` followed by a `[...]` group — could be `#[cfg(test)]`.
-            TokenTree::Punct(p) if p.as_char() == '#' => {
-                if let Some(TokenTree::Group(g)) = tokens.get(i + 1)
-                    && g.delimiter() == Delimiter::Bracket
-                    && is_cfg_test_group(g)
-                {
-                    // Look ahead past the attribute to find the body.
-                    // A brace body → walk it with incremented depth.
-                    // A semicolon → semicolon-terminated form (use, mod decl, etc.),
-                    //   do NOT increment depth (no inline block to suppress).
-                    let mut j = i + 2;
-                    while j < tokens.len() {
-                        match &tokens[j] {
-                            TokenTree::Group(body) if body.delimiter() == Delimiter::Brace => {
-                                *in_test_depth += 1;
-                                walk_panic_tokens(
-                                    body.stream().into_iter(),
-                                    findings,
-                                    path,
-                                    in_test_depth,
-                                );
-                                *in_test_depth -= 1;
-                                i = j; // advance past the body
-                                break;
-                            }
-                            TokenTree::Punct(p2) if p2.as_char() == ';' => {
-                                i = j; // advance past the semicolon
-                                break;
-                            }
-                            // Skip ident tokens (mod, fn, tests, etc.) and other attrs
-                            _ => {}
-                        }
-                        j += 1;
-                    }
-                    i += 1;
-                    continue;
-                }
-            }
-            // Brace group NOT preceded by cfg(test) — walk it at current depth.
-            TokenTree::Group(g) if g.delimiter() == Delimiter::Brace => {
-                walk_panic_tokens(g.stream().into_iter(), findings, path, in_test_depth);
-            }
-            // Detect `.unwrap` or `.expect` when not inside a test scope.
-            TokenTree::Punct(p) if p.as_char() == '.' && *in_test_depth == 0 => {
-                if let Some(TokenTree::Ident(id)) = tokens.get(i + 1) {
-                    let name = id.to_string();
-                    if name == "unwrap" || name == "expect" {
-                        let line = id.span().start().line;
-                        findings.push(format!("{}:{}: .{}()", path, line, name));
-                    }
-                }
-            }
-            // Other non-brace groups (parens, brackets) — walk them too.
-            TokenTree::Group(g) => {
-                walk_panic_tokens(g.stream().into_iter(), findings, path, in_test_depth);
-            }
-            _ => {}
-        }
-        i += 1;
-    }
 }
 
 /// Returns true when the token-tree group `g` (contents of `[...]`) represents
@@ -856,31 +583,8 @@ fn deny_anyhow_in_lib() {
     // Use token-tree walking (proc_macro2) so that `use anyhow` inside
     // `#[cfg(test)]` blocks is not flagged. The blunt `grep` approach fires
     // even when the import is legitimately scoped to test code.
-    let output = Command::new("find")
-        .args(["crates/", "-name", "*.rs", "-not", "-path", "*/target/*"])
-        .output();
-
-    let files_output = match output {
-        Ok(o) => o,
-        Err(e) => {
-            eprintln!("find failed: {e}");
-            exit(1);
-        }
-    };
-
-    // F2 fix: check subprocess exit status
-    if !files_output.status.success() {
-        eprintln!(
-            "ERROR: file discovery command failed with status {}",
-            files_output.status
-        );
-        exit(1);
-    }
-
-    let files_str = String::from_utf8_lossy(&files_output.stdout);
-    // F2 fix: count files scanned; exit if zero (gate cannot certify anything)
-    let files_scanned = files_str.lines().count();
-    if files_scanned == 0 {
+    let (rust_files, disc_unreadable) = collect_rust_files("crates/");
+    if rust_files.is_empty() {
         eprintln!("ERROR: deny-anyhow-in-lib scanned 0 files — gate cannot certify anything");
         exit(1);
     }
@@ -888,14 +592,16 @@ fn deny_anyhow_in_lib() {
     let mut all_findings: Vec<String> = Vec::new();
     let mut files_analyzed = 0usize;
     let mut files_exempt = 0usize;
-    let mut files_unreadable = 0usize;
+    let mut files_unreadable = disc_unreadable;
 
-    for file_path in files_str.lines() {
+    for path_buf in &rust_files {
+        let file_path = path_buf.to_string_lossy();
+        let file_path = file_path.as_ref();
         if is_lint_exempt_file(file_path) {
             files_exempt += 1;
             continue;
         }
-        let content = match std::fs::read_to_string(file_path) {
+        let content = match std::fs::read_to_string(path_buf) {
             Ok(c) => c,
             Err(_) => {
                 files_unreadable += 1;
@@ -911,6 +617,10 @@ fn deny_anyhow_in_lib() {
         eprintln!(
             "ERROR: deny-anyhow-in-lib could not read {files_unreadable} file(s) — gate cannot certify anything"
         );
+        exit(1);
+    }
+    if let Err(msg) = check_post_exemption_vacuity("deny-anyhow-in-lib", files_analyzed) {
+        eprintln!("{msg}");
         exit(1);
     }
     if !all_findings.is_empty() {
@@ -931,7 +641,7 @@ fn deny_anyhow_in_lib() {
 /// (which are legitimate for compatibility verification) are not flagged.
 ///
 /// Returns a `Vec<String>` of `"path:line: use anyhow"` findings.
-/// Returns empty when `path` is a test or examples file (per `is_test_file`).
+/// Returns empty when `path` is a test file (per `is_lint_exempt_file`).
 fn scan_for_anyhow_in_source(src: &str, path: &str) -> Vec<String> {
     if is_lint_exempt_file(path) {
         return Vec::new();
@@ -1031,29 +741,8 @@ fn deny_description_cache_key() {
     // so that the PASSED message reports the number of files scanned — not grep match counts
     // which are 0 in a clean codebase, making it impossible to distinguish a vacuous pass
     // from a genuine scan.
-    let output = Command::new("find")
-        .args(["crates/", "-name", "*.rs", "-not", "-path", "*/target/*"])
-        .output();
-
-    let files_output = match output {
-        Ok(o) => o,
-        Err(e) => {
-            eprintln!("find failed: {e}");
-            exit(1);
-        }
-    };
-
-    if !files_output.status.success() {
-        eprintln!(
-            "ERROR: file discovery command failed with status {}",
-            files_output.status
-        );
-        exit(1);
-    }
-
-    let files_str = String::from_utf8_lossy(&files_output.stdout);
-    let files_scanned = files_str.lines().count();
-    if files_scanned == 0 {
+    let (rust_files, disc_unreadable) = collect_rust_files("crates/");
+    if rust_files.is_empty() {
         eprintln!(
             "ERROR: deny-description-cache-key scanned 0 files — gate cannot certify anything"
         );
@@ -1063,14 +752,16 @@ fn deny_description_cache_key() {
     let mut all_findings: Vec<String> = Vec::new();
     let mut files_analyzed = 0usize;
     let mut files_exempt = 0usize;
-    let mut files_unreadable = 0usize;
+    let mut files_unreadable = disc_unreadable;
 
-    for file_path in files_str.lines() {
+    for path_buf in &rust_files {
+        let file_path = path_buf.to_string_lossy();
+        let file_path = file_path.as_ref();
         if is_lint_exempt_file(file_path) {
             files_exempt += 1;
             continue;
         }
-        let content = match std::fs::read_to_string(file_path) {
+        let content = match std::fs::read_to_string(path_buf) {
             Ok(c) => c,
             Err(_) => {
                 files_unreadable += 1;
@@ -1091,6 +782,10 @@ fn deny_description_cache_key() {
         eprintln!(
             "ERROR: deny-description-cache-key could not read {files_unreadable} file(s) — gate cannot certify anything"
         );
+        exit(1);
+    }
+    if let Err(msg) = check_post_exemption_vacuity("deny-description-cache-key", files_analyzed) {
+        eprintln!("{msg}");
         exit(1);
     }
     if !all_findings.is_empty() {
@@ -1138,7 +833,7 @@ fn collect_idents(ts: proc_macro2::TokenStream) -> Vec<(String, usize)> {
 ///
 /// The adjacency window is set to 10 tokens on each side of the cache-key ident.
 ///
-/// Returns empty when `path` is a test or examples file (per `is_lint_exempt_file`).
+/// Returns empty when `path` is a test file (per `is_lint_exempt_file`).
 fn scan_for_description_cache_key_in_source(src: &str, path: &str) -> Vec<String> {
     if is_lint_exempt_file(path) {
         return Vec::new();
@@ -1223,6 +918,7 @@ impl AllowList {
 /// - Path MUST start with `"crates/"` or `"xtask/"` (prevents over-broad bare-filename matches).
 /// - Path MUST have at least 2 slashes (at least 3 components: prefix/crate/file.rs).
 fn validate_allowlist_entry_path(path: &str) -> Result<(), String> {
+    let path = path.replace('\\', "/");
     if !path.starts_with("crates/") && !path.starts_with("xtask/") {
         return Err(format!(
             "path {path:?} must start with 'crates/' or 'xtask/' (bare filenames match multiple crates)"

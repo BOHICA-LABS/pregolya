@@ -11,6 +11,7 @@
 //! - `message`   — `Message` enum + `ContentBlock` (SS-01)
 //! - `error`     — `PregolyaError` 2D struct (SS-14)
 //! - `credentials` — API key newtypes with redacted `Debug` (SS-14)
+//! - `http`        — authorised `reqwest::Client` factory with 30s timeout (SS-14)
 //! - `events`    — streaming event taxonomy (SS-06)
 //! - `config`    — `RunnableConfig`, `ChatConfig` (SS-01)
 //! - `retry`     — `ToolRetryPolicy`, `CircuitBreaker` (SS-16)
@@ -27,8 +28,11 @@
 //! - `invocation_context` — `InvocationContext` (definitions-only, SS-11)
 //! - `trajectory` — `TrajectoryRecord`, `TrajectoryWriter`, `TrajectoryReader` (definitions-only, SS-04)
 
+pub mod credentials;
 pub mod error;
+pub mod http;
 
+pub use credentials::{AnthropicApiKey, OpenAiApiKey};
 pub use error::{
     Category, Component, PROBLEM_JSON_CONTENT_TYPE, PregolyaError, ProblemDetail, RetryHint,
 };

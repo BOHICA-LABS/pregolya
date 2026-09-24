@@ -274,8 +274,11 @@ impl PregolyaError {
     ///
     /// Note: construction does NOT validate `code`↔`category` consistency against the error
     /// taxonomy. Each `E-<COMPONENT>-NNN` code maps to a single category in the taxonomy, but
-    /// that constraint is enforced by the code-registry CI gate in story S-1.02
-    /// (VP-BC214001-01), not at construction time.
+    /// that constraint is enforced by `cargo xtask check-error-code-registry`
+    /// (VP-BC214001-01, wired in CI lint-extra), not at construction time.
+    // rustfmt::skip preserves assert!(code.starts_with("E-") on one line per BC-2.14.003 §EC-007
+    // pattern-match requirement (test_BC_2_14_003_programmer_error_guards_compliant).
+    #[rustfmt::skip]
     pub fn new(
         component: Component,
         category: Category,
@@ -285,13 +288,14 @@ impl PregolyaError {
     ) -> Self {
         let code = code.into();
         let message = message.into();
-        assert!(
-            code.starts_with("E-")
-                && code[2..].rsplit_once('-').is_some_and(|(mid, suffix)| {
-                    is_valid_component_segment(mid)
-                        && suffix.len() == 3
-                        && suffix.chars().all(|c| c.is_ascii_digit())
-                }),
+        // BC-2.14.001 EC-006: programmer-error-guard assert! (exempt from check-no-panic per
+        // BC-2.14.003 §EC-007: function has # Panics doc section and message cites BC-ID).
+        assert!(code.starts_with("E-")
+            && code[2..].rsplit_once('-').is_some_and(|(mid, suffix)| {
+                is_valid_component_segment(mid)
+                    && suffix.len() == 3
+                    && suffix.chars().all(|c| c.is_ascii_digit())
+            }),
             "BC-2.14.001 EC-006: code must follow E-<COMPONENT>-NNN format where COMPONENT may contain alphanumeric, hyphen, underscore; got: {}",
             code
         );
@@ -388,28 +392,31 @@ impl PregolyaError {
     /// struct-literal construction (allowed in `pregolya-core` per BC-2.14.001 {PC-008}).
     ///
     /// Note: the emit-time assert validates `code`↔COMPONENT binding only. Code↔category
-    /// taxonomy consistency is enforced by the code-registry gate (S-1.02, VP-BC214001-01).
+    /// taxonomy uniqueness is enforced by `cargo xtask check-error-code-registry`
+    /// (VP-BC214001-01, wired in CI lint-extra).
     pub fn to_problem(&self) -> ProblemDetail {
-        // BC-2.14.001 EC-007: emission-time parity — component field may be reassigned post-construction
-        // (it is `pub`), so verify the code↔component binding holds at emission time.
-        // BC-2.14.001 EC-006: guard against in-crate struct-literal construction that bypasses
-        // new() validation — strip_prefix panics with a BC-citing message rather than a raw
-        // byte-offset panic if self.code is shorter than 2 bytes or lacks the "E-" prefix.
-        let code_suffix = self.code.strip_prefix("E-").unwrap_or_else(|| {
-            panic!(
-                "BC-2.14.001 EC-006: code must follow E-<COMPONENT>-NNN format; \
-                 got {:?} — cannot strip 'E-' prefix in to_problem()",
-                self.code
-            )
-        });
+        // BC-2.14.001 EC-006: documented programmer-error-guard assert! (BC-2.14.003 §EC-007
+        // exempt: function has # Panics doc section and message cites BC-ID). Guards against
+        // in-crate struct-literal construction that bypasses new() validation.
+        assert!(
+            self.code.starts_with("E-"),
+            "BC-2.14.001 EC-006: code must follow E-<COMPONENT>-NNN format; \
+             got {:?} — cannot strip 'E-' prefix in to_problem()",
+            self.code
+        );
+        // Safety: assert above guarantees "E-" prefix (2 bytes); slice is valid UTF-8.
+        let code_suffix = &self.code[2..];
         let code_component_emit = code_suffix
             .rsplit_once('-')
             .map(|(mid, _)| mid)
             .unwrap_or("");
+        // BC-2.14.001 EC-007: emission-time parity — component field may be reassigned
+        // post-construction (it is `pub`), so verify the code↔component binding here.
         assert!(
             code_component_emit.eq_ignore_ascii_case(&component_lowercase(&self.component)),
-            "BC-2.14.001 EC-007: code COMPONENT segment '{}' does not match component identifier '{}' at emission time; \
-            component field may have been reassigned after construction",
+            "BC-2.14.001 EC-007: code COMPONENT segment '{}' does not match component \
+             identifier '{}' at emission time; component field may have been reassigned \
+             after construction",
             code_component_emit,
             component_lowercase(&self.component),
         );
@@ -537,14 +544,18 @@ fn component_lowercase(component: &Component) -> String {
         Component::Embed => "embed".to_string(),
         Component::Tools => "tools".to_string(),
         Component::Custom(name) => {
+            // BC-2.14.001 EC-002: documented programmer-error-guard assert! (BC-2.14.003
+            // §EC-007 exempt: function has # Panics doc section and message cites BC-ID).
             assert!(
                 is_valid_component_segment(name),
-                "BC-2.14.001 EC-002: Component::Custom name '{}' contains invalid characters at emission time",
+                "BC-2.14.001 EC-002: Component::Custom name '{}' contains invalid \
+                 characters at emission time",
                 name
             );
             assert!(
                 !NAMED_COMPONENT_LOWERCASE.contains(&name.to_lowercase().as_str()),
-                "BC-2.14.001 EC-002: Component::Custom name '{}' aliases named component '{}' at emission time",
+                "BC-2.14.001 EC-002: Component::Custom name '{}' aliases named component \
+                 '{}' at emission time",
                 name,
                 name.to_lowercase()
             );
@@ -2088,5 +2099,90 @@ mod tests {
             source: None,
         };
         let _ = err.to_problem();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // BC-2.14.003 (S-1.02 AC-018) — error.rs programmer-error guards compliant
+    //
+    // BC-2.14.003 §EC-006 (BC v1.5): programmer-error-guard assert! is EXEMPT from
+    // the no-panic gate when the function has a `# Panics` doc section AND the assert
+    // message contains a BC-NNN identifier. The always-on semantics of BC-2.14.001
+    // are preserved — assert! panics in both debug and release builds.
+    //
+    // GREEN: error.rs uses documented assert!() guards throughout — no unreachable!()
+    //   in production scope. The assertions below PASS because:
+    //     (a) the compliant assert! guard form exists in production code
+    //     (b) the non-compliant if !(cond) guard form is absent from production code
+    //
+    // NOTE: search patterns are built via concat() at runtime to prevent self-reference —
+    // include_str! embeds the entire file including this test module, so any literal
+    // pattern in test code would trivially satisfy contains().
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /// AC-018 (traces to BC-2.14.003 §EC-006)
+    ///
+    /// The programmer-error guards in `new()` and `to_problem()` must use documented
+    /// assert! (function has a `# Panics` doc section; message contains a BC-NNN ID),
+    /// NOT the non-compliant unreachable! guard form.
+    ///
+    /// The existing `#[should_panic]` tests (test_code_format_rejects_*) continue to
+    /// pass because documented assert! panics in both debug and release builds.
+    ///
+    /// GREEN: production code uses the compliant documented assert!() guard form
+    /// throughout — both source-scan assertions in this test pass.
+    #[test]
+    fn test_BC_2_14_003_programmer_error_guards_compliant() {
+        let src = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/error.rs"));
+
+        // Patterns are built via concat() to prevent self-reference through include_str!.
+        // include_str! embeds the whole file; a literal match in comments or assertions
+        // would trivially satisfy contains() against current (paper-fix) HEAD.
+
+        // (a) The compliant guard form must appear in production code.
+        // Green: production code uses the compliant assert! guard form.
+        let compliant_guard = ["assert!(code", ".starts_with(\"E-\")"].concat();
+        assert!(
+            src.contains(&compliant_guard),
+            "BC-2.14.003 EC-006: new() code-format guard must use the documented assert! \
+             form with a BC-2.14.001 EC-006 citation; current code uses the non-compliant \
+             unreachable! guard; implementer must replace unreachable! guards with \
+             documented assert!"
+        );
+
+        // (b) The non-compliant guard form must NOT remain in the production code.
+        // Green: the non-compliant if !(cond) guard form has been removed from production code.
+        let noncompliant_guard = ["if !(code", ".starts_with"].concat();
+        assert!(
+            !src.contains(&noncompliant_guard),
+            "BC-2.14.003 EC-006: new() must not use the non-compliant guard pattern; \
+             replace with documented assert! so the check-no-panic EC-007 exemption \
+             applies (# Panics doc + BC-ID in message)"
+        );
+
+        // (c) to_problem() and component_lowercase() must use NO unreachable!() guards.
+        //
+        // GREEN (F-GUARD-01 closed): production code has ZERO unreachable!() guard sites.
+        // All four guard sites in to_problem() (EC-006 and EC-007 guards) and
+        // component_lowercase() (EC-002 invalid-chars guard and EC-002 collision guard)
+        // use documented assert!() with a # Panics doc section and a BC-ID in the message,
+        // satisfying the §EC-006 / §EC-007 documented-guard exemption from check-no-panic.
+        //
+        // Production scope: split at #[cfg(test)] boundary to exclude test module text.
+        // Pattern built via concat() to avoid self-reference through include_str! —
+        // the file includes this test module so any literal "unreachable!(" substring
+        // in the test source would trivially satisfy contains() against the include'd
+        // content; splitting the pattern across two string literals prevents that.
+        let production_src = src.split("#[cfg(test)]").next().unwrap_or(src);
+        let unreachable_call = ["unreachable", "!("].concat();
+        assert!(
+            !production_src.contains(&unreachable_call),
+            "BC-2.14.003 EC-006 (F-GUARD-01): to_problem() and component_lowercase() must \
+             use documented assert!() programmer-error guards, NOT unreachable!(); \
+             found unreachable!() in production code; implementer must convert all four \
+             guard sites to documented assert!() with # Panics doc and BC-ID in message: \
+             to_problem() EC-006 guard, to_problem() EC-007 guard, \
+             component_lowercase() EC-002 invalid-chars guard, \
+             component_lowercase() EC-002 collision guard"
+        );
     }
 }

@@ -334,7 +334,7 @@ jobs:
           exit 1
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # lint-extra — xtask lint gates (client-timeout, no-panic, anyhow-ban, cache-key-ban)
+  # lint-extra — xtask lint gates (file-size, client-timeout, no-panic, anyhow-ban, cache-key-ban, error-code-registry, deny-bare-api-key)
   # Guarded on BOTH Cargo.toml (workspace) AND xtask/Cargo.toml (xtask crate).
   # ─────────────────────────────────────────────────────────────────────────────
   lint-extra:
@@ -364,6 +364,23 @@ jobs:
           set -euo pipefail
           cargo install tokei@13.0.0 --locked
 
+      - name: Check out factory-artifacts (error taxonomy for registry gate)
+        if: hashFiles('Cargo.toml') != '' && hashFiles('xtask/Cargo.toml') != ''
+        run: |
+          set -euo pipefail
+          # Fetch factory-artifacts branch if it exists. Use `if` to handle the
+          # branch-not-found case (exit 128) — note: stderr is visible so auth/network
+          # failures are distinguishable from branch-not-found in CI logs.
+          if git fetch origin factory-artifacts:factory-artifacts --depth=1; then
+            git worktree add .factory-ci-checkout factory-artifacts
+            echo "FACTORY_DIR=.factory-ci-checkout" >> "$GITHUB_ENV"
+          else
+            # factory-artifacts branch not yet created (normal in early development),
+            # or fetch failed — see stderr above for auth/network error details.
+            echo "FACTORY_DIR=" >> "$GITHUB_ENV"
+            echo "Warning: factory-artifacts branch not found or fetch failed (see above); check-error-code-registry will hard-fail (no taxonomy file reachable — fail-closed behavior)."
+          fi
+
       - name: Run xtask lint gates
         if: hashFiles('Cargo.toml') != '' && hashFiles('xtask/Cargo.toml') != ''
         run: |
@@ -371,6 +388,9 @@ jobs:
           cargo xtask check-file-size
           cargo xtask check-client-timeout
           cargo xtask check-no-panic
+          cargo xtask check-no-panic --fixture-mode xtask/tests/fixtures/violations
+          cargo xtask check-error-code-registry
+          cargo xtask deny-bare-api-key
           cargo xtask deny-anyhow-in-lib
           cargo xtask deny-description-cache-key
 

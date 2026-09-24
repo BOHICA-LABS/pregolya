@@ -28,7 +28,13 @@
 
 [[allow]]
 path = "xtask/src/main.rs"
-reason = "CI gate dispatch binary implementing 5 lint checkers (no-panic, client-timeout, anyhow-ban, description-cache-key, file-size) plus shared allowlist parsing and file-walking utilities. All gates share a common proc_macro2-based scan-and-report pattern; the file is cohesive by function. Adjusted code-line count (tokei Code minus #[cfg(test)] spans via proc_macro2 span-locations) exceeds the 750-line hard gate."
+reason = "CI gate dispatch binary for 7 subcommands (check-file-size, check-client-timeout, check-no-panic, check-error-code-registry, deny-bare-api-key, deny-anyhow-in-lib, deny-description-cache-key), three in-file checker implementations (check_file_size, deny_anyhow_in_lib, deny_description_cache_key), and shared file-walking helpers (is_test_file, is_lint_exempt_file, is_cfg_test_group, allowlist parsing). All gates share a common proc_macro2-based scan-and-report pattern; the file is cohesive by function. Adjusted code-line count (tokei Code minus #[cfg(test)] spans via proc_macro2 span-locations) exceeds the 750-line hard gate."
 approver = "jmagady"
-date = "2026-09-19"
+date = "2026-09-22"
+
+[[allow]]
+path = "xtask/src/tests.rs"
+reason = "Canonical conformance test suite for all xtask CI gate scanners (BC-2.14.003, BC-2.14.004, BC-2.14.005, file-size, anyhow-ban, description-cache-key). Table-driven and parameterised tests covering every scanner rule, violation fixture, and negative guard. The suite is cohesive by gate; splitting into per-gate files would fragment the shared fixture helpers and scan-and-report test pattern without improving reviewability. Pass-4 red-gate additions (F-01 delimiter gap, F-02 non-_ catch-all, F-03 fixture-mode, O-1 zero-timeout forms) pushed the code-line count past the 1500-line test hard gate."
+approver = "jmagady"
+date = "2026-09-22"
 

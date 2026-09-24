@@ -1,0 +1,11 @@
+error[E0532]: cannot match against a tuple struct which contains private fields
+  --> tests/ui/anthropic_api_key_external_field_access_blocked.rs:16:9
+   |
+16 |     let pregolya_core::AnthropicApiKey(_inner) = key;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+note: constructor is not visible here due to private fields
+  --> tests/ui/anthropic_api_key_external_field_access_blocked.rs:16:40
+   |
+16 |     let pregolya_core::AnthropicApiKey(_inner) = key;
+   |                                        ^^^^^^ private field
