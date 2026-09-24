@@ -2595,8 +2595,8 @@ fn test_BC_2_14_003_fixture_mode_in_process_violation_found() {
 /// broken (0 fixture files had findings).
 ///
 /// Red-gate provenance: `--fixture-mode` was not implemented. `run()` ignored extra argv,
-/// scanned `crates/` (clean workspace), and exited 0. This test asserted non-zero
-/// and was authored failing; now GREEN after --fixture-mode was implemented.
+/// scanned `crates/` (clean workspace), and exited 0. This test asserted exit zero
+/// and was authored failing (until `--fixture-mode` was implemented); now GREEN.
 ///
 /// SID-1: the non-ignored in-process companion above provides CI coverage without
 /// subprocess overhead.

@@ -15,9 +15,11 @@
 set -euo pipefail
 
 # Severity class alternation for grep -E patterns.
-# Enumerate recognised severity tokens explicitly: grep -oE patterns with ${SEV}
-# run in a loop, ensuring only known severity prefixes are harvested as finding IDs.
-SEV='(CRIT|HIGH|MED|LOW|OBS|PROCESS-GAP)'
+# Used as an ERE alternation in id-extraction and count-extraction grep patterns
+# (straight-line uses; not in a loop).
+# SEV_LIST is the canonical severity enumeration; SEV is its ERE alternation form.
+SEV_LIST='CRIT HIGH MED LOW OBS PROCESS-GAP'
+SEV="($(echo "$SEV_LIST" | tr ' ' '|'))"
 
 # ── do_parity_check <changelog_file> <evidence_report_file> ─────────────────
 #
@@ -191,7 +193,7 @@ do_parity_check() {
     # ID count.  Catches cases where the tally text is arithmetically inconsistent
     # with the number of heading-delimited IDs in the CHANGELOG section (e.g.,
     # "1 HIGH + 2 MED" declared but only 2 finding headings present → sum 3 ≠ 2).
-    local tally_sum=0 n
+    local tally_sum=0 n token
     while IFS= read -r token; do
         n=$(printf '%s' "$token" | grep -oE '^[0-9]+' || echo 0)
         tally_sum=$((tally_sum + n))
@@ -205,16 +207,16 @@ do_parity_check() {
     # ── Per-severity histogram: declared counts vs extracted ID counts ───────────
     # Catches cases where the total tally sum is correct but the per-severity
     # breakdown disagrees (e.g. "2 HIGH + 2 OBS" declared but IDs show 1 HIGH + 3 OBS).
-    for sev in CRIT HIGH MED LOW OBS PROCESS-GAP; do
-        cl_declared=$(printf '%s' "$cl_tally" | grep -oE "[0-9]+ ${sev}" | grep -oE '^[0-9]+' | head -1)
+    for sev in $SEV_LIST; do
+        cl_declared=$(printf '%s' "$cl_tally" | grep -oE "[0-9]+ ${sev}" | grep -oE '^[0-9]+' | head -1 || true)
         cl_actual=$(printf '%s' "$cl_ids" | grep -c "^${sev}-" || true)
         if [ -n "$cl_declared" ] && [ "$cl_declared" != "$cl_actual" ]; then
             echo "[BURST-PARITY FAIL] fix-burst-${newest_burst}: CHANGELOG declares ${cl_declared} ${sev} findings but ${cl_actual} ${sev}-prefixed IDs extracted"
             return 1
         fi
     done
-    for sev in CRIT HIGH MED LOW OBS PROCESS-GAP; do
-        er_declared=$(printf '%s' "$er_tally" | grep -oE "[0-9]+ ${sev}" | grep -oE '^[0-9]+' | head -1)
+    for sev in $SEV_LIST; do
+        er_declared=$(printf '%s' "$er_tally" | grep -oE "[0-9]+ ${sev}" | grep -oE '^[0-9]+' | head -1 || true)
         er_actual=$(printf '%s' "$er_ids" | grep -c "^${sev}-" || true)
         if [ -n "$er_declared" ] && [ "$er_declared" != "$er_actual" ]; then
             echo "[BURST-PARITY FAIL] fix-burst-${newest_burst}: evidence-report declares ${er_declared} ${sev} findings but ${er_actual} ${sev}-prefixed IDs extracted"
@@ -249,8 +251,10 @@ do_parity_check() {
 # ── Self-probe ───────────────────────────────────────────────────────────────
 #
 # Probe 1 — ID-mismatch probe.
-#   CHANGELOG: HIGH-001 + MED-001.  Evidence-report: HIGH-001 + LOW-001.
-#   Diverges on ID set.  Asserts do_parity_check exits non-zero.
+#   CHANGELOG: HIGH-001 + MED-001. Evidence-report: HIGH-001 + MED-002.
+#   Identical tallies; diverges only on ID ordinal.
+#   Exercises the ID-set comparison guard.
+#   Asserts do_parity_check exits non-zero.
 #
 # Probe 2 — Tally-divergent probe.
 #   CHANGELOG: HIGH-001 + MED-001.  Evidence-report: HIGH-001 + MED-001.
@@ -293,17 +297,17 @@ Description of the medium finding.
 PROBE_HEREDOC
 
     # Synthetic evidence-report: fix-burst-99 re-verification with HIGH-001 and
-    # LOW-001.  Deliberately divergent: CHANGELOG says MED-001, ER says LOW-001.
+    # MED-002.  Identical tally (1 HIGH + 1 MED); diverges only on ID ordinal.
     local fake_er1="$tmpdir1/evidence-report.md"
     cat > "$fake_er1" <<'PROBE_HEREDOC'
 ## fix-burst-99 re-verification
 
-**Adversary pass 97 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH + 1 LOW.
+**Adversary pass 97 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH + 1 MED.
 
 | Finding | Severity | Detection class | Load-bearing artifact |
 |---------|----------|-----------------|-----------------------|
 | F-P97-HIGH-001 | HIGH | test class | test artifact |
-| F-P97-LOW-001 | LOW | test class | test artifact |
+| F-P97-MED-002 | MED | test class | test artifact |
 PROBE_HEREDOC
 
     local probe1_exit=0
@@ -645,6 +649,154 @@ PROBE_HEREDOC
         echo "[SELF-PROBE PASS] probe-8 (duplicate-id-detected): duplicate finding ID (HIGH-001) in CHANGELOG correctly detected"
     else
         echo "[SELF-PROBE FAIL] probe-8 (duplicate-id-detected): duplicate finding IDs were NOT detected"
+        all_passed=1
+    fi
+
+    # ── Probe 9: re-verification-section-existence ────────────────────────────
+    # CHANGELOG has fix-burst-94. ER has no re-verification sections.
+    # er_newest_burst="" → er_newest_burst guard does not fire.
+    # Section-existence guard fires because ER is missing fix-burst-94 re-verification.
+    local tmpdir9
+    tmpdir9="$(mktemp -d)"
+
+    local fake_cl9="$tmpdir9/CHANGELOG.md"
+    cat > "$fake_cl9" <<'PROBE_HEREDOC'
+## fix-burst-94 (pass-92 findings)
+
+**Pass-92 finding tally: 1 HIGH**
+
+### HIGH-001: Some finding
+
+Description of the finding.
+PROBE_HEREDOC
+
+    local fake_er9="$tmpdir9/evidence-report.md"
+    cat > "$fake_er9" <<'PROBE_HEREDOC'
+## Some other section
+
+This ER has no re-verification sections at all.
+PROBE_HEREDOC
+
+    local probe9_exit=0
+    do_parity_check "$fake_cl9" "$fake_er9" >/dev/null 2>&1 || probe9_exit=$?
+    rm -rf "$tmpdir9"
+
+    if [ "$probe9_exit" -ne 0 ]; then
+        echo "[SELF-PROBE PASS] probe-9 (section-existence-missing): CHANGELOG newest burst missing from ER re-verification correctly detected"
+    else
+        echo "[SELF-PROBE FAIL] probe-9 (section-existence-missing): missing re-verification section was NOT detected"
+        all_passed=1
+    fi
+
+    # ── Probe 10: heading-format-drift ────────────────────────────────────────
+    # CHANGELOG has fix-burst tokens (case-insensitive) but NO canonical
+    # '^## fix-burst-[0-9]+' headings (capital letters prevent the canonical match).
+    # newest_burst="" → heading-format-drift guard fires.
+    local tmpdir10
+    tmpdir10="$(mktemp -d)"
+
+    local fake_cl10="$tmpdir10/CHANGELOG.md"
+    cat > "$fake_cl10" <<'PROBE_HEREDOC'
+## Fix-Burst-94 (pass-92 findings)
+
+**Pass-92 finding tally: 1 HIGH**
+
+### HIGH-001: Some finding
+
+Description of the finding.
+PROBE_HEREDOC
+
+    local fake_er10="$tmpdir10/evidence-report.md"
+    cat > "$fake_er10" <<'PROBE_HEREDOC'
+## some section
+
+Irrelevant content.
+PROBE_HEREDOC
+
+    local probe10_exit=0
+    do_parity_check "$fake_cl10" "$fake_er10" >/dev/null 2>&1 || probe10_exit=$?
+    rm -rf "$tmpdir10"
+
+    if [ "$probe10_exit" -ne 0 ]; then
+        echo "[SELF-PROBE PASS] probe-10 (heading-format-drift): non-canonical fix-burst heading correctly detected"
+    else
+        echo "[SELF-PROBE FAIL] probe-10 (heading-format-drift): non-canonical fix-burst heading was NOT detected"
+        all_passed=1
+    fi
+
+    # ── Probe 11: cl-ids-empty ────────────────────────────────────────────────
+    # CHANGELOG has canonical fix-burst-94 heading with a valid tally, but NO
+    # '### HIGH-001:' style headings in the section.  Guards #3, #4, #12, #13
+    # must pass first; then cl_ids is empty → guard #7 fires.
+    local tmpdir11
+    tmpdir11="$(mktemp -d)"
+
+    local fake_cl11="$tmpdir11/CHANGELOG.md"
+    cat > "$fake_cl11" <<'PROBE_HEREDOC'
+## fix-burst-94 (pass-92 findings)
+
+**Pass-92 finding tally: 1 HIGH**
+
+Descriptive text with no finding headings.
+PROBE_HEREDOC
+
+    local fake_er11="$tmpdir11/evidence-report.md"
+    cat > "$fake_er11" <<'PROBE_HEREDOC'
+## fix-burst-94 re-verification
+
+**Adversary pass 92 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH.
+
+| Finding | Severity | Detection class | Load-bearing artifact |
+|---------|----------|-----------------|-----------------------|
+| F-P92-HIGH-001 | HIGH | test class | test artifact |
+PROBE_HEREDOC
+
+    local probe11_exit=0
+    do_parity_check "$fake_cl11" "$fake_er11" >/dev/null 2>&1 || probe11_exit=$?
+    rm -rf "$tmpdir11"
+
+    if [ "$probe11_exit" -ne 0 ]; then
+        echo "[SELF-PROBE PASS] probe-11 (cl-ids-empty): empty CHANGELOG finding-ID extraction correctly detected"
+    else
+        echo "[SELF-PROBE FAIL] probe-11 (cl-ids-empty): empty CHANGELOG finding-ID extraction was NOT detected"
+        all_passed=1
+    fi
+
+    # ── Probe 12: er-ids-empty ────────────────────────────────────────────────
+    # CHANGELOG has canonical headings (cl_ids non-empty), but ER section has
+    # no '| F-P92-HIGH-001 |' rows — just descriptive text.
+    # cl_ids non-empty → guard #7 passes; er_ids empty → guard #10 fires.
+    local tmpdir12
+    tmpdir12="$(mktemp -d)"
+
+    local fake_cl12="$tmpdir12/CHANGELOG.md"
+    cat > "$fake_cl12" <<'PROBE_HEREDOC'
+## fix-burst-94 (pass-92 findings)
+
+**Pass-92 finding tally: 1 HIGH**
+
+### HIGH-001: Some finding
+
+Description of the finding.
+PROBE_HEREDOC
+
+    local fake_er12="$tmpdir12/evidence-report.md"
+    cat > "$fake_er12" <<'PROBE_HEREDOC'
+## fix-burst-94 re-verification
+
+**Adversary pass 92 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH.
+
+Descriptive text with no finding rows.
+PROBE_HEREDOC
+
+    local probe12_exit=0
+    do_parity_check "$fake_cl12" "$fake_er12" >/dev/null 2>&1 || probe12_exit=$?
+    rm -rf "$tmpdir12"
+
+    if [ "$probe12_exit" -ne 0 ]; then
+        echo "[SELF-PROBE PASS] probe-12 (er-ids-empty): empty ER finding-ID extraction correctly detected"
+    else
+        echo "[SELF-PROBE FAIL] probe-12 (er-ids-empty): empty ER finding-ID extraction was NOT detected"
         all_passed=1
     fi
 

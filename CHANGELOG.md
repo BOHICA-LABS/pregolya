@@ -16,89 +16,99 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
-## fix-burst-58 (pass-56 findings)
+## fix-burst-60 (pass-58 findings)
 
-**Pass-56 finding tally: 2 HIGH + 5 MED + 4 LOW + 2 OBS**
+**Pass-58 finding tally: 2 HIGH + 4 MED + 3 LOW + 2 OBS**
 
-**Test count:** 92 passed, 2 skipped (pregolya-core); 255 passed, 5 skipped (xtask). No production code logic changed in `pregolya-core`. `xtask/src/tests.rs` changes: block-comment correction and test rename (text-only; no test logic changed). Script changes in `scripts/` (not `crates/`). Records changes in CHANGELOG and evidence-report. Clause (a): no `crates/` files added or deleted — OK (no `crates/` changes). Clause (b): no `crates/` files changed at all — OK. Clause (c): no change within `xtask/tests/fixtures/violations/`; `CREDENTIAL_FIXTURE_COUNT` unchanged — OK. Clause (d): `xtask/src/tests.rs` changed — block-comment correction and test rename only; no gate-scanner logic, guard, or visitor behavior altered; gate counts remain valid — OK.
+### HIGH-001: probe-1 fires on tally-count guard instead of ID-set comparison guard
 
-### HIGH-001: Duplicate finding ID and missing OBS-002 heading in fix-burst-57 records
+**Root cause:** probe-1's synthetic ER used a tally of `1 HIGH + 1 LOW` while the CHANGELOG used `1 HIGH + 1 MED`. The divergent severity tokens caused the tally-count comparison guard to fire before the ID-set comparison guard. The ID-set guard had no probe coverage.
 
-**Finding:** fix-burst-57 CHANGELOG and ER both contained two headings/rows labeled `HIGH-001`; OBS-002 had no standalone heading, making per-severity ID counts disagree with declared tally. The fix-burst-57 gate passed due to the sum-only check masking the divergence.
+**Fix:** Changed probe-1's synthetic ER tally to `1 HIGH + 1 MED` (identical to the CHANGELOG tally) and changed the ER finding row from `F-P97-LOW-001` to `F-P97-MED-002`. The ID mismatch (`MED-001` in CHANGELOG vs `MED-002` in ER) now forces divergence only at the ID-set comparison guard, as intended.
 
-**What was fixed:** Merged the two duplicate `### HIGH-001` headings into one; gave `OBS-002` its own `### OBS-002:` heading. Fixed ER table: merged two `F-P55-HIGH-001` rows into one; added `F-P55-OBS-002` row. Gate now produces PASS on corrected fix-burst-57 records.
+**Load-bearing artifact:** `run_self_probes` probe-1 in `check-burst-records-parity.sh` — `[SELF-PROBE PASS] probe-1 (ID-mismatch): divergent ID pair correctly detected mismatch` emitted on `--self-probe`.
 
-### HIGH-002: Parity script structural gaps — sum-only tally check and no duplicate-ID guard
+### HIGH-002: four new guards (section-existence, heading-format-drift, cl_ids-empty, er_ids-empty) have zero self-probe coverage (fifth recurrence of unprobed-guard class)
 
-**Finding:** `check-burst-records-parity.sh` reconciled only the SUM of findings, not per-severity counts; duplicate IDs were not detected. A 2-HIGH / 2-OBS enumeration with a 1-HIGH / 3-OBS declaration passes if totals match.
+**Root cause:** Four guards added in fix-burst-60 — section-existence (fires when the CHANGELOG's newest burst has no corresponding ER re-verification section), heading-format-drift (fires when CHANGELOG has fix-burst tokens but no canonical `^## fix-burst-N` heading), cl_ids-empty (fires when the CHANGELOG section has a tally but no `### SEV-NNN:` headings), and er_ids-empty (fires when the ER section has a tally but no `| F-PNNN-SEV-NNN |` rows) — had zero self-probe coverage. All new guards appended to `do_parity_check` are behind all previously-probed early-return paths and are unreachable without purpose-built probes.
 
-**What was fixed:** Added per-severity histogram comparison loop (for each severity: declared count parsed from tally vs actual count from extracted IDs, fail on mismatch); added duplicate-ID guard using `sort | uniq -d` on both `cl_ids` and `er_ids`; hoisted empty-tally fail-closed guard before pass-number comparison (OBS-002); removed redundant `-n` conjuncts from pass-number comparison condition.
+**Fix:** Added four new probes to `run_self_probes`: probe-9 (`section-existence-missing`) — synthetic ER with no re-verification sections; probe-10 (`heading-format-drift`) — CHANGELOG with `## Fix-Burst-94` (capital letters, non-canonical); probe-11 (`cl-ids-empty`) — CHANGELOG section with a tally line but no `### HIGH-NNN:` headings; probe-12 (`er-ids-empty`) — ER section with a tally line but no `| F-P94-HIGH-001 |` rows.
 
-### MED-001: Phantom function `check_pass_number_agreement` cited in HIGH-001 closure record
+**Load-bearing artifact:** `run_self_probes` probes 9–12 in `check-burst-records-parity.sh` — `[SELF-PROBE PASS] probe-9 (section-existence-missing)`, `[SELF-PROBE PASS] probe-10 (heading-format-drift)`, `[SELF-PROBE PASS] probe-11 (cl-ids-empty)`, `[SELF-PROBE PASS] probe-12 (er-ids-empty)` emitted on `--self-probe`.
 
-**Finding:** CHANGELOG fix-burst-57 HIGH-001 load-bearing artifact cited `check_pass_number_agreement`, which does not exist. The empty-tally guard lives in `do_parity_check`.
+### MED-001: ER fix-burst-59 re-verification gate output block non-verbatim for probe-7 and probe-8
 
-**What was fixed:** Citation updated to `do_parity_check`.
+**Root cause:** The gate output block in the `## fix-burst-59 re-verification` section of evidence-report.md contained paraphrased probe output strings for probe-7 and probe-8 instead of the exact strings emitted by the script.
 
-### MED-002: Missing `**Test count:**` clause walk in CHANGELOG fix-burst-57
+**Fix:** Replaced both non-verbatim lines with the exact strings from the `run_self_probes` function: `[SELF-PROBE PASS] probe-7 (per-severity-histogram-divergent): histogram mismatch (2 HIGH declared, 1 actual) correctly detected` and `[SELF-PROBE PASS] probe-8 (duplicate-id-detected): duplicate finding ID (HIGH-001) in CHANGELOG correctly detected`.
 
-**Finding:** fix-burst-57 changed Rust source and scripts but the CHANGELOG section had no `**Test count:**` line or clause walk.
+**Load-bearing artifact:** Gate output block in `## fix-burst-59 re-verification` section of evidence-report.md — probe-7 and probe-8 lines verbatim-match script echo strings.
 
-**What was fixed:** Added `**Test count:**` + clause (a)–(d) walk to `## fix-burst-57`.
+### MED-002: Re-verification HEAD annotation for fix-burst-59 was an unresolvable placeholder
 
-### MED-003: Empty-tally fail-closed guard had zero self-probe coverage
+**Root cause:** The `[Re-verification HEAD (post-fix-burst-59): ...]` annotation in evidence-report.md contained `see D-438 in STATE.md for exact SHA` — a cross-document reference that cannot be resolved within the deliverable surface.
 
-**Finding:** The empty-tally guard in `do_parity_check` — the load-bearing artifact for HIGH-001 closure — was unreachable under `--self-probe` (all probes supplied valid tally lines).
+**Fix:** Replaced the placeholder with the exact SHA: `3d511a57884aed1a380b84114b75bda2d659a5c7`.
 
-**What was fixed:** Added probe-5 (CHANGELOG section with finding headings but no tally line → empty-tally guard fires); added probe-6 (ER has a newer burst section than CHANGELOG → `er_newest_burst` guard fires). `lefthook.yml` comment updated from "four" to "six synthetic probes."
+**Load-bearing artifact:** `[Re-verification HEAD (post-fix-burst-59): 3d511a57884aed1a380b84114b75bda2d659a5c7]` annotation in `## fix-burst-59 re-verification` section of evidence-report.md.
 
-### MED-004: xtask false "no pub(crate) scanner" claim + wrong SID-1 substitute in deny-bare-api-key subprocess block
+### MED-003: Inverted Red Gate provenance doc comment on `test_BC_2_14_003_fixture_mode_subprocess_exits_zero_when_scanner_healthy`
 
-**Finding:** Block comment in `xtask/src/tests.rs` falsely stated `scan_for_bare_api_keys_in_source` is not exposed as `pub(crate)`. `/// SID-1 note:` cited `static_assertions` in `credentials.rs` as the in-process substitute rather than the `scan_for_bare_api_keys_in_source` test family.
+**Root cause:** The block comment above the test in `xtask/src/tests.rs` stated "This test asserted non-zero and was authored failing" — describing a non-zero exit assertion, opposite to the actual `output.status.success()` (exit zero) assertion.
 
-**What was fixed:** Deleted false "no per-source scanner" claim; updated block comment to describe the correct division (in-process unit coverage vs CLI process-boundary test); updated `/// SID-1 note:` to name `test_BC_2_14_005_flags_derive_debug_on_token_struct` and siblings as the authoritative non-ignored substitutes.
+**Fix:** Updated the doc comment to: "This test asserted exit zero and was authored failing (until `--fixture-mode` was implemented); now GREEN."
 
-### MED-005: Test name `test_BC_2_14_005_deny_bare_api_key_subprocess_exits_nonzero_on_violation` contradicts body
+**Load-bearing artifact:** Block comment above `test_BC_2_14_003_fixture_mode_subprocess_exits_zero_when_scanner_healthy` in `xtask/src/tests.rs`.
 
-**Finding:** Test asserts `output.status.success()` (exit 0 on clean workspace) but the name promises non-zero on violation.
+### MED-004: fix-burst-59 section placed after fix-burst-58 in CHANGELOG instead of before it
 
-**What was fixed:** Renamed to `test_BC_2_14_005_deny_bare_api_key_subprocess_exits_zero_on_clean_workspace`; doc comment updated to describe actual assertion.
+**Root cause:** fix-burst-59 was inserted below fix-burst-58 rather than above it, breaking newest-first ordering.
 
-### LOW-001: CHANGELOG fix-burst-57 heading used date instead of pass-N convention
+**Fix:** Moved the fix-burst-59 section to before fix-burst-58 in CHANGELOG.md.
 
-**Finding:** `## fix-burst-57 (2026-09-23)` broke the `(pass-N findings)` convention.
+**Load-bearing artifact:** `## fix-burst-59 (pass-57 findings)` section appears before `## fix-burst-58 (pass-56 findings)` in CHANGELOG.md.
 
-**What was fixed:** Changed to `## fix-burst-57 (pass-55 findings)`.
+### LOW-001: SEV comment replaced in fix-burst-59 was still inaccurate
 
-### LOW-002: ER fix-burst-57 re-verification heading pre-declared streak position
+**Root cause:** fix-burst-59 LOW-003 replaced the comment with `grep -oE patterns with ${SEV} run in a loop` — but the two uses of `${SEV}` in `do_parity_check` are straight-line, not in a loop.
 
-**Finding:** Heading `## fix-burst-57 re-verification (adversary pass-56 streak attempt 1/3)` recorded a streak position before pass-56 ran.
+**Fix:** Replaced the comment with: "Used as an ERE alternation in id-extraction and count-extraction grep patterns (straight-line uses; not in a loop)."
 
-**What was fixed:** Removed parenthetical; heading is now plain `## fix-burst-57 re-verification`.
+**Load-bearing artifact:** SEV usage comment in `do_parity_check` in `check-burst-records-parity.sh`.
 
-### LOW-003: fix-burst-57 re-verification section had no HEAD annotation
+### LOW-002: `token` variable not declared `local` in `do_parity_check`
 
-**Finding:** The section added by fix-burst-57 had no `[Reviewed HEAD / Re-verification HEAD]` annotation, inconsistent with fix-burst-56 re-verification.
+**Root cause:** `token` was used in the `parse_tally_sum` helper but not included in the `local` declaration, allowing it to leak into caller scope.
 
-**What was fixed:** Added `[Reviewed HEAD (adversary pass 55): 26384d58…]` and `[Re-verification HEAD (post-fix-burst-57): 359e8e0c…]`.
+**Fix:** Added `token` to the local declaration: `local tally_sum=0 n token`.
 
-### LOW-004: Per-AC Demo Recordings table missing AC-018 row
+**Load-bearing artifact:** `local tally_sum=0 n token` declaration in `do_parity_check` in `check-burst-records-parity.sh`.
 
-**Finding:** Table claimed to be "completed" after LOW-002 fix but AC-018 had no row.
+### LOW-003: fix-burst-59 Test count paragraph omits `scripts/check-burst-records-parity.sh` and `lefthook.yml`
 
-**What was fixed:** Added `AC-018` row ("same recording as AC-002") in monotonic order.
+**Root cause:** The `**Test count:**` paragraph for fix-burst-59 did not mention that `scripts/check-burst-records-parity.sh` and `lefthook.yml` were also changed in that burst.
 
-### OBS-001: fix-burst-57 ER table missing Detection class column
+**Fix:** Extended the paragraph to acknowledge both files and confirm they fall outside the clause (a)–(d) perimeters.
 
-**Finding:** fix-burst-57 re-verification table dropped the `Detection class` column present in fix-burst-55 and fix-burst-56 tables.
+**Load-bearing artifact:** `**Test count:**` paragraph in `## fix-burst-59 (pass-57 findings)` section of CHANGELOG.md.
 
-**What was fixed:** Added `Detection class` column with per-row classifications.
+### OBS-001: Severity set enumerated three times with no single source of truth
 
-### OBS-002: Script pass-number comparison had redundant -n conjuncts; empty-tally guard position
+**Root cause:** The severity tokens appeared independently in three locations: the `SEV` variable, the histogram loop body, and the duplicate-ID loop body.
 
-**Finding:** `[ -n "$cl_pass" ] && [ -n "$er_pass" ] &&` conjuncts redundant (empty tally fires before reaching this comparison); empty-tally guard was positioned after the pass-number comparison it backstops.
+**Fix:** Introduced `SEV_LIST='CRIT HIGH MED LOW OBS PROCESS-GAP'` as the single source of truth. `SEV` is derived as `"($(echo "$SEV_LIST" | tr ' ' '|'))"`. Both histogram loops iterate `for sev in $SEV_LIST`.
 
-**What was fixed:** Hoisted empty-tally guard before pass-number comparison; removed redundant `-n` conjuncts. Addressed as part of HIGH-002 fix.
+**Load-bearing artifact:** `SEV_LIST` variable in `check-burst-records-parity.sh`; both histogram loops iterate `$SEV_LIST`.
+
+### OBS-002: `cl_declared` and `er_declared` extractions missing `|| true`
+
+**Root cause:** `grep` exits with code 1 on zero matches; without `|| true`, a zero-match grep under pipefail semantics aborts the function.
+
+**Fix:** Added `|| true` to both `cl_declared` and `er_declared` extractions.
+
+**Load-bearing artifact:** `cl_declared` and `er_declared` extraction lines in `do_parity_check` in `check-burst-records-parity.sh`.
+
+**Test count:** 255 passed, 5 skipped (xtask); 92 passed, 2 skipped (pregolya-core). Clause (a): no `crates/` files added or deleted — OK. Clause (b): no `crates/` files changed — OK. Clause (c): no change within `xtask/tests/fixtures/violations/`; `CREDENTIAL_FIXTURE_COUNT` unchanged — OK. Clause (d): `xtask/src/tests.rs` changed — doc comment only; no gate-scanner logic, guard, or visitor behavior altered; gate counts remain valid — OK.
 
 ## fix-burst-59 (pass-57 findings)
 
@@ -214,7 +224,91 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 **Load-bearing artifact:** `## fix-burst-57 (pass-55 findings)` section heading order in CHANGELOG.md.
 
-**Test count:** 255 passed, 5 skipped (xtask); 92 passed, 2 skipped (pregolya-core). No crates/ changes in fix-burst-59. Clause (a): no `crates/` files added or deleted — OK. Clause (b): no `crates/` files changed — OK. Clause (c): no change within `xtask/tests/fixtures/violations/`; `CREDENTIAL_FIXTURE_COUNT` unchanged — OK. Clause (d): `xtask/src/tests.rs` changed — block-comment correction only; no gate-scanner logic, guard, or visitor behavior altered; gate counts remain valid — OK.
+**Test count:** 255 passed, 5 skipped (xtask); 92 passed, 2 skipped (pregolya-core). No crates/ changes in fix-burst-59. Clause (a): no `crates/` files added or deleted — OK. Clause (b): no `crates/` files changed — OK. Clause (c): no change within `xtask/tests/fixtures/violations/`; `CREDENTIAL_FIXTURE_COUNT` unchanged — OK. Clause (d): `xtask/src/tests.rs` changed — block-comment correction only; no gate-scanner logic, guard, or visitor behavior altered; gate counts remain valid — OK. Additionally, `scripts/check-burst-records-parity.sh` received behavioral changes (probe-6 fix, probes 7–8 addition, CRIT/PROCESS-GAP histogram, OBS-001 locals, OBS-002 guard reorder) and `lefthook.yml` received comment updates (LOW-002). These files fall outside the `crates/` and `xtask/src/` clause perimeters, so clauses (a)–(d) remain valid.
+
+## fix-burst-58 (pass-56 findings)
+
+**Pass-56 finding tally: 2 HIGH + 5 MED + 4 LOW + 2 OBS**
+
+**Test count:** 92 passed, 2 skipped (pregolya-core); 255 passed, 5 skipped (xtask). No production code logic changed in `pregolya-core`. `xtask/src/tests.rs` changes: block-comment correction and test rename (text-only; no test logic changed). Script changes in `scripts/` (not `crates/`). Records changes in CHANGELOG and evidence-report. Clause (a): no `crates/` files added or deleted — OK (no `crates/` changes). Clause (b): no `crates/` files changed at all — OK. Clause (c): no change within `xtask/tests/fixtures/violations/`; `CREDENTIAL_FIXTURE_COUNT` unchanged — OK. Clause (d): `xtask/src/tests.rs` changed — block-comment correction and test rename only; no gate-scanner logic, guard, or visitor behavior altered; gate counts remain valid — OK.
+
+### HIGH-001: Duplicate finding ID and missing OBS-002 heading in fix-burst-57 records
+
+**Finding:** fix-burst-57 CHANGELOG and ER both contained two headings/rows labeled `HIGH-001`; OBS-002 had no standalone heading, making per-severity ID counts disagree with declared tally. The fix-burst-57 gate passed due to the sum-only check masking the divergence.
+
+**What was fixed:** Merged the two duplicate `### HIGH-001` headings into one; gave `OBS-002` its own `### OBS-002:` heading. Fixed ER table: merged two `F-P55-HIGH-001` rows into one; added `F-P55-OBS-002` row. Gate now produces PASS on corrected fix-burst-57 records.
+
+### HIGH-002: Parity script structural gaps — sum-only tally check and no duplicate-ID guard
+
+**Finding:** `check-burst-records-parity.sh` reconciled only the SUM of findings, not per-severity counts; duplicate IDs were not detected. A 2-HIGH / 2-OBS enumeration with a 1-HIGH / 3-OBS declaration passes if totals match.
+
+**What was fixed:** Added per-severity histogram comparison loop (for each severity: declared count parsed from tally vs actual count from extracted IDs, fail on mismatch); added duplicate-ID guard using `sort | uniq -d` on both `cl_ids` and `er_ids`; hoisted empty-tally fail-closed guard before pass-number comparison (OBS-002); removed redundant `-n` conjuncts from pass-number comparison condition.
+
+### MED-001: Phantom function `check_pass_number_agreement` cited in HIGH-001 closure record
+
+**Finding:** CHANGELOG fix-burst-57 HIGH-001 load-bearing artifact cited `check_pass_number_agreement`, which does not exist. The empty-tally guard lives in `do_parity_check`.
+
+**What was fixed:** Citation updated to `do_parity_check`.
+
+### MED-002: Missing `**Test count:**` clause walk in CHANGELOG fix-burst-57
+
+**Finding:** fix-burst-57 changed Rust source and scripts but the CHANGELOG section had no `**Test count:**` line or clause walk.
+
+**What was fixed:** Added `**Test count:**` + clause (a)–(d) walk to `## fix-burst-57`.
+
+### MED-003: Empty-tally fail-closed guard had zero self-probe coverage
+
+**Finding:** The empty-tally guard in `do_parity_check` — the load-bearing artifact for HIGH-001 closure — was unreachable under `--self-probe` (all probes supplied valid tally lines).
+
+**What was fixed:** Added probe-5 (CHANGELOG section with finding headings but no tally line → empty-tally guard fires); added probe-6 (ER has a newer burst section than CHANGELOG → `er_newest_burst` guard fires). `lefthook.yml` comment updated from "four" to "six synthetic probes."
+
+### MED-004: xtask false "no pub(crate) scanner" claim + wrong SID-1 substitute in deny-bare-api-key subprocess block
+
+**Finding:** Block comment in `xtask/src/tests.rs` falsely stated `scan_for_bare_api_keys_in_source` is not exposed as `pub(crate)`. `/// SID-1 note:` cited `static_assertions` in `credentials.rs` as the in-process substitute rather than the `scan_for_bare_api_keys_in_source` test family.
+
+**What was fixed:** Deleted false "no per-source scanner" claim; updated block comment to describe the correct division (in-process unit coverage vs CLI process-boundary test); updated `/// SID-1 note:` to name `test_BC_2_14_005_flags_derive_debug_on_token_struct` and siblings as the authoritative non-ignored substitutes.
+
+### MED-005: Test name `test_BC_2_14_005_deny_bare_api_key_subprocess_exits_nonzero_on_violation` contradicts body
+
+**Finding:** Test asserts `output.status.success()` (exit 0 on clean workspace) but the name promises non-zero on violation.
+
+**What was fixed:** Renamed to `test_BC_2_14_005_deny_bare_api_key_subprocess_exits_zero_on_clean_workspace`; doc comment updated to describe actual assertion.
+
+### LOW-001: CHANGELOG fix-burst-57 heading used date instead of pass-N convention
+
+**Finding:** `## fix-burst-57 (2026-09-23)` broke the `(pass-N findings)` convention.
+
+**What was fixed:** Changed to `## fix-burst-57 (pass-55 findings)`.
+
+### LOW-002: ER fix-burst-57 re-verification heading pre-declared streak position
+
+**Finding:** Heading `## fix-burst-57 re-verification (adversary pass-56 streak attempt 1/3)` recorded a streak position before pass-56 ran.
+
+**What was fixed:** Removed parenthetical; heading is now plain `## fix-burst-57 re-verification`.
+
+### LOW-003: fix-burst-57 re-verification section had no HEAD annotation
+
+**Finding:** The section added by fix-burst-57 had no `[Reviewed HEAD / Re-verification HEAD]` annotation, inconsistent with fix-burst-56 re-verification.
+
+**What was fixed:** Added `[Reviewed HEAD (adversary pass 55): 26384d58…]` and `[Re-verification HEAD (post-fix-burst-57): 359e8e0c…]`.
+
+### LOW-004: Per-AC Demo Recordings table missing AC-018 row
+
+**Finding:** Table claimed to be "completed" after LOW-002 fix but AC-018 had no row.
+
+**What was fixed:** Added `AC-018` row ("same recording as AC-002") in monotonic order.
+
+### OBS-001: fix-burst-57 ER table missing Detection class column
+
+**Finding:** fix-burst-57 re-verification table dropped the `Detection class` column present in fix-burst-55 and fix-burst-56 tables.
+
+**What was fixed:** Added `Detection class` column with per-row classifications.
+
+### OBS-002: Script pass-number comparison had redundant -n conjuncts; empty-tally guard position
+
+**Finding:** `[ -n "$cl_pass" ] && [ -n "$er_pass" ] &&` conjuncts redundant (empty tally fires before reaching this comparison); empty-tally guard was positioned after the pass-number comparison it backstops.
+
+**What was fixed:** Hoisted empty-tally guard before pass-number comparison; removed redundant `-n` conjuncts. Addressed as part of HIGH-002 fix.
 
 ## fix-burst-57 (pass-55 findings)
 
