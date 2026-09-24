@@ -16,6 +16,84 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-61 (pass-59 findings)
+
+**Pass-59 finding tally: 1 HIGH + 5 MED + 3 LOW**
+
+### HIGH-001: ER-side duplicate-ID guard and ER-side per-severity histogram guard have zero self-probe coverage (sixth recurrence of unprobed-guard class)
+
+**Root cause:** probe-8 (the only duplicate-ID probe) places a duplicate `### HIGH-001` heading in the synthetic CHANGELOG — the `cl_dupes` guard fires first. The `er_dupes` branch is never reached. Similarly, probe-7 diverges on the CHANGELOG histogram side and returns there; no probe passes both CL guards to reach the ER histogram loop. Both ER guards are independently reachable: `er_dupes` fires when the ER finding rows contain a duplicate ID while CL does not; the ER histogram fires when CL histogram passes (declared = actual) but ER histogram fails (declared ≠ actual).
+
+**Fix:** Added probe-13 (`er-duplicate-id`): CL has `HIGH-001` + `MED-001` (no CL dupes), ER has `F-P89-HIGH-001` twice + `F-P89-MED-001`; tally-count and sum guards pass, CL dupes guard passes, then `er_dupes` fires. Added probe-14 (`er-per-severity-histogram-divergent`): CL declares `1 HIGH + 2 MED` with matching rows; ER declares `1 HIGH + 2 MED` but has two HIGH rows — CL histogram passes, ER histogram fires. Updated `lefthook.yml` `burst-parity-self-probe` comment from "twelve" to "fifteen" (adding probe-13 `er-duplicate-id`, probe-14 `er-per-severity-histogram-divergent`, and probe-15 `er-tally-counts-absent` per MED-003).
+
+**Load-bearing artifact:** `run_self_probes` probe-13 and probe-14 in `check-burst-records-parity.sh` — `[SELF-PROBE PASS] probe-13 (er-duplicate-id): duplicate finding ID (F-P89-HIGH-001) in evidence-report correctly detected` and `[SELF-PROBE PASS] probe-14 (er-per-severity-histogram-divergent): ER histogram mismatch (1 HIGH declared, 2 actual) correctly detected` emitted on `--self-probe`.
+
+### MED-001: fix-burst-60 `**Test count:**` paragraph omits `scripts/check-burst-records-parity.sh` and `lefthook.yml` changes — immediate recurrence of LOW-003
+
+**Root cause:** LOW-003 in fix-burst-60 added acknowledgment of scripts/lefthook changes to fix-burst-59's paragraph but did not apply the same pattern to fix-burst-60's own paragraph, which only cited `xtask/src/tests.rs` under clause (d).
+
+**Fix:** Extended the fix-burst-60 `**Test count:**` paragraph in CHANGELOG.md and evidence-report.md to acknowledge `scripts/check-burst-records-parity.sh` behavioral changes and `lefthook.yml` comment updates ("eight" → "twelve"), confirming both fall outside the `crates/` and `xtask/src/` clause perimeters.
+
+**Load-bearing artifact:** `**Test count:**` paragraph in `## fix-burst-60 (pass-58 findings)` in CHANGELOG.md and `## fix-burst-60 re-verification` in evidence-report.md.
+
+### MED-002: MED-003 replacement doc comment claims exit-0 assertion was authored failing — contradicts pre-fix behavior
+
+**Root cause:** fix-burst-60 MED-003 replaced an inverted doc comment with "This test asserted exit zero and was authored failing (until `--fixture-mode` was implemented); now GREEN." Pre-fix, `run()` scanned `crates/` (clean workspace) and exited 0 — so the `output.status.success()` assertion PASSED pre-fix, not failed. The Red Gate signal came from `combined.contains("violation_assert_no_doc")` / `combined.contains("violation_assert_brace")` assertions that failed because `run()` never printed fixture file names. The doc comment correctly identified the assertion direction but attached a false failure-provenance claim for the exit-code check.
+
+**Fix:** Rewrote the doc comment to state: the exit-0 assertion is a contract pin that also passed pre-fix (run() scanned crates/, clean workspace, exited 0); the genuine Red Gate signal came from the `combined.contains(...)` fixture-name assertions, which failed pre-fix because run() never printed violation fixture file names.
+
+**Load-bearing artifact:** Block comment above `test_BC_2_14_003_fixture_mode_subprocess_exits_zero_when_scanner_healthy` in `xtask/src/tests.rs`.
+
+### MED-003: Tally-count comparison and ER histogram fail open when ER result line has no severity-count tokens
+
+**Root cause:** If the ER result line matched `\*\*Adversary pass [0-9]+ result:\*\*.*` but contained no `N SEV` tokens, `er_counts` was empty; the tally-count comparison was skipped by its `-n` conjunct; the ER histogram loop was skipped because `er_declared` was empty; the gate printed a PASS citing only the CHANGELOG tally. The fail-closed empty-tally guard prevented a line-absent failure but not a counts-absent failure.
+
+**Fix:** Added a fail-closed guard after tally extraction: if either `cl_counts` or `er_counts` is empty, emit `[BURST-PARITY FAIL] ... tally line found but no severity-count tokens extracted` and return 1. Dropped the `-n` conjuncts from the tally-count comparison (now unconditional). Added probe-15 (`er-tally-counts-absent`): ER result line is `**Adversary pass 87 result:** CLEAN(strict)=yes.` (no `— N SEV` suffix); new fail-closed guard fires.
+
+**Load-bearing artifact:** Fail-closed counts-absent guard in `do_parity_check` in `check-burst-records-parity.sh`; probe-15 (`er-tally-counts-absent`) in `run_self_probes`.
+
+### MED-004: Phantom symbol `parse_tally_sum` cited in LOW-002 root cause — recurrence of fix-burst-58 MED-001
+
+**Root cause:** The LOW-002 root cause in fix-burst-60 stated "`token` was used in the `parse_tally_sum` helper" — but no `parse_tally_sum` function exists in the script. The tally-sum accumulation is an inline `while IFS= read -r token` / `tally_sum=$((tally_sum + n))` loop in `do_parity_check`.
+
+**Fix:** Replaced `parse_tally_sum` with the correct anchor: "the inline tally-sum accumulation loop (`while IFS= read -r token` / `tally_sum=$((tally_sum + n))` block) inside `do_parity_check`."
+
+**Load-bearing artifact:** `### LOW-002` root cause sentence in `## fix-burst-60 (pass-58 findings)` in CHANGELOG.md.
+
+### MED-005: HIGH-002 root cause attributes four unprobed guards to "fix-burst-60" — impossible for a pass-58 finding
+
+**Root cause:** The HIGH-002 root cause originally said "Four guards added in fix-burst-60". Fix-burst-60 is the response to pass-58, which reviewed HEAD `3d511a57...` (post-fix-burst-59). Guards found unprobed by pass-58 must have pre-existed in that HEAD — they were NOT added by fix-burst-60.
+
+**Fix:** Corrected the root cause to state that the four guards pre-existed in the post-fix-burst-59 HEAD and were introduced in an earlier burst; fix-burst-60 added only the probes to cover them.
+
+**Load-bearing artifact:** `### HIGH-002` root cause sentence in `## fix-burst-60 (pass-58 findings)` in CHANGELOG.md.
+
+### LOW-001: probe-11 and probe-12 comments cite non-existent guard numbering scheme with incorrect ordering claims
+
+**Root cause:** probe-11's comment said "Guards #3, #4, #12, #13 must pass first; then cl_ids is empty → guard #7 fires" — but `do_parity_check` has no guard numbering. The ordering claim was also wrong: the tally guards execute AFTER the `cl_ids`/`er_ids` empty checks, not before.
+
+**Fix:** Rewrote both comments to describe guards by behavioral name. probe-11: "The heading-format-drift, section-existence, and er_newest_burst guards all pass; then the cl_ids-empty fail-closed guard fires (it precedes tally extraction)." probe-12: "cl_ids is non-empty so the cl_ids-empty guard passes; then the er_ids-empty fail-closed guard fires."
+
+**Load-bearing artifact:** Inline comments at probe-11 and probe-12 construction sites in `run_self_probes` in `check-burst-records-parity.sh`.
+
+### LOW-002: `run_self_probes` header block enumerates only probes 1–4 of the 15 probes the function runs
+
+**Root cause:** The `# ── Self-probe ──` block comment above `run_self_probes` was authored with 4 probes and never updated as probes 5–12 then 13–15 were added, creating a stale divergent inventory.
+
+**Fix:** Replaced the 4-probe enumeration with a pointer: "Each probe is documented inline at its construction site. Run with --self-probe to list all probe scenarios." Eliminates the drift problem entirely.
+
+**Load-bearing artifact:** `# ── Self-probe ──` header block comment in `check-burst-records-parity.sh`.
+
+### LOW-003: lefthook `Enforces:` list omits re-verification-section existence, heading-format-drift, and empty-extraction guards — recurrence of fix-burst-59 LOW-002
+
+**Root cause:** The `check-burst-records-parity` step's `# Enforces:` list was not updated when fix-burst-60 added probes for the three new guard behaviors, continuing the same stale-self-description class as fix-burst-59 LOW-002.
+
+**Fix:** Added "re-verification-section existence, heading-format-drift detection, and fail-closed empty-extraction guards (CHANGELOG IDs, ER IDs, tally severity counts)" to the `# Enforces:` list.
+
+**Load-bearing artifact:** `# Enforces:` list in `check-burst-records-parity` step of `lefthook.yml`.
+
+**Test count:** 255 passed, 5 skipped (xtask); 92 passed, 2 skipped (pregolya-core). Clause (a): no `crates/` files added or deleted — OK. Clause (b): no `crates/` files changed — OK. Clause (c): no change within `xtask/tests/fixtures/violations/`; `CREDENTIAL_FIXTURE_COUNT` unchanged — OK. Clause (d): `xtask/src/tests.rs` changed — doc comment only; no gate-scanner logic, guard, or visitor behavior altered; gate counts remain valid — OK. Additionally, `scripts/check-burst-records-parity.sh` received behavioral changes (probes 13–15 added, fail-closed counts-absent guard, probe-11/12 comments rewritten, header pointer) and `lefthook.yml` received updates (probe count "twelve" → "fifteen", scenario list, `Enforces:` list). These files fall outside the `crates/` and `xtask/src/` clause perimeters, so clauses (a)–(d) remain valid.
+
 ## fix-burst-60 (pass-58 findings)
 
 **Pass-58 finding tally: 2 HIGH + 4 MED + 3 LOW + 2 OBS**
@@ -30,9 +108,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### HIGH-002: four new guards (section-existence, heading-format-drift, cl_ids-empty, er_ids-empty) have zero self-probe coverage (fifth recurrence of unprobed-guard class)
 
-**Root cause:** Four guards added in fix-burst-60 — section-existence (fires when the CHANGELOG's newest burst has no corresponding ER re-verification section), heading-format-drift (fires when CHANGELOG has fix-burst tokens but no canonical `^## fix-burst-N` heading), cl_ids-empty (fires when the CHANGELOG section has a tally but no `### SEV-NNN:` headings), and er_ids-empty (fires when the ER section has a tally but no `| F-PNNN-SEV-NNN |` rows) — had zero self-probe coverage. All new guards appended to `do_parity_check` are behind all previously-probed early-return paths and are unreachable without purpose-built probes.
+**Root cause:** Four guards that pre-existed in the post-fix-burst-59 HEAD — section-existence (fires when the CHANGELOG's newest burst has no corresponding ER re-verification section), heading-format-drift (fires when CHANGELOG has fix-burst tokens but no canonical `^## fix-burst-N` heading), cl_ids-empty (fires when the CHANGELOG section has a tally but no `### SEV-NNN:` headings), and er_ids-empty (fires when the ER section has a tally but no `| F-PNNN-SEV-NNN |` rows) — had zero self-probe coverage. All new guards appended to `do_parity_check` are behind all previously-probed early-return paths and are unreachable without purpose-built probes.
 
-**Fix:** Added four new probes to `run_self_probes`: probe-9 (`section-existence-missing`) — synthetic ER with no re-verification sections; probe-10 (`heading-format-drift`) — CHANGELOG with `## Fix-Burst-94` (capital letters, non-canonical); probe-11 (`cl-ids-empty`) — CHANGELOG section with a tally line but no `### HIGH-NNN:` headings; probe-12 (`er-ids-empty`) — ER section with a tally line but no `| F-P94-HIGH-001 |` rows.
+**Fix:** Added four new probes to `run_self_probes`: probe-9 (`section-existence-missing`) — synthetic ER with no re-verification sections; probe-10 (`heading-format-drift`) — CHANGELOG with `## Fix-Burst-94` (capital letters, non-canonical); probe-11 (`cl-ids-empty`) — CHANGELOG section with a tally line but no `### HIGH-NNN:` headings; probe-12 (`er-ids-empty`) — ER section with a tally line but no `| F-P94-HIGH-001 |` rows. `lefthook.yml` `burst-parity-self-probe` comment was also updated from "eight" to "twelve" synthetic probes as part of the HIGH-002 closure.
 
 **Load-bearing artifact:** `run_self_probes` probes 9–12 in `check-burst-records-parity.sh` — `[SELF-PROBE PASS] probe-9 (section-existence-missing)`, `[SELF-PROBE PASS] probe-10 (heading-format-drift)`, `[SELF-PROBE PASS] probe-11 (cl-ids-empty)`, `[SELF-PROBE PASS] probe-12 (er-ids-empty)` emitted on `--self-probe`.
 
@@ -78,7 +156,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### LOW-002: `token` variable not declared `local` in `do_parity_check`
 
-**Root cause:** `token` was used in the `parse_tally_sum` helper but not included in the `local` declaration, allowing it to leak into caller scope.
+**Root cause:** `token` was used in the inline tally-sum accumulation loop (`while IFS= read -r token` / `tally_sum=$((tally_sum + n))` block) inside `do_parity_check` but not included in the `local` declaration, allowing it to leak into caller scope.
 
 **Fix:** Added `token` to the local declaration: `local tally_sum=0 n token`.
 
@@ -108,7 +186,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 **Load-bearing artifact:** `cl_declared` and `er_declared` extraction lines in `do_parity_check` in `check-burst-records-parity.sh`.
 
-**Test count:** 255 passed, 5 skipped (xtask); 92 passed, 2 skipped (pregolya-core). Clause (a): no `crates/` files added or deleted — OK. Clause (b): no `crates/` files changed — OK. Clause (c): no change within `xtask/tests/fixtures/violations/`; `CREDENTIAL_FIXTURE_COUNT` unchanged — OK. Clause (d): `xtask/src/tests.rs` changed — doc comment only; no gate-scanner logic, guard, or visitor behavior altered; gate counts remain valid — OK.
+**Test count:** 255 passed, 5 skipped (xtask); 92 passed, 2 skipped (pregolya-core). Clause (a): no `crates/` files added or deleted — OK. Clause (b): no `crates/` files changed — OK. Clause (c): no change within `xtask/tests/fixtures/violations/`; `CREDENTIAL_FIXTURE_COUNT` unchanged — OK. Clause (d): `xtask/src/tests.rs` changed — doc comment only; no gate-scanner logic, guard, or visitor behavior altered; gate counts remain valid — OK. Additionally, `scripts/check-burst-records-parity.sh` received behavioral changes (probe-1 tally correction, probes 9–12 added, `SEV_LIST` single source of truth, `token` declared local, `|| true` on `cl_declared`/`er_declared`) and `lefthook.yml` received comment updates (probe count "eight" → "twelve", scenario names added). These files fall outside the `crates/` and `xtask/src/` clause perimeters, so clauses (a)–(d) remain valid.
 
 ## fix-burst-59 (pass-57 findings)
 

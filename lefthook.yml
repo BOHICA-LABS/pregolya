@@ -22,16 +22,19 @@ pre-push:
     # Enforces: ID-set agreement, tally-count agreement,
     # tally-sum↔ID-count reconciliation, pass-number agreement,
     # ER-newest-burst agreement, per-severity histogram agreement,
-    # and duplicate-finding-ID detection.
+    # duplicate-finding-ID detection, re-verification-section existence,
+    # heading-format-drift detection,
+    # and fail-closed empty-extraction guards (CHANGELOG IDs, ER IDs, tally severity counts).
     # Logic extracted to scripts/check-burst-records-parity.sh for testability.
     check-burst-records-parity:
       run: bash scripts/check-burst-records-parity.sh
     # Self-probe: runs the script's --self-probe mode to verify the regex logic.
-    # Runs twelve synthetic probes covering ID-mismatch, tally-divergent,
+    # Runs fifteen synthetic probes covering ID-mismatch, tally-divergent,
     # tally-sum≠id-count, pass-number-divergent, tally-line-absent,
     # er-newest-burst-divergent, per-severity-histogram-divergent,
     # duplicate-id-detected, section-existence-missing, heading-format-drift,
-    # cl-ids-empty, and er-ids-empty scenarios.
+    # cl-ids-empty, er-ids-empty, er-duplicate-id,
+    # er-per-severity-histogram-divergent, and er-tally-counts-absent scenarios.
     # Always passes on a correctly-functioning script; fails if a regex
     # regression is introduced.
     burst-parity-self-probe:

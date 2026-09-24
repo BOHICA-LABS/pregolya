@@ -2595,8 +2595,12 @@ fn test_BC_2_14_003_fixture_mode_in_process_violation_found() {
 /// broken (0 fixture files had findings).
 ///
 /// Red-gate provenance: `--fixture-mode` was not implemented. `run()` ignored extra argv,
-/// scanned `crates/` (clean workspace), and exited 0. This test asserted exit zero
-/// and was authored failing (until `--fixture-mode` was implemented); now GREEN.
+/// scanned `crates/` (a clean workspace) and exited 0 — so the exit-0 assertion in this
+/// test was a contract pin that also PASSED pre-fix. The genuine Red Gate signal came from
+/// the `combined.contains("violation_assert_no_doc")` and
+/// `combined.contains("violation_assert_brace")` assertions below: pre-fix, `run()` never
+/// printed violation fixture file names (it scanned `crates/`, not the fixture directory),
+/// so those `contains()` assertions failed regardless of the exit code.
 ///
 /// SID-1: the non-ignored in-process companion above provides CI coverage without
 /// subprocess overhead.

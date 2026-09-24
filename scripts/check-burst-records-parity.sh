@@ -166,7 +166,16 @@ do_parity_check() {
     er_counts=$(printf '%s\n' "$er_tally" \
         | grep -oE "[0-9]+ ${SEV}" | sort || true)
 
-    if [ -n "$cl_counts" ] && [ -n "$er_counts" ] && [ "$cl_counts" != "$er_counts" ]; then
+    # ── Fail-closed: tally severity-count tokens must be extractable ─────────────
+    # A tally line that contains no "N SEV" tokens (e.g. CLEAN(strict)=yes with no
+    # severity breakdown) would silently pass the equality check below (empty==empty),
+    # masking a format gap.  Fail closed instead.
+    if [ -z "$cl_counts" ] || [ -z "$er_counts" ]; then
+        echo "[BURST-PARITY FAIL] fix-burst-${newest_burst}: tally line found but no severity-count tokens extracted (CL: '${cl_counts:-empty}' / ER: '${er_counts:-empty}')" >&2
+        return 1
+    fi
+
+    if [ "$cl_counts" != "$er_counts" ]; then
         echo "[BURST-PARITY FAIL] fix-burst-${newest_burst}: tally mismatch between CHANGELOG and evidence-report"
         echo "  CHANGELOG tally:         $cl_tally"
         echo "  Evidence-report tally:   $er_tally"
@@ -250,29 +259,8 @@ do_parity_check() {
 
 # ── Self-probe ───────────────────────────────────────────────────────────────
 #
-# Probe 1 — ID-mismatch probe.
-#   CHANGELOG: HIGH-001 + MED-001. Evidence-report: HIGH-001 + MED-002.
-#   Identical tallies; diverges only on ID ordinal.
-#   Exercises the ID-set comparison guard.
-#   Asserts do_parity_check exits non-zero.
-#
-# Probe 2 — Tally-divergent probe.
-#   CHANGELOG: HIGH-001 + MED-001.  Evidence-report: HIGH-001 + MED-001.
-#   IDENTICAL ID sets, but CHANGELOG tally = 1 HIGH + 1 MED whereas ER
-#   tally = 2 HIGH + 0 MED.  This is the only construction that exercises the
-#   tally comparison path (probe 1 short-circuits at the ID check).
-#   Asserts do_parity_check exits non-zero.
-#
-# Probe 3 — Tally-sum ≠ ID-count probe.
-#   CHANGELOG: HIGH-001 + MED-001 (2 IDs), tally declares 1 HIGH + 2 MED (sum=3).
-#   Evidence-report: HIGH-001 + MED-001, same tally — ID-set and tally-text match.
-#   Tally-sum ↔ ID-count reconciliation must detect 3 ≠ 2.
-#   Asserts do_parity_check exits non-zero.
-#
-# Probe 4 — Pass-number divergence probe.
-#   CHANGELOG: HIGH-001, tally cites Pass-94.  Evidence-report: HIGH-001, result
-#   cites Adversary pass 93.  IDENTICAL ID sets and tally counts, but pass numbers
-#   diverge (94 ≠ 93).  Asserts do_parity_check exits non-zero.
+# Each probe is documented inline at its construction site.
+# Run with --self-probe to list all probe scenarios.
 run_self_probes() {
     local all_passed=0
 
@@ -726,8 +714,10 @@ PROBE_HEREDOC
 
     # ── Probe 11: cl-ids-empty ────────────────────────────────────────────────
     # CHANGELOG has canonical fix-burst-94 heading with a valid tally, but NO
-    # '### HIGH-001:' style headings in the section.  Guards #3, #4, #12, #13
-    # must pass first; then cl_ids is empty → guard #7 fires.
+    # '### HIGH-001:' style headings in the section.
+    # The heading-format-drift, section-existence, and er_newest_burst guards
+    # all pass; then the cl_ids-empty fail-closed guard fires (it precedes
+    # tally extraction).
     local tmpdir11
     tmpdir11="$(mktemp -d)"
 
@@ -765,7 +755,8 @@ PROBE_HEREDOC
     # ── Probe 12: er-ids-empty ────────────────────────────────────────────────
     # CHANGELOG has canonical headings (cl_ids non-empty), but ER section has
     # no '| F-P92-HIGH-001 |' rows — just descriptive text.
-    # cl_ids non-empty → guard #7 passes; er_ids empty → guard #10 fires.
+    # cl_ids is non-empty so the cl_ids-empty guard passes;
+    # then the er_ids-empty fail-closed guard fires.
     local tmpdir12
     tmpdir12="$(mktemp -d)"
 
@@ -797,6 +788,150 @@ PROBE_HEREDOC
         echo "[SELF-PROBE PASS] probe-12 (er-ids-empty): empty ER finding-ID extraction correctly detected"
     else
         echo "[SELF-PROBE FAIL] probe-12 (er-ids-empty): empty ER finding-ID extraction was NOT detected"
+        all_passed=1
+    fi
+
+    # ── Probe 13: er-duplicate-id ─────────────────────────────────────────────
+    # The cl_dupes guard passes (no CL duplicates).  The er_dupes guard fires
+    # because F-P89-HIGH-001 appears twice in the ER finding rows.
+    # Verifies that the er_dupes fail-closed guard is exercised by the self-probe
+    # suite (it has zero coverage in probes 1-12, which never reach it via the
+    # er_dupes path).
+    local tmpdir13
+    tmpdir13="$(mktemp -d)"
+
+    local fake_cl13="$tmpdir13/CHANGELOG.md"
+    cat > "$fake_cl13" <<'PROBE_HEREDOC'
+## fix-burst-91 (pass-89 findings)
+
+**Pass-89 finding tally: 1 HIGH + 1 MED**
+
+### HIGH-001: A high severity finding
+
+Description of the high finding.
+
+### MED-001: A medium severity finding
+
+Description of the medium finding.
+PROBE_HEREDOC
+
+    local fake_er13="$tmpdir13/evidence-report.md"
+    cat > "$fake_er13" <<'PROBE_HEREDOC'
+## fix-burst-91 re-verification
+
+**Adversary pass 89 result:** CLEAN(strict)=no — 1 HIGH + 1 MED.
+
+| Finding | Severity | Detection class | Load-bearing artifact |
+|---------|----------|-----------------|-----------------------|
+| F-P89-HIGH-001 | HIGH | test class | test artifact |
+| F-P89-HIGH-001 | HIGH | test class | test artifact |
+| F-P89-MED-001 | MED | test class | test artifact |
+PROBE_HEREDOC
+
+    local probe13_exit=0
+    do_parity_check "$fake_cl13" "$fake_er13" >/dev/null 2>&1 || probe13_exit=$?
+    rm -rf "$tmpdir13"
+
+    if [ "$probe13_exit" -ne 0 ]; then
+        echo "[SELF-PROBE PASS] probe-13 (er-duplicate-id): duplicate finding ID (F-P89-HIGH-001) in evidence-report correctly detected"
+    else
+        echo "[SELF-PROBE FAIL] probe-13 (er-duplicate-id): duplicate finding ID in evidence-report was NOT detected"
+        all_passed=1
+    fi
+
+    # ── Probe 14: er-per-severity-histogram-divergent ─────────────────────────
+    # CL tally declares 1 HIGH + 2 MED with 3 headings (HIGH-001, MED-001, MED-002) —
+    # sum=3=id_count, CL histogram correct.  ER tally also declares 1 HIGH + 2 MED
+    # (so tally-count comparison passes), but ER has 3 finding rows:
+    # F-P88-HIGH-001, F-P88-HIGH-002, F-P88-MED-001 — no duplicates, sum=3=id_count,
+    # but 2 HIGH rows where tally declares 1 HIGH.
+    # The ER per-severity histogram loop detects 1 HIGH declared vs 2 HIGH actual →
+    # fires before the ID-set comparison guard is reached.
+    local tmpdir14
+    tmpdir14="$(mktemp -d)"
+
+    local fake_cl14="$tmpdir14/CHANGELOG.md"
+    cat > "$fake_cl14" <<'PROBE_HEREDOC'
+## fix-burst-90 (pass-88 findings)
+
+**Pass-88 finding tally: 1 HIGH + 2 MED**
+
+### HIGH-001: A high severity finding
+
+Description of the high finding.
+
+### MED-001: A medium severity finding
+
+Description of the medium finding.
+
+### MED-002: Another medium severity finding
+
+Description of the second medium finding.
+PROBE_HEREDOC
+
+    local fake_er14="$tmpdir14/evidence-report.md"
+    cat > "$fake_er14" <<'PROBE_HEREDOC'
+## fix-burst-90 re-verification
+
+**Adversary pass 88 result:** CLEAN(strict)=no — 1 HIGH + 2 MED.
+
+| Finding | Severity | Detection class | Load-bearing artifact |
+|---------|----------|-----------------|-----------------------|
+| F-P88-HIGH-001 | HIGH | test class | test artifact |
+| F-P88-HIGH-002 | HIGH | test class | test artifact |
+| F-P88-MED-001 | MED | test class | test artifact |
+PROBE_HEREDOC
+
+    local probe14_exit=0
+    do_parity_check "$fake_cl14" "$fake_er14" >/dev/null 2>&1 || probe14_exit=$?
+    rm -rf "$tmpdir14"
+
+    if [ "$probe14_exit" -ne 0 ]; then
+        echo "[SELF-PROBE PASS] probe-14 (er-per-severity-histogram-divergent): ER histogram mismatch (1 HIGH declared, 2 actual) correctly detected"
+    else
+        echo "[SELF-PROBE FAIL] probe-14 (er-per-severity-histogram-divergent): ER histogram mismatch was NOT detected"
+        all_passed=1
+    fi
+
+    # ── Probe 15: er-tally-counts-absent ──────────────────────────────────────
+    # Both CL and ER have tally lines, but the ER tally line contains no
+    # "N SEV" tokens (e.g. CLEAN(strict)=yes with no severity breakdown suffix).
+    # The fail-closed empty-extraction guard fires after extracting er_counts="".
+    # Without this guard the empty er_counts would silently pass the equality
+    # check (empty == empty), masking the format gap.
+    local tmpdir15
+    tmpdir15="$(mktemp -d)"
+
+    local fake_cl15="$tmpdir15/CHANGELOG.md"
+    cat > "$fake_cl15" <<'PROBE_HEREDOC'
+## fix-burst-89 (pass-87 findings)
+
+**Pass-87 finding tally: 1 HIGH**
+
+### HIGH-001: A high severity finding
+
+Description of the high finding.
+PROBE_HEREDOC
+
+    local fake_er15="$tmpdir15/evidence-report.md"
+    cat > "$fake_er15" <<'PROBE_HEREDOC'
+## fix-burst-89 re-verification
+
+**Adversary pass 87 result:** CLEAN(strict)=yes.
+
+| Finding | Severity | Detection class | Load-bearing artifact |
+|---------|----------|-----------------|-----------------------|
+| F-P87-HIGH-001 | HIGH | test class | test artifact |
+PROBE_HEREDOC
+
+    local probe15_exit=0
+    do_parity_check "$fake_cl15" "$fake_er15" >/dev/null 2>&1 || probe15_exit=$?
+    rm -rf "$tmpdir15"
+
+    if [ "$probe15_exit" -ne 0 ]; then
+        echo "[SELF-PROBE PASS] probe-15 (er-tally-counts-absent): ER tally line with no severity-count tokens correctly detected"
+    else
+        echo "[SELF-PROBE FAIL] probe-15 (er-tally-counts-absent): ER tally with no severity-count tokens was NOT detected"
         all_passed=1
     fi
 
