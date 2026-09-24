@@ -16,6 +16,44 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-62 (pass-60 findings)
+
+**Pass-60 finding tally: 1 HIGH + 2 MED + 1 LOW**
+
+### HIGH-001: self-probe suite asserts only non-zero exit with no per-guard message assertion; no happy-path or skip-path probes exist
+
+**Root cause:** Probes 1–15 used the pattern `do_parity_check ... || probeN_exit=$?` and checked only `[ "$probeN_exit" -ne 0 ]`. This could not distinguish which guard fired — a probe targeting guard X would pass as long as any guard fired first, including an earlier unrelated guard. No probe exercised the happy-path (well-formed matching inputs → exit 0) or the skip-path (no fix-burst sections → exit 0 with SKIP message); a systematic regression in either path would be undetected.
+
+**Fix:** Rewrote probes 1–15 to capture output with `out=$(do_parity_check ... 2>&1) || probeN_exit=$?` and assert the specific expected FAIL substring using `grep -qF "<EXPECTED-FAIL-SUBSTRING>" <<< "$out"`. Added probe-16 (happy-path): well-formed matching CL+ER with one fix-burst section asserts exit 0 and `[BURST-PARITY PASS]` in output. Added probe-17 (skip-path): CHANGELOG with no fix-burst tokens asserts exit 0 and `[BURST-PARITY SKIP]` in output. Updated `lefthook.yml` comment from "fifteen" to "seventeen" probes.
+
+**Load-bearing artifact:** `run_self_probes` probes 1–17 with per-probe `grep -qF` message assertions in `check-burst-records-parity.sh`; probe-16 and probe-17 entries in `run_self_probes`.
+
+### MED-001: probe-6 comment admitted section-existence guard as acceptable trigger — reintroduced wrong-guard ambiguity
+
+**Root cause:** The probe-6 inline comment stated "ER containing a newer burst than CHANGELOG (or if section-existence guard fires first)". The parenthetical explicitly accepted the section-existence guard firing instead of the `er_newest_burst != newest_burst` guard — the exact wrong-guard ambiguity that probe-6 was designed to exercise exclusively. This is the same class of defect that HIGH-001 was closing for all other probes.
+
+**Fix:** Replaced the comment with: "The `## fix-burst-94 re-verification` block is present so the section-existence guard passes; control reaches the `er_newest_burst != newest_burst` comparison, which is the guard under test here. Do not remove that block — its absence silently reverts this probe to section-existence coverage (fix-burst-59 HIGH-001)."
+
+**Load-bearing artifact:** Inline comment above probe-6 construction site in `run_self_probes` in `check-burst-records-parity.sh`.
+
+### MED-002: `### HIGH-002:` heading in fix-burst-60 said "four new guards" — contradicts fix-burst-61 MED-005 body correction
+
+**Root cause:** fix-burst-61 MED-005 corrected the root cause body of `### HIGH-002` to state that the four guards pre-existed in the post-fix-burst-59 HEAD and were not added by fix-burst-60. The heading `### HIGH-002: four new guards (section-existence, ...)` was not updated in the same burst, leaving a direct contradiction between the heading and the body one line below.
+
+**Fix:** Updated the heading to `### HIGH-002: four pre-existing guards (section-existence, heading-format-drift, cl_ids-empty, er_ids-empty) have zero self-probe coverage (fifth recurrence of unprobed-guard class)`.
+
+**Load-bearing artifact:** `### HIGH-002:` heading in `## fix-burst-60 (pass-58 findings)` in CHANGELOG.md.
+
+### LOW-001: counts-absent FAIL message was the only message in `do_parity_check` routed to stderr via `>&2`
+
+**Root cause:** The fail-closed counts-absent guard emitted `echo "[BURST-PARITY FAIL] ... tally line found but no severity-count tokens extracted" >&2`. All other FAIL messages in `do_parity_check` print to stdout. The inconsistency means the counts-absent failure could be invisible in pipelines that redirect stderr separately, and the FAIL message would not appear in lefthook's captured stdout log in the same order as other failures.
+
+**Fix:** Removed `>&2` from the counts-absent guard echo.
+
+**Load-bearing artifact:** Counts-absent guard echo in `do_parity_check` in `check-burst-records-parity.sh`.
+
+**Test count:** 255 passed, 5 skipped (xtask); 92 passed, 2 skipped (pregolya-core). Clause (a): no `crates/` files added or deleted — OK. Clause (b): no `crates/` files changed — OK. Clause (c): no change within `xtask/tests/fixtures/violations/`; `CREDENTIAL_FIXTURE_COUNT` unchanged — OK. Clause (d): no change to `xtask/src/` — OK. Additionally, `scripts/check-burst-records-parity.sh` received behavioral changes (probes 1–15 rewritten with `grep -qF` message assertions, probes 16–17 added, probe-6 comment replaced, `>&2` removed from counts-absent guard) and `lefthook.yml` received comment updates (probe count "fifteen" → "seventeen", scenario list updated). These files fall outside the `crates/` and `xtask/src/` clause perimeters, so clauses (a)–(d) remain valid.
+
 ## fix-burst-61 (pass-59 findings)
 
 **Pass-59 finding tally: 1 HIGH + 5 MED + 3 LOW**
@@ -106,7 +144,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 **Load-bearing artifact:** `run_self_probes` probe-1 in `check-burst-records-parity.sh` — `[SELF-PROBE PASS] probe-1 (ID-mismatch): divergent ID pair correctly detected mismatch` emitted on `--self-probe`.
 
-### HIGH-002: four new guards (section-existence, heading-format-drift, cl_ids-empty, er_ids-empty) have zero self-probe coverage (fifth recurrence of unprobed-guard class)
+### HIGH-002: four pre-existing guards (section-existence, heading-format-drift, cl_ids-empty, er_ids-empty) have zero self-probe coverage (fifth recurrence of unprobed-guard class)
 
 **Root cause:** Four guards that pre-existed in the post-fix-burst-59 HEAD — section-existence (fires when the CHANGELOG's newest burst has no corresponding ER re-verification section), heading-format-drift (fires when CHANGELOG has fix-burst tokens but no canonical `^## fix-burst-N` heading), cl_ids-empty (fires when the CHANGELOG section has a tally but no `### SEV-NNN:` headings), and er_ids-empty (fires when the ER section has a tally but no `| F-PNNN-SEV-NNN |` rows) — had zero self-probe coverage. All new guards appended to `do_parity_check` are behind all previously-probed early-return paths and are unreachable without purpose-built probes.
 

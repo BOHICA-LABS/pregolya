@@ -171,7 +171,7 @@ do_parity_check() {
     # severity breakdown) would silently pass the equality check below (empty==empty),
     # masking a format gap.  Fail closed instead.
     if [ -z "$cl_counts" ] || [ -z "$er_counts" ]; then
-        echo "[BURST-PARITY FAIL] fix-burst-${newest_burst}: tally line found but no severity-count tokens extracted (CL: '${cl_counts:-empty}' / ER: '${er_counts:-empty}')" >&2
+        echo "[BURST-PARITY FAIL] fix-burst-${newest_burst}: tally line found but no severity-count tokens extracted (CL: '${cl_counts:-empty}' / ER: '${er_counts:-empty}')"
         return 1
     fi
 
@@ -298,14 +298,14 @@ PROBE_HEREDOC
 | F-P97-MED-002 | MED | test class | test artifact |
 PROBE_HEREDOC
 
-    local probe1_exit=0
-    do_parity_check "$fake_cl1" "$fake_er1" >/dev/null 2>&1 || probe1_exit=$?
+    local probe1_out="" probe1_exit=0
+    probe1_out=$(do_parity_check "$fake_cl1" "$fake_er1" 2>&1) || probe1_exit=$?
     rm -rf "$tmpdir1"
 
-    if [ "$probe1_exit" -ne 0 ]; then
+    if [ "$probe1_exit" -ne 0 ] && echo "$probe1_out" | grep -qF "fix-burst-99: finding ID mismatch"; then
         echo "[SELF-PROBE PASS] probe-1 (ID-mismatch): divergent ID pair correctly detected mismatch"
     else
-        echo "[SELF-PROBE FAIL] probe-1 (ID-mismatch): divergent ID pair was not detected"
+        echo "[SELF-PROBE FAIL] probe-1 (ID-mismatch): expected non-zero exit with 'fix-burst-99: finding ID mismatch' but got exit=${probe1_exit}, output='${probe1_out}'"
         all_passed=1
     fi
 
@@ -346,14 +346,14 @@ PROBE_HEREDOC
 | F-P97-MED-001 | MED | test class | test artifact |
 PROBE_HEREDOC
 
-    local probe2_exit=0
-    do_parity_check "$fake_cl2" "$fake_er2" >/dev/null 2>&1 || probe2_exit=$?
+    local probe2_out="" probe2_exit=0
+    probe2_out=$(do_parity_check "$fake_cl2" "$fake_er2" 2>&1) || probe2_exit=$?
     rm -rf "$tmpdir2"
 
-    if [ "$probe2_exit" -ne 0 ]; then
+    if [ "$probe2_exit" -ne 0 ] && echo "$probe2_out" | grep -qF "fix-burst-98: tally mismatch"; then
         echo "[SELF-PROBE PASS] probe-2 (tally-divergent): identical IDs with divergent tallies correctly detected mismatch"
     else
-        echo "[SELF-PROBE FAIL] probe-2 (tally-divergent): tally mismatch was not detected (tally comparison path untested)"
+        echo "[SELF-PROBE FAIL] probe-2 (tally-divergent): expected non-zero exit with 'fix-burst-98: tally mismatch' but got exit=${probe2_exit}, output='${probe2_out}'"
         all_passed=1
     fi
 
@@ -392,14 +392,14 @@ PROBE_HEREDOC
 | F-P96-MED-001 | MED | test class | test artifact |
 PROBE_HEREDOC
 
-    local probe3_exit=0
-    do_parity_check "$fake_cl3" "$fake_er3" >/dev/null 2>&1 || probe3_exit=$?
+    local probe3_out="" probe3_exit=0
+    probe3_out=$(do_parity_check "$fake_cl3" "$fake_er3" 2>&1) || probe3_exit=$?
     rm -rf "$tmpdir3"
 
-    if [ "$probe3_exit" -ne 0 ]; then
+    if [ "$probe3_exit" -ne 0 ] && echo "$probe3_out" | grep -qF "fix-burst-97: declared tally sums to"; then
         echo "[SELF-PROBE PASS] probe-3 (tally-sum≠id-count): declared tally sum 3 vs 2 IDs correctly detected"
     else
-        echo "[SELF-PROBE FAIL] probe-3 (tally-sum≠id-count): tally-sum/id-count mismatch was not detected"
+        echo "[SELF-PROBE FAIL] probe-3 (tally-sum≠id-count): expected non-zero exit with 'fix-burst-97: declared tally sums to' but got exit=${probe3_exit}, output='${probe3_out}'"
         all_passed=1
     fi
 
@@ -431,14 +431,14 @@ PROBE_HEREDOC
 | F-P93-HIGH-001 | HIGH | test class | test artifact |
 PROBE_HEREDOC
 
-    local probe4_exit=0
-    do_parity_check "$fake_cl4" "$fake_er4" >/dev/null 2>&1 || probe4_exit=$?
+    local probe4_out="" probe4_exit=0
+    probe4_out=$(do_parity_check "$fake_cl4" "$fake_er4" 2>&1) || probe4_exit=$?
     rm -rf "$tmpdir4"
 
-    if [ "$probe4_exit" -ne 0 ]; then
+    if [ "$probe4_exit" -ne 0 ] && echo "$probe4_out" | grep -qF "fix-burst-95: CHANGELOG cites Pass-"; then
         echo "[SELF-PROBE PASS] probe-4 (pass-number-divergent): divergent pass numbers (CHANGELOG Pass-94 vs evidence-report pass 93) correctly detected"
     else
-        echo "[SELF-PROBE FAIL] probe-4 (pass-number-divergent): pass-number mismatch was not detected (pass-number guard untested)"
+        echo "[SELF-PROBE FAIL] probe-4 (pass-number-divergent): expected non-zero exit with 'fix-burst-95: CHANGELOG cites Pass-' but got exit=${probe4_exit}, output='${probe4_out}'"
         all_passed=1
     fi
 
@@ -469,21 +469,24 @@ PROBE_HEREDOC
 | F-P92-HIGH-001 | HIGH | test class | test artifact |
 PROBE_HEREDOC
 
-    local probe5_exit=0
-    do_parity_check "$fake_cl5" "$fake_er5" >/dev/null 2>&1 || probe5_exit=$?
+    local probe5_out="" probe5_exit=0
+    probe5_out=$(do_parity_check "$fake_cl5" "$fake_er5" 2>&1) || probe5_exit=$?
     rm -rf "$tmpdir5"
 
-    if [ "$probe5_exit" -ne 0 ]; then
+    if [ "$probe5_exit" -ne 0 ] && echo "$probe5_out" | grep -qF "fix-burst-94: tally extraction empty"; then
         echo "[SELF-PROBE PASS] probe-5 (tally-line-absent): absent CHANGELOG tally correctly detected mismatch"
     else
-        echo "[SELF-PROBE FAIL] probe-5 (tally-line-absent): absent CHANGELOG tally was NOT detected"
+        echo "[SELF-PROBE FAIL] probe-5 (tally-line-absent): expected non-zero exit with 'fix-burst-94: tally extraction empty' but got exit=${probe5_exit}, output='${probe5_out}'"
         all_passed=1
     fi
 
     # ── Probe 6: er-newest-burst-divergent ────────────────────────────────────────
     # ER newest burst (95) is newer than CHANGELOG newest burst (94).
-    # The re-verification-section-existence guard (or er_newest_burst guard) must
-    # return non-zero.
+    # The `## fix-burst-94 re-verification` block is present so the
+    # section-existence guard passes; control reaches the
+    # `er_newest_burst != newest_burst` comparison, which is the guard under
+    # test here. Do not remove that block — its absence silently reverts this
+    # probe to section-existence coverage (fix-burst-59 HIGH-001).
     local tmpdir6
     tmpdir6="$(mktemp -d)"
 
@@ -517,14 +520,14 @@ PROBE_HEREDOC
 | F-P93-HIGH-001 | HIGH | test class | test artifact |
 PROBE_HEREDOC
 
-    local probe6_exit=0
-    do_parity_check "$fake_cl6" "$fake_er6" >/dev/null 2>&1 || probe6_exit=$?
+    local probe6_out="" probe6_exit=0
+    probe6_out=$(do_parity_check "$fake_cl6" "$fake_er6" 2>&1) || probe6_exit=$?
     rm -rf "$tmpdir6"
 
-    if [ "$probe6_exit" -ne 0 ]; then
+    if [ "$probe6_exit" -ne 0 ] && echo "$probe6_out" | grep -qF "evidence-report newest burst (fix-burst-95) differs from CHANGELOG newest burst (fix-burst-94)"; then
         echo "[SELF-PROBE PASS] probe-6 (er-newest-burst-divergent): ER-newer-than-CHANGELOG correctly detected mismatch"
     else
-        echo "[SELF-PROBE FAIL] probe-6 (er-newest-burst-divergent): ER-newer-than-CHANGELOG was NOT detected"
+        echo "[SELF-PROBE FAIL] probe-6 (er-newest-burst-divergent): expected non-zero exit with 'evidence-report newest burst (fix-burst-95) differs from CHANGELOG newest burst (fix-burst-94)' but got exit=${probe6_exit}, output='${probe6_out}'"
         all_passed=1
     fi
 
@@ -573,14 +576,14 @@ PROBE_HEREDOC
 | F-P92-OBS-003 | OBS | test class | test artifact |
 PROBE_HEREDOC
 
-    local probe7_exit=0
-    do_parity_check "$fake_cl7" "$fake_er7" >/dev/null 2>&1 || probe7_exit=$?
+    local probe7_out="" probe7_exit=0
+    probe7_out=$(do_parity_check "$fake_cl7" "$fake_er7" 2>&1) || probe7_exit=$?
     rm -rf "$tmpdir7"
 
-    if [ "$probe7_exit" -ne 0 ]; then
+    if [ "$probe7_exit" -ne 0 ] && echo "$probe7_out" | grep -qF "fix-burst-96: CHANGELOG declares"; then
         echo "[SELF-PROBE PASS] probe-7 (per-severity-histogram-divergent): histogram mismatch (2 HIGH declared, 1 actual) correctly detected"
     else
-        echo "[SELF-PROBE FAIL] probe-7 (per-severity-histogram-divergent): per-severity histogram mismatch was NOT detected"
+        echo "[SELF-PROBE FAIL] probe-7 (per-severity-histogram-divergent): expected non-zero exit with 'fix-burst-96: CHANGELOG declares' but got exit=${probe7_exit}, output='${probe7_out}'"
         all_passed=1
     fi
 
@@ -629,14 +632,14 @@ PROBE_HEREDOC
 | F-P92-LOW-001 | LOW | test class | test artifact |
 PROBE_HEREDOC
 
-    local probe8_exit=0
-    do_parity_check "$fake_cl8" "$fake_er8" >/dev/null 2>&1 || probe8_exit=$?
+    local probe8_out="" probe8_exit=0
+    probe8_out=$(do_parity_check "$fake_cl8" "$fake_er8" 2>&1) || probe8_exit=$?
     rm -rf "$tmpdir8"
 
-    if [ "$probe8_exit" -ne 0 ]; then
+    if [ "$probe8_exit" -ne 0 ] && echo "$probe8_out" | grep -qF "fix-burst-93: duplicate finding IDs in CHANGELOG:"; then
         echo "[SELF-PROBE PASS] probe-8 (duplicate-id-detected): duplicate finding ID (HIGH-001) in CHANGELOG correctly detected"
     else
-        echo "[SELF-PROBE FAIL] probe-8 (duplicate-id-detected): duplicate finding IDs were NOT detected"
+        echo "[SELF-PROBE FAIL] probe-8 (duplicate-id-detected): expected non-zero exit with 'fix-burst-93: duplicate finding IDs in CHANGELOG:' but got exit=${probe8_exit}, output='${probe8_out}'"
         all_passed=1
     fi
 
@@ -665,14 +668,14 @@ PROBE_HEREDOC
 This ER has no re-verification sections at all.
 PROBE_HEREDOC
 
-    local probe9_exit=0
-    do_parity_check "$fake_cl9" "$fake_er9" >/dev/null 2>&1 || probe9_exit=$?
+    local probe9_out="" probe9_exit=0
+    probe9_out=$(do_parity_check "$fake_cl9" "$fake_er9" 2>&1) || probe9_exit=$?
     rm -rf "$tmpdir9"
 
-    if [ "$probe9_exit" -ne 0 ]; then
+    if [ "$probe9_exit" -ne 0 ] && echo "$probe9_out" | grep -qF "CHANGELOG has '## fix-burst-94' but evidence-report is missing"; then
         echo "[SELF-PROBE PASS] probe-9 (section-existence-missing): CHANGELOG newest burst missing from ER re-verification correctly detected"
     else
-        echo "[SELF-PROBE FAIL] probe-9 (section-existence-missing): missing re-verification section was NOT detected"
+        echo "[SELF-PROBE FAIL] probe-9 (section-existence-missing): expected non-zero exit with \"CHANGELOG has '## fix-burst-94' but evidence-report is missing\" but got exit=${probe9_exit}, output='${probe9_out}'"
         all_passed=1
     fi
 
@@ -701,14 +704,14 @@ PROBE_HEREDOC
 Irrelevant content.
 PROBE_HEREDOC
 
-    local probe10_exit=0
-    do_parity_check "$fake_cl10" "$fake_er10" >/dev/null 2>&1 || probe10_exit=$?
+    local probe10_out="" probe10_exit=0
+    probe10_out=$(do_parity_check "$fake_cl10" "$fake_er10" 2>&1) || probe10_exit=$?
     rm -rf "$tmpdir10"
 
-    if [ "$probe10_exit" -ne 0 ]; then
+    if [ "$probe10_exit" -ne 0 ] && echo "$probe10_out" | grep -qF "heading-format drift detected"; then
         echo "[SELF-PROBE PASS] probe-10 (heading-format-drift): non-canonical fix-burst heading correctly detected"
     else
-        echo "[SELF-PROBE FAIL] probe-10 (heading-format-drift): non-canonical fix-burst heading was NOT detected"
+        echo "[SELF-PROBE FAIL] probe-10 (heading-format-drift): expected non-zero exit with 'heading-format drift detected' but got exit=${probe10_exit}, output='${probe10_out}'"
         all_passed=1
     fi
 
@@ -741,14 +744,14 @@ PROBE_HEREDOC
 | F-P92-HIGH-001 | HIGH | test class | test artifact |
 PROBE_HEREDOC
 
-    local probe11_exit=0
-    do_parity_check "$fake_cl11" "$fake_er11" >/dev/null 2>&1 || probe11_exit=$?
+    local probe11_out="" probe11_exit=0
+    probe11_out=$(do_parity_check "$fake_cl11" "$fake_er11" 2>&1) || probe11_exit=$?
     rm -rf "$tmpdir11"
 
-    if [ "$probe11_exit" -ne 0 ]; then
+    if [ "$probe11_exit" -ne 0 ] && echo "$probe11_out" | grep -qF "CHANGELOG section extraction returned empty for fix-burst-94"; then
         echo "[SELF-PROBE PASS] probe-11 (cl-ids-empty): empty CHANGELOG finding-ID extraction correctly detected"
     else
-        echo "[SELF-PROBE FAIL] probe-11 (cl-ids-empty): empty CHANGELOG finding-ID extraction was NOT detected"
+        echo "[SELF-PROBE FAIL] probe-11 (cl-ids-empty): expected non-zero exit with 'CHANGELOG section extraction returned empty for fix-burst-94' but got exit=${probe11_exit}, output='${probe11_out}'"
         all_passed=1
     fi
 
@@ -780,14 +783,14 @@ PROBE_HEREDOC
 Descriptive text with no finding rows.
 PROBE_HEREDOC
 
-    local probe12_exit=0
-    do_parity_check "$fake_cl12" "$fake_er12" >/dev/null 2>&1 || probe12_exit=$?
+    local probe12_out="" probe12_exit=0
+    probe12_out=$(do_parity_check "$fake_cl12" "$fake_er12" 2>&1) || probe12_exit=$?
     rm -rf "$tmpdir12"
 
-    if [ "$probe12_exit" -ne 0 ]; then
+    if [ "$probe12_exit" -ne 0 ] && echo "$probe12_out" | grep -qF "evidence-report re-verification section extraction returned empty for fix-burst-94"; then
         echo "[SELF-PROBE PASS] probe-12 (er-ids-empty): empty ER finding-ID extraction correctly detected"
     else
-        echo "[SELF-PROBE FAIL] probe-12 (er-ids-empty): empty ER finding-ID extraction was NOT detected"
+        echo "[SELF-PROBE FAIL] probe-12 (er-ids-empty): expected non-zero exit with 'evidence-report re-verification section extraction returned empty for fix-burst-94' but got exit=${probe12_exit}, output='${probe12_out}'"
         all_passed=1
     fi
 
@@ -828,14 +831,14 @@ PROBE_HEREDOC
 | F-P89-MED-001 | MED | test class | test artifact |
 PROBE_HEREDOC
 
-    local probe13_exit=0
-    do_parity_check "$fake_cl13" "$fake_er13" >/dev/null 2>&1 || probe13_exit=$?
+    local probe13_out="" probe13_exit=0
+    probe13_out=$(do_parity_check "$fake_cl13" "$fake_er13" 2>&1) || probe13_exit=$?
     rm -rf "$tmpdir13"
 
-    if [ "$probe13_exit" -ne 0 ]; then
+    if [ "$probe13_exit" -ne 0 ] && echo "$probe13_out" | grep -qF "fix-burst-91: duplicate finding IDs in evidence-report:"; then
         echo "[SELF-PROBE PASS] probe-13 (er-duplicate-id): duplicate finding ID (F-P89-HIGH-001) in evidence-report correctly detected"
     else
-        echo "[SELF-PROBE FAIL] probe-13 (er-duplicate-id): duplicate finding ID in evidence-report was NOT detected"
+        echo "[SELF-PROBE FAIL] probe-13 (er-duplicate-id): expected non-zero exit with 'fix-burst-91: duplicate finding IDs in evidence-report:' but got exit=${probe13_exit}, output='${probe13_out}'"
         all_passed=1
     fi
 
@@ -882,14 +885,14 @@ PROBE_HEREDOC
 | F-P88-MED-001 | MED | test class | test artifact |
 PROBE_HEREDOC
 
-    local probe14_exit=0
-    do_parity_check "$fake_cl14" "$fake_er14" >/dev/null 2>&1 || probe14_exit=$?
+    local probe14_out="" probe14_exit=0
+    probe14_out=$(do_parity_check "$fake_cl14" "$fake_er14" 2>&1) || probe14_exit=$?
     rm -rf "$tmpdir14"
 
-    if [ "$probe14_exit" -ne 0 ]; then
+    if [ "$probe14_exit" -ne 0 ] && echo "$probe14_out" | grep -qF "fix-burst-90: evidence-report declares"; then
         echo "[SELF-PROBE PASS] probe-14 (er-per-severity-histogram-divergent): ER histogram mismatch (1 HIGH declared, 2 actual) correctly detected"
     else
-        echo "[SELF-PROBE FAIL] probe-14 (er-per-severity-histogram-divergent): ER histogram mismatch was NOT detected"
+        echo "[SELF-PROBE FAIL] probe-14 (er-per-severity-histogram-divergent): expected non-zero exit with 'fix-burst-90: evidence-report declares' but got exit=${probe14_exit}, output='${probe14_out}'"
         all_passed=1
     fi
 
@@ -899,6 +902,8 @@ PROBE_HEREDOC
     # The fail-closed empty-extraction guard fires after extracting er_counts="".
     # Without this guard the empty er_counts would silently pass the equality
     # check (empty == empty), masking the format gap.
+    # (LOW-001 fix: this message now routes to stdout, not stderr, consistent
+    # with all other FAIL messages.)
     local tmpdir15
     tmpdir15="$(mktemp -d)"
 
@@ -924,14 +929,89 @@ PROBE_HEREDOC
 | F-P87-HIGH-001 | HIGH | test class | test artifact |
 PROBE_HEREDOC
 
-    local probe15_exit=0
-    do_parity_check "$fake_cl15" "$fake_er15" >/dev/null 2>&1 || probe15_exit=$?
+    local probe15_out="" probe15_exit=0
+    probe15_out=$(do_parity_check "$fake_cl15" "$fake_er15" 2>&1) || probe15_exit=$?
     rm -rf "$tmpdir15"
 
-    if [ "$probe15_exit" -ne 0 ]; then
+    if [ "$probe15_exit" -ne 0 ] && echo "$probe15_out" | grep -qF "fix-burst-89: tally line found but no severity-count tokens extracted"; then
         echo "[SELF-PROBE PASS] probe-15 (er-tally-counts-absent): ER tally line with no severity-count tokens correctly detected"
     else
-        echo "[SELF-PROBE FAIL] probe-15 (er-tally-counts-absent): ER tally with no severity-count tokens was NOT detected"
+        echo "[SELF-PROBE FAIL] probe-15 (er-tally-counts-absent): expected non-zero exit with 'fix-burst-89: tally line found but no severity-count tokens extracted' but got exit=${probe15_exit}, output='${probe15_out}'"
+        all_passed=1
+    fi
+
+    # ── Probe 16: happy-path ───────────────────────────────────────────────────
+    # Well-formed, matching CHANGELOG and evidence-report: `do_parity_check`
+    # must exit 0 and output must contain [BURST-PARITY PASS].
+    local tmpdir16
+    tmpdir16="$(mktemp -d)"
+
+    local fake_cl16="$tmpdir16/CHANGELOG.md"
+    cat > "$fake_cl16" <<'PROBE_HEREDOC'
+## fix-burst-97 (pass-92 findings)
+
+**Pass-92 finding tally: 1 HIGH + 1 MED**
+
+### HIGH-001: A high severity finding
+
+Description of the high finding.
+
+### MED-001: A medium severity finding
+
+Description of the medium finding.
+PROBE_HEREDOC
+
+    local fake_er16="$tmpdir16/evidence-report.md"
+    cat > "$fake_er16" <<'PROBE_HEREDOC'
+## fix-burst-97 re-verification
+
+**Adversary pass 92 result:** CLEAN(strict)=no — 1 HIGH + 1 MED.
+
+| Finding ID | Severity | Status | Category | Load-bearing artifact |
+|------------|----------|--------|----------|-----------------------|
+| F-P92-HIGH-001 | HIGH | closed | test | test |
+| F-P92-MED-001 | MED | closed | test | test |
+PROBE_HEREDOC
+
+    local probe16_out="" probe16_exit=0
+    probe16_out=$(do_parity_check "$fake_cl16" "$fake_er16" 2>&1) || probe16_exit=$?
+    rm -rf "$tmpdir16"
+
+    if [ "$probe16_exit" -eq 0 ] && echo "$probe16_out" | grep -qF "[BURST-PARITY PASS]"; then
+        echo "[SELF-PROBE PASS] probe-16 (happy-path): well-formed matching input correctly passes"
+    else
+        echo "[SELF-PROBE FAIL] probe-16 (happy-path): expected exit 0 with '[BURST-PARITY PASS]' but got exit=${probe16_exit}, output='${probe16_out}'"
+        all_passed=1
+    fi
+
+    # ── Probe 17: skip-path ────────────────────────────────────────────────────
+    # CHANGELOG with no `fix-burst` tokens at all: `do_parity_check` must exit 0
+    # and output must contain [BURST-PARITY SKIP].
+    local tmpdir17
+    tmpdir17="$(mktemp -d)"
+
+    local fake_cl17="$tmpdir17/CHANGELOG.md"
+    cat > "$fake_cl17" <<'PROBE_HEREDOC'
+# Changelog
+## [Unreleased]
+### Added
+- Initial feature
+PROBE_HEREDOC
+
+    # ER can be anything — it is not read when the skip path fires.
+    local fake_er17="$tmpdir17/evidence-report.md"
+    cat > "$fake_er17" <<'PROBE_HEREDOC'
+# Evidence Report
+PROBE_HEREDOC
+
+    local probe17_out="" probe17_exit=0
+    probe17_out=$(do_parity_check "$fake_cl17" "$fake_er17" 2>&1) || probe17_exit=$?
+    rm -rf "$tmpdir17"
+
+    if [ "$probe17_exit" -eq 0 ] && echo "$probe17_out" | grep -qF "[BURST-PARITY SKIP]"; then
+        echo "[SELF-PROBE PASS] probe-17 (skip-path): no fix-burst sections correctly skipped"
+    else
+        echo "[SELF-PROBE FAIL] probe-17 (skip-path): expected exit 0 with '[BURST-PARITY SKIP]' but got exit=${probe17_exit}, output='${probe17_out}'"
         all_passed=1
     fi
 

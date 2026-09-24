@@ -249,10 +249,52 @@ Gate outputs remain valid because the syn rewrite finds the same 0 violations on
 
 The fix-burst-26 evidence-report docs commit (this commit) is docs-only and does NOT trigger clause (d).
 
+## fix-burst-62 re-verification
+
+[Reviewed HEAD (adversary pass 60): 72fd7aff5307caaa87dc595ec4f7f62306877df0]
+[Re-verification HEAD (post-fix-burst-62): TBD — to be set in fix-burst-63]
+
+**Test count:** 255 passed, 5 skipped (xtask); 92 passed, 2 skipped (pregolya-core). Clause (a): no `crates/` files added or deleted — OK. Clause (b): no `crates/` files changed — OK. Clause (c): no change within `xtask/tests/fixtures/violations/`; `CREDENTIAL_FIXTURE_COUNT` unchanged — OK. Clause (d): no change to `xtask/src/` — OK. Additionally, `scripts/check-burst-records-parity.sh` received behavioral changes (probes 1–15 rewritten with `grep -qF` message assertions, probes 16–17 added, probe-6 comment replaced, `>&2` removed from counts-absent guard) and `lefthook.yml` received comment updates (probe count "fifteen" → "seventeen", scenario list updated). These files fall outside the `crates/` and `xtask/src/` clause perimeters, so clauses (a)–(d) remain valid.
+
+**Adversary pass 60 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH + 2 MED + 1 LOW.
+
+**Gate output (burst-parity normal mode):**
+```
+[BURST-PARITY PASS] fix-burst-62: 4 finding IDs matched; tally: 1H+1L+2M.
+```
+
+**Gate output (burst-parity self-probe):**
+```
+[SELF-PROBE PASS] probe-1 (ID-mismatch): divergent ID pair correctly detected mismatch
+[SELF-PROBE PASS] probe-2 (tally-divergent): identical IDs with divergent tallies correctly detected mismatch
+[SELF-PROBE PASS] probe-3 (tally-sum≠id-count): declared tally sum 3 vs 2 IDs correctly detected
+[SELF-PROBE PASS] probe-4 (pass-number-divergent): divergent pass numbers (CHANGELOG Pass-94 vs evidence-report pass 93) correctly detected
+[SELF-PROBE PASS] probe-5 (tally-line-absent): absent CHANGELOG tally correctly detected mismatch
+[SELF-PROBE PASS] probe-6 (er-newest-burst-divergent): ER-newer-than-CHANGELOG correctly detected mismatch
+[SELF-PROBE PASS] probe-7 (per-severity-histogram-divergent): histogram mismatch (2 HIGH declared, 1 actual) correctly detected
+[SELF-PROBE PASS] probe-8 (duplicate-id-detected): duplicate finding ID (HIGH-001) in CHANGELOG correctly detected
+[SELF-PROBE PASS] probe-9 (section-existence-missing): CHANGELOG newest burst missing from ER re-verification correctly detected
+[SELF-PROBE PASS] probe-10 (heading-format-drift): non-canonical fix-burst heading correctly detected
+[SELF-PROBE PASS] probe-11 (cl-ids-empty): empty CHANGELOG finding-ID extraction correctly detected
+[SELF-PROBE PASS] probe-12 (er-ids-empty): empty ER finding-ID extraction correctly detected
+[SELF-PROBE PASS] probe-13 (er-duplicate-id): duplicate finding ID (F-P89-HIGH-001) in evidence-report correctly detected
+[SELF-PROBE PASS] probe-14 (er-per-severity-histogram-divergent): ER histogram mismatch (1 HIGH declared, 2 actual) correctly detected
+[SELF-PROBE PASS] probe-15 (er-tally-counts-absent): ER tally line with no severity-count tokens correctly detected
+[SELF-PROBE PASS] probe-16 (happy-path): well-formed matching input correctly passes
+[SELF-PROBE PASS] probe-17 (skip-path): no fix-burst sections correctly skipped
+```
+
+| Finding | Severity | Disposition | Detection class | Load-bearing artifact |
+|---------|----------|-------------|-----------------|----------------------|
+| F-P60-HIGH-001 | HIGH | closed | no-message-assertion+no-happy-skip-probes | `run_self_probes` probes 1–17 with `grep -qF` assertions and probes 16–17 in `check-burst-records-parity.sh` |
+| F-P60-MED-001 | MED | closed | wrong-guard-comment-ambiguity | inline comment above probe-6 construction site in `run_self_probes` in `check-burst-records-parity.sh` |
+| F-P60-MED-002 | MED | closed | heading-body-contradiction | `### HIGH-002:` heading in `## fix-burst-60 (pass-58 findings)` in CHANGELOG.md |
+| F-P60-LOW-001 | LOW | closed | stderr-routing-inconsistency | counts-absent guard echo in `do_parity_check` in `check-burst-records-parity.sh` |
+
 ## fix-burst-61 re-verification
 
 [Reviewed HEAD (adversary pass 59): 564b8cda7eb1279932b742be45378a32279f5e65]
-[Re-verification HEAD (post-fix-burst-61): TBD — to be set in fix-burst-62]
+[Re-verification HEAD (post-fix-burst-61): 72fd7aff5307caaa87dc595ec4f7f62306877df0]
 
 **Test count:** 255 passed, 5 skipped (xtask); 92 passed, 2 skipped (pregolya-core). Clause (a): no `crates/` files added or deleted — OK. Clause (b): no `crates/` files changed — OK. Clause (c): no change within `xtask/tests/fixtures/violations/`; `CREDENTIAL_FIXTURE_COUNT` unchanged — OK. Clause (d): `xtask/src/tests.rs` changed — doc comment only; no gate-scanner logic, guard, or visitor behavior altered; gate counts remain valid — OK. Additionally, `scripts/check-burst-records-parity.sh` received behavioral changes (probes 13–15 added, fail-closed counts-absent guard, probe-11/12 comments rewritten, header pointer) and `lefthook.yml` received updates (probe count "twelve" → "fifteen", scenario list, `Enforces:` list). These files fall outside the `crates/` and `xtask/src/` clause perimeters, so clauses (a)–(d) remain valid.
 
