@@ -20,7 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 **Pass-56 finding tally: 2 HIGH + 5 MED + 4 LOW + 2 OBS**
 
-**Test count:** 92 passed, 2 skipped (pregolya-core); 255 passed, 5 skipped (xtask). No production code logic changed in `pregolya-core`. `xtask/src/tests.rs` changes: block-comment correction and test rename (text-only; no test logic changed). Script changes in `scripts/` (not `crates/`). Records changes in CHANGELOG and evidence-report. Clause (a): test count unchanged. Clause (b): gate output captured on actual evidence file after CHANGELOG fix-burst-58 section written. Clause (c): demo video files unchanged. Clause (d): no production code behavior changed; clauses (a)–(d) remain valid.
+**Test count:** 92 passed, 2 skipped (pregolya-core); 255 passed, 5 skipped (xtask). No production code logic changed in `pregolya-core`. `xtask/src/tests.rs` changes: block-comment correction and test rename (text-only; no test logic changed). Script changes in `scripts/` (not `crates/`). Records changes in CHANGELOG and evidence-report. Clause (a): no `crates/` files added or deleted — OK (no `crates/` changes). Clause (b): no `crates/` files changed at all — OK. Clause (c): no change within `xtask/tests/fixtures/violations/`; `CREDENTIAL_FIXTURE_COUNT` unchanged — OK. Clause (d): `xtask/src/tests.rs` changed — block-comment correction and test rename only; no gate-scanner logic, guard, or visitor behavior altered; gate counts remain valid — OK.
 
 ### HIGH-001: Duplicate finding ID and missing OBS-002 heading in fix-burst-57 records
 
@@ -100,11 +100,127 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 **What was fixed:** Hoisted empty-tally guard before pass-number comparison; removed redundant `-n` conjuncts. Addressed as part of HIGH-002 fix.
 
+## fix-burst-59 (pass-57 findings)
+
+**Pass-57 finding tally: 2 HIGH + 4 MED + 4 LOW + 4 OBS**
+
+### HIGH-001: probe-6 fires on re-verification-section-existence guard instead of er_newest_burst guard
+
+**Root cause:** probe-6's synthetic ER contained only `## fix-burst-95 re-verification` but no `## fix-burst-94 re-verification` section. The re-verification-section-existence guard (checking for `fix-burst-${newest_burst} re-verification`) fires first and returns non-zero. The `er_newest_burst` comparison is never reached — the guard it was intended to test has zero probe coverage.
+
+**Fix:** Added `## fix-burst-94 re-verification` block (with valid tally line and `F-P92-HIGH-001` row) to probe-6's synthetic ER so the section-existence guard passes and control reaches the `er_newest_burst != newest_burst` comparison, which then fires as intended.
+
+**Load-bearing artifact:** `run_self_probes` probe-6 in `check-burst-records-parity.sh` — `[SELF-PROBE PASS] probe-6 (er-newest-burst-divergent)` emitted on `--self-probe`.
+
+### HIGH-002: per-severity histogram and duplicate-ID guards added in fix-burst-58 have zero self-probe coverage (fourth recurrence of unprobed-guard class)
+
+**Root cause:** The six existing probes all return before reaching the histogram and duplicate-ID guards. Any guard newly appended to `do_parity_check` is structurally behind all previously-exercised early-return paths and is unreachable without a purpose-built probe. This recurrence pattern is now codified: every new `do_parity_check` guard MUST ship with a probe that reaches it, and the author MUST trace the probe past all earlier guards.
+
+**Fix:** Added probe-7 (`per-severity-histogram-divergent`): synthetic CHANGELOG tally declares 2 HIGH but only 1 HIGH heading exists, passing sum and duplicate guards but failing the histogram comparison. Added probe-8 (`duplicate-id-detected`): synthetic CHANGELOG has duplicate `HIGH-001` heading with tally 2 HIGH + 1 MED + 1 LOW (sum=4=id_count, no histogram divergence), triggering the duplicate-ID guard.
+
+**Load-bearing artifact:** `run_self_probes` probe-7 and probe-8 in `check-burst-records-parity.sh` — `[SELF-PROBE PASS] probe-7 (per-severity-histogram-divergent)` and `[SELF-PROBE PASS] probe-8 (duplicate-id-detected)` emitted on `--self-probe`.
+
+### MED-001: histogram severity loops cover only HIGH/MED/LOW/OBS — CRIT and PROCESS-GAP missing
+
+**Root cause:** Both histogram loops were written as `for sev in HIGH MED LOW OBS` without the full set of recognized severity tokens. Prior fix-bursts (e.g., fix-burst-50 with `1 PROCESS-GAP`) would pass the tally-count comparison (since the raw tally text matches) but bypass the per-severity count verification for CRIT and PROCESS-GAP findings.
+
+**Fix:** Both loops changed to `for sev in CRIT HIGH MED LOW OBS PROCESS-GAP`. The `grep -c "^${sev}-"` extraction pattern handles `PROCESS-GAP-NNN` correctly via `^PROCESS-GAP-` prefix matching.
+
+**Load-bearing artifact:** `do_parity_check` histogram loop variable `sev` in `check-burst-records-parity.sh`.
+
+### MED-002: Recording Provenance clause (a)-(d) walks in fix-burst-57 and fix-burst-58 mis-map canonical propositions
+
+**Root cause:** The canonical clauses (a)–(d) defined in the Recording Provenance validity criterion were not used verbatim. Each fix-burst independently improvised a different taxonomy under the (a)–(d) labels, causing mismatches between the propositions and the labels (e.g., clause (a) described fixture changes in one burst and crates file addition in another).
+
+**Fix:** Rewrote clause walks in `## fix-burst-57 (pass-55 findings)` CHANGELOG, `## fix-burst-58 (pass-56 findings)` CHANGELOG, and `## fix-burst-57 re-verification` ER to use the canonical (a)–(d) definitions verbatim: (a) no `crates/` files added or deleted; (b) `crates/` changes doc-comment-only; (c) no `xtask/tests/fixtures/violations/` changes, `CREDENTIAL_FIXTURE_COUNT` unchanged; (d) no behavioral change to `xtask/src/**/*.rs` gate-scanner logic.
+
+**Load-bearing artifact:** `**Test count:**` paragraph in fix-burst-57 and fix-burst-58 CHANGELOG and ER sections.
+
+### MED-003: block comment above renamed subprocess test has inverted Red Gate provenance direction
+
+**Root cause:** The block comment banner above `test_BC_2_14_005_deny_bare_api_key_subprocess_exits_zero_on_clean_workspace` stated "assertions below failed if the command exited 0" — describing a non-zero assertion, opposite to the actual `output.status.success()` assertion. The test was previously renamed from `_exits_nonzero_on_violation` to `_exits_zero_on_clean_workspace` but the banner's provenance sentence was not updated.
+
+**Fix:** Replaced inverted sentence with: "When `run()` was a `todo!()` stub it panicked → non-zero exit → the exit-0 assertion below failed, giving the Red Gate signal."
+
+**Load-bearing artifact:** Block comment above `test_BC_2_14_005_deny_bare_api_key_subprocess_exits_zero_on_clean_workspace` in `xtask/src/tests.rs`.
+
+### MED-004: fix-burst-58 re-verification HEAD annotation recorded SHA of first commit instead of final HEAD
+
+**Root cause:** fix-burst-58 required two commits (main changes + SHA-placeholder update). The ER annotation was set to `4874dcc7` (the first commit's SHA) but the actual frozen HEAD presented to pass-57 was `51a84eba` (the second commit's SHA).
+
+**Fix:** Updated `## fix-burst-58 re-verification` HEAD annotation from `4874dcc7901d3e5e3b60757359bbbdcf9a73a44c` to `51a84eba9514cbde4b99f26f0839934c07de360e`.
+
+**Load-bearing artifact:** `[Re-verification HEAD (post-fix-burst-58)]` annotation in `## fix-burst-58 re-verification` section of evidence-report.md.
+
+### LOW-001: unescaped `|` in F-P55-OBS-001 load-bearing artifact cell breaks table rendering
+
+**Root cause:** The load-bearing artifact cell for F-P55-OBS-001 contained `` `| head -1` `` with an unescaped pipe character, which Markdown parsers interpret as a table cell separator.
+
+**Fix:** Changed `` `| head -1` `` to `` `\| head -1` `` in the F-P55-OBS-001 row of the fix-burst-57 re-verification table.
+
+**Load-bearing artifact:** F-P55-OBS-001 row in `## fix-burst-57 re-verification` findings table in evidence-report.md.
+
+### LOW-002: `check-burst-records-parity` lefthook comment omits per-severity histogram and duplicate-ID guards added in fix-burst-58
+
+**Root cause:** The `# Enforces:` comment block in lefthook.yml was not updated when HIGH-002 was closed in fix-burst-58, leaving the new guards undocumented in the hook's self-description.
+
+**Fix:** Added `ER-newest-burst agreement, per-severity histogram agreement, and duplicate-finding-ID detection` to the `# Enforces:` list. Updated `burst-parity-self-probe` probe count from "six" to "eight" with the new scenario names.
+
+**Load-bearing artifact:** `check-burst-records-parity` step comment in `lefthook.yml` pre-push hook.
+
+### LOW-003: SEV variable comment contains fabricated awk ERE rationale
+
+**Root cause:** Comment above the `SEV` severity-token enumeration stated that bash variable expansion was needed for awk ERE patterns — an explanation invented for an awk construct that does not appear in the code. The actual mechanism is `grep -oE` with `${SEV}` in a bash loop.
+
+**Fix:** Replaced the comment with: "Enumerate recognised severity tokens explicitly: grep -oE patterns with `${SEV}` run in a loop, ensuring only known severity prefixes are harvested as finding IDs."
+
+**Load-bearing artifact:** SEV loop comment in `do_parity_check` in `check-burst-records-parity.sh`.
+
+### LOW-004: Per-AC Demo Recordings table missing 7 rows (AC-004, AC-006, AC-007, AC-009, AC-013, AC-015, AC-019)
+
+**Root cause:** Seven acceptance criteria were not represented in the Per-AC Demo Recordings table. The AC-003 row pattern (Recording = test-name citation, Status = `covered`) established that ACs with no video artifact still require a row, but this pattern was not applied to all ACs when the table was first authored.
+
+**Fix:** Added 7 rows in monotonic AC order using primary non-ignored unit tests from the AC Coverage Map as Recording citations. Table now covers all 20 ACs in strict monotonic order.
+
+**Load-bearing artifact:** `## Per-AC Demo Recordings` table in evidence-report.md — row count 20 (AC-001 through AC-020).
+
+### OBS-001: histogram and duplicate-ID guard variables not declared `local` in `do_parity_check`
+
+**Root cause:** Six variables used by the histogram loops and duplicate-ID guard (`cl_declared`, `cl_actual`, `er_declared`, `er_actual`, `cl_dupes`, `er_dupes`, `sev`) were not included in the `local` declaration block at the top of `do_parity_check`, leaking into caller scope.
+
+**Fix:** Added `local cl_declared cl_actual er_declared er_actual cl_dupes er_dupes sev` to the `local` declaration block.
+
+**Load-bearing artifact:** `local` declaration block in `do_parity_check` in `check-burst-records-parity.sh`.
+
+### OBS-002: duplicate-ID guard positioned after tally-sum reconciliation (shadowed diagnostic)
+
+**Root cause:** A duplicate finding ID with a compensating omission (e.g., two `HIGH-001` entries and one missing `HIGH-002`) passes the tally-count and tally-sum checks, so the sum check fires on legitimate sum mismatches with a misleading "N IDs enumerated" message when the real issue is a duplicate. Hoisting the duplicate-ID guard gives clearer diagnostics.
+
+**Fix:** Moved the `cl_dupes`/`er_dupes` guard block to before the `id_count`/tally-sum reconciliation. Guard order is now: section-existence → er_newest_burst → extract → empty-tally → pass-number → tally-count → duplicate-ID → sum-reconciliation → histogram → ID-set.
+
+**Load-bearing artifact:** `do_parity_check` guard-order sequence in `check-burst-records-parity.sh`; probe-8 (`duplicate-id-detected`) verifies this path.
+
+### OBS-003: burst-parity gate is lefthook pre-push only — not in CI workflow
+
+**Root cause:** `check-burst-records-parity.sh` runs as a lefthook pre-push hook but is not invoked by the CI workflow. Records-parity drift that is committed but not pushed would be caught at push time but not in CI.
+
+**Status:** Intentionally deferred. The parity gate is an authoring-discipline check at the feature-branch push boundary; CI enforcement is beyond this burst's scope. Deferred to a CI-hardening follow-up story. The pre-push hook provides sufficient enforcement for the current workflow.
+
+### OBS-004: fix-burst-57 CHANGELOG headings non-monotonic (OBS-002 out of order)
+
+**Root cause:** When OBS-002 was extracted from LOW-002 as a standalone finding in fix-burst-57, it was placed immediately after LOW-002 rather than after the final LOW heading. This placed an OBS heading between two LOW headings, breaking the strictly monotonic severity order (HIGH → MED → LOW → OBS).
+
+**Fix:** Reordered fix-burst-57 CHANGELOG sections to strictly monotonic: HIGH-001, MED-001, MED-002, MED-003, LOW-001, LOW-002, LOW-003, OBS-001, OBS-002, OBS-003.
+
+**Load-bearing artifact:** `## fix-burst-57 (pass-55 findings)` section heading order in CHANGELOG.md.
+
+**Test count:** 255 passed, 5 skipped (xtask); 92 passed, 2 skipped (pregolya-core). No crates/ changes in fix-burst-59. Clause (a): no `crates/` files added or deleted — OK. Clause (b): no `crates/` files changed — OK. Clause (c): no change within `xtask/tests/fixtures/violations/`; `CREDENTIAL_FIXTURE_COUNT` unchanged — OK. Clause (d): `xtask/src/tests.rs` changed — block-comment correction only; no gate-scanner logic, guard, or visitor behavior altered; gate counts remain valid — OK.
+
 ## fix-burst-57 (pass-55 findings)
 
 Addresses adversary pass-55 findings. **Pass-55 finding tally: 1 HIGH + 3 MED + 3 LOW + 3 OBS**
 
-**Test count:** 92 passed, 2 skipped (unchanged). The `#[ignore]` reason change in `test_BC_2_14_004_timeout_fires_against_mock_server` is text-only; no production code logic changed. The script change in `check-burst-records-parity.sh` is in `scripts/` (not `crates/`). Clause (a): test count 92 matches. Clause (b): gate output was captured on the actual evidence file after CHANGELOG fix-burst-57 section written. Clause (c): demo video files unchanged. Clause (d): no production code behavior changed; clauses (a)–(d) remain valid.
+**Test count:** 92 passed, 2 skipped (unchanged). The `#[ignore]` reason change in `test_BC_2_14_004_timeout_fires_against_mock_server` is text-only; no production code logic changed. The script change in `check-burst-records-parity.sh` is in `scripts/` (not `crates/`). Clause (a): no `crates/` files added or deleted — OK (http.rs changed but not added/deleted). Clause (b): http.rs change limited to `#[ignore]` reason text — no panic-family, timeout, or credential constructs added or removed — OK. Clause (c): no change within `xtask/tests/fixtures/violations/`; `CREDENTIAL_FIXTURE_COUNT` unchanged — OK. Clause (d): no change to `xtask/src/**/*.rs` — OK.
 
 ### HIGH-001: Unreachable pass-token guards deleted; false closure records corrected
 
@@ -146,10 +262,6 @@ Addresses adversary pass-55 findings. **Pass-55 finding tally: 1 HIGH + 3 MED + 
 
 **What was fixed:** Added rows for AC-001, AC-012, AC-014 (same recording as AC-008); reordered entire table to monotonic AC number order.
 
-### OBS-002: Per-AC Demo Recordings table: reordered to monotonic AC number order
-
-Table row order corrected to monotonic AC number order; addressed as part of LOW-002 fix.
-
 ### LOW-003: #[ignore] reason wall-clock corrected to ~30 s
 
 **Finding:** `test_BC_2_14_004_timeout_fires_against_mock_server` `#[ignore]` reason stated `~35 s wall-clock` but the test fires when the client times out at 30 s.
@@ -161,6 +273,10 @@ Table row order corrected to monotonic AC number order; addressed as part of LOW
 **Finding:** `cl_pass`/`er_pass` extractions lacked `| head -1`.
 
 **What was fixed:** `| head -1` appended to both extraction pipelines in `check-burst-records-parity.sh`.
+
+### OBS-002: Per-AC Demo Recordings table: reordered to monotonic AC number order
+
+Table row order corrected to monotonic AC number order; addressed as part of LOW-002 fix.
 
 ### OBS-003: Duplicate clause-walk text removed from fix-burst-55 re-verification
 

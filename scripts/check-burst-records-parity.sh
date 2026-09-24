@@ -15,8 +15,8 @@
 set -euo pipefail
 
 # Severity class alternation for grep -E patterns.
-# Must enumerate each value — awk ERE is used for patterns that include $SEV,
-# so bash expands the variable before awk sees it.
+# Enumerate recognised severity tokens explicitly: grep -oE patterns with ${SEV}
+# run in a loop, ensuring only known severity prefixes are harvested as finding IDs.
 SEV='(CRIT|HIGH|MED|LOW|OBS|PROCESS-GAP)'
 
 # ── do_parity_check <changelog_file> <evidence_report_file> ─────────────────
@@ -28,6 +28,7 @@ SEV='(CRIT|HIGH|MED|LOW|OBS|PROCESS-GAP)'
 do_parity_check() {
     local cl_file="$1"
     local er_file="$2"
+    local cl_declared cl_actual er_declared er_actual cl_dupes er_dupes sev
 
     # ── Identify newest fix-burst number (numeric max, order-independent) ───
     local newest_burst
@@ -170,6 +171,18 @@ do_parity_check() {
         return 1
     fi
 
+    # ── Duplicate-ID guard: duplicate IDs in either document are a defect ───────
+    cl_dupes=$(printf '%s' "$cl_ids" | sort | uniq -d)
+    er_dupes=$(printf '%s' "$er_ids" | sort | uniq -d)
+    if [ -n "$cl_dupes" ]; then
+        echo "[BURST-PARITY FAIL] fix-burst-${newest_burst}: duplicate finding IDs in CHANGELOG: $cl_dupes"
+        return 1
+    fi
+    if [ -n "$er_dupes" ]; then
+        echo "[BURST-PARITY FAIL] fix-burst-${newest_burst}: duplicate finding IDs in evidence-report: $er_dupes"
+        return 1
+    fi
+
     local id_count
     id_count=$(printf '%s\n' "$cl_ids" | wc -l | tr -d ' ')
 
@@ -192,7 +205,7 @@ do_parity_check() {
     # ── Per-severity histogram: declared counts vs extracted ID counts ───────────
     # Catches cases where the total tally sum is correct but the per-severity
     # breakdown disagrees (e.g. "2 HIGH + 2 OBS" declared but IDs show 1 HIGH + 3 OBS).
-    for sev in HIGH MED LOW OBS; do
+    for sev in CRIT HIGH MED LOW OBS PROCESS-GAP; do
         cl_declared=$(printf '%s' "$cl_tally" | grep -oE "[0-9]+ ${sev}" | grep -oE '^[0-9]+' | head -1)
         cl_actual=$(printf '%s' "$cl_ids" | grep -c "^${sev}-" || true)
         if [ -n "$cl_declared" ] && [ "$cl_declared" != "$cl_actual" ]; then
@@ -200,7 +213,7 @@ do_parity_check() {
             return 1
         fi
     done
-    for sev in HIGH MED LOW OBS; do
+    for sev in CRIT HIGH MED LOW OBS PROCESS-GAP; do
         er_declared=$(printf '%s' "$er_tally" | grep -oE "[0-9]+ ${sev}" | grep -oE '^[0-9]+' | head -1)
         er_actual=$(printf '%s' "$er_ids" | grep -c "^${sev}-" || true)
         if [ -n "$er_declared" ] && [ "$er_declared" != "$er_actual" ]; then
@@ -208,18 +221,6 @@ do_parity_check() {
             return 1
         fi
     done
-
-    # ── Duplicate-ID guard: duplicate IDs in either document are a defect ───────
-    cl_dupes=$(printf '%s' "$cl_ids" | sort | uniq -d)
-    er_dupes=$(printf '%s' "$er_ids" | sort | uniq -d)
-    if [ -n "$cl_dupes" ]; then
-        echo "[BURST-PARITY FAIL] fix-burst-${newest_burst}: duplicate finding IDs in CHANGELOG: $cl_dupes"
-        return 1
-    fi
-    if [ -n "$er_dupes" ]; then
-        echo "[BURST-PARITY FAIL] fix-burst-${newest_burst}: duplicate finding IDs in evidence-report: $er_dupes"
-        return 1
-    fi
 
     # ── Compare ID sets ───────────────────────────────────────────────────────
     if [ "$cl_ids" != "$er_ids" ]; then
@@ -507,6 +508,14 @@ PROBE_HEREDOC
 
     local fake_er6="$tmpdir6/evidence-report.md"
     cat > "$fake_er6" <<'PROBE_HEREDOC'
+## fix-burst-94 re-verification
+
+**Adversary pass 92 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH.
+
+| Finding | Severity | Detection class | Load-bearing artifact |
+|---------|----------|-----------------|-----------------------|
+| F-P92-HIGH-001 | HIGH | test class | test artifact |
+
 ## fix-burst-95 re-verification
 
 **Adversary pass 93 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH.
@@ -524,6 +533,118 @@ PROBE_HEREDOC
         echo "[SELF-PROBE PASS] probe-6 (er-newest-burst-divergent): ER-newer-than-CHANGELOG correctly detected mismatch"
     else
         echo "[SELF-PROBE FAIL] probe-6 (er-newest-burst-divergent): ER-newer-than-CHANGELOG was NOT detected"
+        all_passed=1
+    fi
+
+    # ── Probe 7: per-severity-histogram-divergent ─────────────────────────────
+    # CHANGELOG tally declares 2 HIGH + 2 OBS but contains only 1 HIGH heading
+    # (HIGH-001) and 3 OBS headings (OBS-001, OBS-002, OBS-003).
+    # Tally sum = 4 = id_count = 4 (no sum mismatch), no duplicate IDs.
+    # The per-severity histogram check must detect HIGH declared=2 but actual=1.
+    local tmpdir7
+    tmpdir7="$(mktemp -d)"
+
+    local fake_cl7="$tmpdir7/CHANGELOG.md"
+    cat > "$fake_cl7" <<'PROBE_HEREDOC'
+## fix-burst-96 (pass-92 findings)
+
+**Pass-92 finding tally: 2 HIGH + 2 OBS**
+
+### HIGH-001: A high severity finding
+
+Description of the high finding.
+
+### OBS-001: An obs finding
+
+Description of the obs finding.
+
+### OBS-002: Another obs finding
+
+Description of the obs finding.
+
+### OBS-003: Another obs finding
+
+Description of the obs finding.
+PROBE_HEREDOC
+
+    local fake_er7="$tmpdir7/evidence-report.md"
+    cat > "$fake_er7" <<'PROBE_HEREDOC'
+## fix-burst-96 re-verification
+
+**Adversary pass 92 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 2 HIGH + 2 OBS.
+
+| Finding | Severity | Detection class | Load-bearing artifact |
+|---------|----------|-----------------|-----------------------|
+| F-P92-HIGH-001 | HIGH | test class | test artifact |
+| F-P92-OBS-001 | OBS | test class | test artifact |
+| F-P92-OBS-002 | OBS | test class | test artifact |
+| F-P92-OBS-003 | OBS | test class | test artifact |
+PROBE_HEREDOC
+
+    local probe7_exit=0
+    do_parity_check "$fake_cl7" "$fake_er7" >/dev/null 2>&1 || probe7_exit=$?
+    rm -rf "$tmpdir7"
+
+    if [ "$probe7_exit" -ne 0 ]; then
+        echo "[SELF-PROBE PASS] probe-7 (per-severity-histogram-divergent): histogram mismatch (2 HIGH declared, 1 actual) correctly detected"
+    else
+        echo "[SELF-PROBE FAIL] probe-7 (per-severity-histogram-divergent): per-severity histogram mismatch was NOT detected"
+        all_passed=1
+    fi
+
+    # ── Probe 8: duplicate-id-detected ───────────────────────────────────────
+    # CHANGELOG tally declares 2 HIGH + 1 MED + 1 LOW (sum=4) with 4 headings,
+    # but HIGH-001 appears twice (duplicate).  Histogram: declared HIGH=2,
+    # actual HIGH=2 (two HIGH-prefixed IDs extracted) — histogram passes.
+    # The duplicate-ID guard must detect the duplicate before or at its guard.
+    local tmpdir8
+    tmpdir8="$(mktemp -d)"
+
+    local fake_cl8="$tmpdir8/CHANGELOG.md"
+    cat > "$fake_cl8" <<'PROBE_HEREDOC'
+## fix-burst-93 (pass-92 findings)
+
+**Pass-92 finding tally: 2 HIGH + 1 MED + 1 LOW**
+
+### HIGH-001: A high severity finding
+
+Description of the high finding.
+
+### HIGH-001: Duplicate high severity finding
+
+Description of the duplicate.
+
+### MED-001: A medium severity finding
+
+Description of the medium finding.
+
+### LOW-001: A low severity finding
+
+Description of the low finding.
+PROBE_HEREDOC
+
+    local fake_er8="$tmpdir8/evidence-report.md"
+    cat > "$fake_er8" <<'PROBE_HEREDOC'
+## fix-burst-93 re-verification
+
+**Adversary pass 92 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 2 HIGH + 1 MED + 1 LOW.
+
+| Finding | Severity | Detection class | Load-bearing artifact |
+|---------|----------|-----------------|-----------------------|
+| F-P92-HIGH-001 | HIGH | test class | test artifact |
+| F-P92-HIGH-001 | HIGH | test class | test artifact |
+| F-P92-MED-001 | MED | test class | test artifact |
+| F-P92-LOW-001 | LOW | test class | test artifact |
+PROBE_HEREDOC
+
+    local probe8_exit=0
+    do_parity_check "$fake_cl8" "$fake_er8" >/dev/null 2>&1 || probe8_exit=$?
+    rm -rf "$tmpdir8"
+
+    if [ "$probe8_exit" -ne 0 ]; then
+        echo "[SELF-PROBE PASS] probe-8 (duplicate-id-detected): duplicate finding ID (HIGH-001) in CHANGELOG correctly detected"
+    else
+        echo "[SELF-PROBE FAIL] probe-8 (duplicate-id-detected): duplicate finding IDs were NOT detected"
         all_passed=1
     fi
 

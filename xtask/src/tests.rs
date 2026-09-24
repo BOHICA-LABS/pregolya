@@ -1707,8 +1707,9 @@ pub fn make_client() -> reqwest::Client {
 // `scan_for_bare_api_keys_in_source` provides in-process unit coverage of the
 // scanner behavior; these subprocess tests verify the CLI exit-code contract at
 // the process boundary.
-// Since run() was authored as todo!() it panicked → non-zero exit → the assertions below failed
-// if the command exited 0, giving us the Red Gate signal in the other direction.
+// When run() was a todo!() stub it panicked → non-zero exit → the exit-0 assertion
+// below failed, giving the Red Gate signal. run() is now implemented and a clean
+// workspace exits 0.
 //
 // These tests are #[ignore]'d because they require a full `cargo build` per
 // invocation, which is expensive in CI. SID-1 is satisfied by

@@ -23,15 +23,22 @@ status: complete
 | AC-001 | BC-2.14.003 PC-001 | constructor returns Result | same recording as AC-008 | — | — | recorded |
 | AC-002 | BC-2.14.003 PC-004 | `cargo xtask check-no-panic` exits 0 — no unwrap/expect/panic in non-test code | [AC-002-check-no-panic-pass.webm](AC-002-check-no-panic-pass.webm) | [AC-002-check-no-panic-pass.gif](AC-002-check-no-panic-pass.gif) | [tape](AC-002-check-no-panic-pass.tape) | recorded (refreshed 2026-09-22) |
 | AC-003 | BC-2.14.003 INV-003/INV-004 | `debug_assert!` and exhaustive-match `unreachable!` are exempt — gate exits 0 | `test_BC_2_14_003_debug_assert_not_flagged` in `xtask::tests` — places synthetic `debug_assert!` in non-test scope; asserts gate returns Ok with 0 violations; discriminating (would fail if exemption was removed). Gate PASS is not itself load-bearing for the exemption since production tree contains zero `debug_assert!`/`unreachable!` sites. | — | — | covered |
+| AC-004 | BC-2.14.004 PC-002/PC-003 | `build_client` 30s timeout — `HTTP_CLIENT_TIMEOUT_SECS` = 30 in reqwest `Client` `Debug` output | `test_BC_2_14_004_default_timeout_applied` in `crates/pregolya-core/src/http.rs` — asserts `HTTP_CLIENT_TIMEOUT_SECS` value `30` appears in reqwest `Client` `Debug` output; discriminating (catches 1s regression) | — | — | covered |
 | AC-005 | BC-2.14.004 PC-003 | `cargo xtask check-client-timeout` exits 0 — no missing `.timeout()` | [AC-005-check-client-timeout-pass.webm](AC-005-check-client-timeout-pass.webm) | [AC-005-check-client-timeout-pass.gif](AC-005-check-client-timeout-pass.gif) | [tape](AC-005-check-client-timeout-pass.tape) | recorded (refreshed 2026-09-22) |
+| AC-006 | BC-2.14.004 PC-005 | timeout configured at construction; `build_client()` succeeds (DI-009 scope) | `test_BC_2_14_004_build_client_returns_ok` in `crates/pregolya-core/src/http.rs` (non-`#[ignore]`; verifies Ok-return; SID-1 substitute for PC-002: `test_BC_2_14_004_default_timeout_applied`) | — | — | covered |
+| AC-007 | BC-2.14.005 PC-001 | constructor returns Ok for valid key | `test_BC_2_14_005_openai_new_valid_key_returns_ok` and `test_BC_2_14_005_anthropic_new_valid_key_returns_ok` in `credentials.rs` (both labeled AC-007; assert `new()` returns `Ok` for non-empty key) | — | — | covered |
 | AC-008 | BC-2.14.005 PC-002 | `Debug` emits exactly `"<redacted>"` — key material never appears in format output | [AC-008-AC-011-AC-016-credential-validation-redaction.webm](AC-008-AC-011-AC-016-credential-validation-redaction.webm) | [AC-008-AC-011-AC-016-credential-validation-redaction.gif](AC-008-AC-011-AC-016-credential-validation-redaction.gif) | [tape](AC-008-AC-011-AC-016-credential-validation-redaction.tape) | recorded |
+| AC-009 | BC-2.14.005 PC-003/PC-004/PC-005 | no AsRef/Deref/Display/Serialize/Deserialize; `expose_secret` is ONLY access path | `test_BC_2_14_005_openai_expose_secret_returns_inner_value` + 10 `assert_not_impl_any!` invocations in `credentials.rs` `mod tests` (labeled AC-009) | — | — | covered |
 | AC-010 | BC-2.14.005 PC-006 | `cargo xtask deny-bare-api-key` exits 0 — structural credential scan passes | [AC-010-deny-bare-api-key-pass.webm](AC-010-deny-bare-api-key-pass.webm) | [AC-010-deny-bare-api-key-pass.gif](AC-010-deny-bare-api-key-pass.gif) | [tape](AC-010-deny-bare-api-key-pass.tape) | recorded (refreshed 2026-09-22) |
 | AC-011 | BC-2.14.006 PC-001 | `OpenAiApiKey::new("")` → `Err(E-CORE-005 / VAL / Never)` | same recording as AC-008 | — | — | recorded |
 | AC-012 | BC-2.14.006 PC-003 | no silent None/default on invalid inputs | same recording as AC-008 | — | — | recorded |
+| AC-013 | BC-2.14.006 EC-005 | no `From<String>`/`From<&'static str>` conversions — infallible From bypasses `new()` validation | 4 `assert_not_impl_any!` invocations in `credentials.rs` `mod tests` (labeled AC-013): `From<String>` and `From<&'static str>` for both `OpenAiApiKey` and `AnthropicApiKey` | — | — | covered |
 | AC-014 | BC-2.14.006 PC-004 | error code E-CORE-005 + message format | same recording as AC-008 | — | — | recorded |
+| AC-015 | BC-2.14.004 EC-006 | ClientBuilder failure maps to E-CORE-012 | `test_BC_2_14_004_build_failure_maps_to_e_core_012` in `crates/pregolya-core/src/http.rs` (non-`#[ignore]`; asserts code, category, retry_hint, message prefix) | — | — | covered |
 | AC-016 | BC-2.14.006 EC-006 | `new("   ")` whitespace-only rejected with same `E-CORE-005` error | same recording as AC-008 | — | — | recorded |
 | AC-017 | BC-2.14.003 EC-007 | `cargo xtask check-no-panic --fixture-mode` FLAGS violations in 14 of 17 fixture files spanning five violation classes: bare `assert!` (incl. short BC-ID + BC-ID in condition), catch-all `unreachable!()` arms (wildcard `_ =>` and irrefutable-binding forms `other =>`, `ref other =>`, `mut other =>`, guarded `other if ... =>`, `_other =>`), `.unwrap()` in macros, `todo!()` (unimplemented!() covered by inline unit test only), `assert_eq!`/`assert_ne!` with BC-ID in comparand — 14/17 fixture files flagged | [AC-017-check-no-panic-flags-violations.webm](AC-017-check-no-panic-flags-violations.webm) | [AC-017-check-no-panic-flags-violations.gif](AC-017-check-no-panic-flags-violations.gif) | [tape](AC-017-check-no-panic-flags-violations.tape) | recorded (re-recorded 2026-09-22) |
 | AC-018 | BC-2.14.003 EC-006 | programmer-error guards compliant | same recording as AC-002 | — | — | recorded |
+| AC-019 | BC-2.14.004 EC-006 | E-CORE-012 test is non-ignored + production path (SID-1) | `test_BC_2_14_004_build_failure_production_path_invariant` in `crates/pregolya-core/src/http.rs` (non-`#[ignore]`; asserts `map_build_failure` is in production scope; SID-1) | — | — | covered |
 | AC-020 | BC-2.14.001 EC-004 / VP-BC214001-01 | `cargo xtask check-error-code-registry` exits 0 — 148 error codes validated, 0 collisions | text evidence (gate stdout) | — | — | captured 2026-09-22 (post-fix-burst-5) |
 
 ---
@@ -242,10 +249,53 @@ Gate outputs remain valid because the syn rewrite finds the same 0 violations on
 
 The fix-burst-26 evidence-report docs commit (this commit) is docs-only and does NOT trigger clause (d).
 
+## fix-burst-59 re-verification
+
+[Reviewed HEAD (adversary pass 57): 51a84eba9514cbde4b99f26f0839934c07de360e]
+[Re-verification HEAD (post-fix-burst-59): see D-438 in STATE.md for exact SHA]
+
+**Test count:** 255 passed, 5 skipped (xtask); 92 passed, 2 skipped (pregolya-core). No production code logic changed. Clauses (a)–(d) remain valid (same rationale as CHANGELOG test-count paragraph above).
+
+**Adversary pass 57 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 2 HIGH + 4 MED + 4 LOW + 4 OBS = 14 findings.
+
+**Gate output (burst-parity normal mode):**
+```
+[BURST-PARITY PASS] fix-burst-59: 14 finding IDs matched; tally: 2H+4L+4M+4OBS.
+```
+
+**Gate output (burst-parity self-probe):**
+```
+[SELF-PROBE PASS] probe-1 (ID-mismatch): divergent ID pair correctly detected mismatch
+[SELF-PROBE PASS] probe-2 (tally-divergent): identical IDs with divergent tallies correctly detected mismatch
+[SELF-PROBE PASS] probe-3 (tally-sum≠id-count): declared tally sum 3 vs 2 IDs correctly detected
+[SELF-PROBE PASS] probe-4 (pass-number-divergent): divergent pass numbers (CHANGELOG Pass-94 vs evidence-report pass 93) correctly detected
+[SELF-PROBE PASS] probe-5 (tally-line-absent): absent CHANGELOG tally correctly detected mismatch
+[SELF-PROBE PASS] probe-6 (er-newest-burst-divergent): ER-newer-than-CHANGELOG correctly detected mismatch
+[SELF-PROBE PASS] probe-7 (per-severity-histogram-divergent): per-severity HIGH count mismatch (declared 2, found 1) correctly detected
+[SELF-PROBE PASS] probe-8 (duplicate-id-detected): duplicate HIGH-001 ID in CHANGELOG correctly detected
+```
+
+| Finding | Severity | Disposition | Detection class | Load-bearing artifact |
+|---------|----------|-------------|-----------------|----------------------|
+| F-P57-HIGH-001 | HIGH | closed | script-self-probe (probe-coverage gap) | `run_self_probes` probe-6 in `check-burst-records-parity.sh` — `[SELF-PROBE PASS] probe-6 (er-newest-burst-divergent)` emitted on `--self-probe` |
+| F-P57-HIGH-002 | HIGH | closed | script-self-probe (probe-coverage gap — fourth recurrence) | `run_self_probes` probe-7 (`per-severity-histogram-divergent`) and probe-8 (`duplicate-id-detected`) in `check-burst-records-parity.sh` |
+| F-P57-MED-001 | MED | closed | script-logic (missing severity tokens) | `do_parity_check` histogram loop `sev` in `check-burst-records-parity.sh`; loop now `for sev in CRIT HIGH MED LOW OBS PROCESS-GAP` |
+| F-P57-MED-002 | MED | closed | records-clause-walk (canonical (a)-(d) mis-mapping) | `**Test count:**` paragraph in fix-burst-57 and fix-burst-58 CHANGELOG and ER sections |
+| F-P57-MED-003 | MED | closed | code-comment (inverted Red Gate provenance direction) | block comment above `test_BC_2_14_005_deny_bare_api_key_subprocess_exits_zero_on_clean_workspace` in `xtask/src/tests.rs` |
+| F-P57-MED-004 | MED | closed | records-sha-annotation (two-commit SHA drift) | `[Re-verification HEAD (post-fix-burst-58)]` annotation updated to `51a84eba` SHA in `## fix-burst-58 re-verification` |
+| F-P57-LOW-001 | LOW | closed | records-markup (unescaped pipe) | F-P55-OBS-001 row `\| head -1` in `## fix-burst-57 re-verification` findings table |
+| F-P57-LOW-002 | LOW | closed | records-comment (stale hook description) | `check-burst-records-parity` step comment in `lefthook.yml`; probe count updated "six" → "eight" |
+| F-P57-LOW-003 | LOW | closed | script-comment (fabricated awk rationale) | SEV loop comment in `do_parity_check` in `check-burst-records-parity.sh` |
+| F-P57-LOW-004 | LOW | closed | records-completeness (missing AC rows) | `## Per-AC Demo Recordings` table — 7 rows added; row count now 20 (AC-001 through AC-020) |
+| F-P57-OBS-001 | OBS | closed | script-scope (missing local declarations) | `local` declaration block in `do_parity_check` in `check-burst-records-parity.sh` |
+| F-P57-OBS-002 | OBS | closed | script-guard-order (shadowed diagnostic) | `do_parity_check` guard order; probe-8 (`duplicate-id-detected`) verifies this path |
+| F-P57-OBS-003 | OBS | deferred (documented rationale in CHANGELOG) | ci-gap (gate not in CI workflow) | pre-push hook enforcement at feature-branch push boundary |
+| F-P57-OBS-004 | OBS | closed | records-order (non-monotonic headings) | `## fix-burst-57 (pass-55 findings)` heading order in CHANGELOG.md |
+
 ## fix-burst-58 re-verification
 
 [Reviewed HEAD (adversary pass 56): 359e8e0c9db2da0f0c022c0c06ec317a20efe6ab]
-[Re-verification HEAD (post-fix-burst-58): 4874dcc7901d3e5e3b60757359bbbdcf9a73a44c]
+[Re-verification HEAD (post-fix-burst-58): 51a84eba9514cbde4b99f26f0839934c07de360e]
 
 **Test count:** 92 passed, 2 skipped (pregolya-core); 255 passed, 5 skipped (xtask). No production code logic changed. Clauses (a)–(d) remain valid (same rationale as CHANGELOG test-count paragraph above).
 
@@ -288,7 +338,7 @@ The fix-burst-26 evidence-report docs commit (this commit) is docs-only and does
 [Reviewed HEAD (adversary pass 55): 26384d58a4df7fd37f6e019b578736212c18ec04]
 [Re-verification HEAD (post-fix-burst-57): 359e8e0c9db2da0f0c022c0c06ec317a20efe6ab]
 
-**Test count:** 92 passed, 2 skipped (unchanged). The `#[ignore]` reason change in `test_BC_2_14_004_timeout_fires_against_mock_server` is text-only; no test logic or production code behavior changed. The script changes to `check-burst-records-parity.sh` are in `scripts/` (not `crates/`). Clauses (a)–(d) of Recording Provenance remain valid: no production code behavior changed, no demo video files changed, test count unchanged, gate output captured below on the actual evidence file after fix-burst-57 CHANGELOG section written.
+**Test count:** 92 passed, 2 skipped (unchanged). The `#[ignore]` reason change in `test_BC_2_14_004_timeout_fires_against_mock_server` is text-only; no test logic or production code behavior changed. The script changes to `check-burst-records-parity.sh` are in `scripts/` (not `crates/`). Clause (a): no `crates/` files added or deleted — OK (http.rs changed but not added/deleted). Clause (b): http.rs change limited to `#[ignore]` reason text — no panic-family, timeout, or credential constructs added or removed — OK. Clause (c): no change within `xtask/tests/fixtures/violations/`; `CREDENTIAL_FIXTURE_COUNT` unchanged — OK. Clause (d): no change to `xtask/src/**/*.rs` — OK.
 
 **Adversary pass 55 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 HIGH + 3 MED + 3 LOW + 3 OBS.
 
@@ -316,7 +366,7 @@ The fix-burst-26 evidence-report docs commit (this commit) is docs-only and does
 | F-P55-LOW-001 | LOW | CLOSED | stale lefthook comment | `lefthook.yml` comments updated to enumerate four probes |
 | F-P55-LOW-002 | LOW | CLOSED | missing table rows | Rows added for AC-001, AC-012, AC-014 (same recording as AC-008) in `## Per-AC Demo Recordings`; table reordered to monotonic AC number order (OBS-002 addressed here) |
 | F-P55-LOW-003 | LOW | CLOSED | overstated wall-clock duration | `#[ignore]` reason on `test_BC_2_14_004_timeout_fires_against_mock_server` corrected to `~30 s wall-clock (client timeout fires at 30 s; inline stall server sleeps 35 s on a detached thread)` |
-| F-P55-OBS-001 | OBS | CLOSED | missing head -1 guard | `| head -1` appended to `cl_pass` and `er_pass` extraction pipelines |
+| F-P55-OBS-001 | OBS | CLOSED | missing head -1 guard | `\| head -1` appended to `cl_pass` and `er_pass` extraction pipelines |
 | F-P55-OBS-002 | OBS | CLOSED | non-monotonic table row order | Per-AC Demo Recordings table reordered to monotonic AC number order |
 | F-P55-OBS-003 | OBS | CLOSED | duplicate prose | Duplicate clause-walk text removed from fix-burst-55 re-verification `Gate output` bullet |
 
