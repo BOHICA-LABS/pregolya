@@ -245,14 +245,60 @@ Re-verified at fix-burst-26 syn rewrite (2026-09-23): scanner-logic clause (d) t
 
 Clause (a): no `crates/` production files added or deleted — the multibyte test added to `crates/pregolya-core/src/http.rs` is inside `#[cfg(test)]` and does not affect the gate scan target. Clause (b): `crates/pregolya-core/src/http.rs` changed — `sanitize_error_message` now uses char-count cap (`chars().take(200)`); this production code change has no reqwest client usage and does not alter check-client-timeout gate outputs. Clause (c): no fixture directory changes; `CREDENTIAL_FIXTURE_COUNT` unchanged — OK. Clause (d): TRIGGERED — scanner completely rewritten.
 
-Gate outputs remain valid because the syn rewrite finds the same 0 violations on the workspace: no `crates/` code uses `reqwest::Client::new()` without `.timeout()`, and the pre-push hook confirmed all xtask gates PASSED (check-client-timeout, check-no-panic, check-error-code-registry, deny-bare-api-key, deny-anyhow, deny-description-cache-key). Counts: `check-client-timeout PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations` (unchanged). All other gate counts unchanged from prior attestation. Implementer run (fix-burst-26): 300 tests pass, 7 skipped. KL-4 tests now assert detection (was: known-limitation zero-finding, is: positive finding assertion). All other gate tests pass unchanged.
+Gate outputs remain valid because the syn rewrite finds the same 0 violations on the workspace: no `crates/` code uses `reqwest::Client::new()` without `.timeout()`, and the pre-push hook confirmed all xtask gates PASSED (check-client-timeout, check-no-panic, check-error-code-registry, deny-bare-api-key, deny-anyhow-in-lib, deny-description-cache-key). Counts: `check-client-timeout PASSED: 25 analyzed, 16 exempt, 0 unreadable, 0 violations` (unchanged). All other gate counts unchanged from prior attestation. Implementer run (fix-burst-26): 300 tests pass, 7 skipped. KL-4 tests now assert detection (was: known-limitation zero-finding, is: positive finding assertion). All other gate tests pass unchanged.
 
 The fix-burst-26 evidence-report docs commit (this commit) is docs-only and does NOT trigger clause (d).
+
+## fix-burst-63 re-verification
+
+[Reviewed HEAD (adversary pass 61): 98665a07a9bdf180a3107aa1e53e0408f5c303f7]
+[Re-verification HEAD (post-fix-burst-63): TBD — to be set in fix-burst-64]
+
+**Test count:** 255 passed, 5 skipped (xtask); 92 passed, 2 skipped (pregolya-core). Clause (a): no `crates/` files added or deleted — OK. Clause (b): no `crates/` files changed — OK. Clause (c): no change within `xtask/tests/fixtures/violations/`; `CREDENTIAL_FIXTURE_COUNT` unchanged — OK. Clause (d): no change to `xtask/src/` — OK. Additionally, `scripts/check-burst-records-parity.sh` received behavioral changes (`derive_story_id`, `check_changelog_exists`, `check_evidence_report_exists` functions extracted; probes 18–22 added to `run_self_probes`) and `lefthook.yml` received comment updates (probe count "seventeen" → "twenty-two", scenario list extended with five new probe names). These files fall outside the `crates/` and `xtask/src/` clause perimeters, so clauses (a)–(d) remain valid.
+
+**Adversary pass 61 result:** CLEAN(strict)=no, CLEAN(PR-merge)=no — 1 MED + 2 LOW.
+
+**Gate output (burst-parity normal mode):**
+```
+[BURST-PARITY PASS] fix-burst-63: 3 finding IDs matched; tally: 1M+2L.
+```
+
+**Gate output (burst-parity self-probe):**
+```
+[SELF-PROBE PASS] probe-1 (ID-mismatch): divergent ID pair correctly detected mismatch
+[SELF-PROBE PASS] probe-2 (tally-divergent): identical IDs with divergent tallies correctly detected mismatch
+[SELF-PROBE PASS] probe-3 (tally-sum≠id-count): declared tally sum 3 vs 2 IDs correctly detected
+[SELF-PROBE PASS] probe-4 (pass-number-divergent): divergent pass numbers (CHANGELOG Pass-94 vs evidence-report pass 93) correctly detected
+[SELF-PROBE PASS] probe-5 (tally-line-absent): absent CHANGELOG tally correctly detected mismatch
+[SELF-PROBE PASS] probe-6 (er-newest-burst-divergent): ER-newer-than-CHANGELOG correctly detected mismatch
+[SELF-PROBE PASS] probe-7 (per-severity-histogram-divergent): histogram mismatch (2 HIGH declared, 1 actual) correctly detected
+[SELF-PROBE PASS] probe-8 (duplicate-id-detected): duplicate finding ID (HIGH-001) in CHANGELOG correctly detected
+[SELF-PROBE PASS] probe-9 (section-existence-missing): CHANGELOG newest burst missing from ER re-verification correctly detected
+[SELF-PROBE PASS] probe-10 (heading-format-drift): non-canonical fix-burst heading correctly detected
+[SELF-PROBE PASS] probe-11 (cl-ids-empty): empty CHANGELOG finding-ID extraction correctly detected
+[SELF-PROBE PASS] probe-12 (er-ids-empty): empty ER finding-ID extraction correctly detected
+[SELF-PROBE PASS] probe-13 (er-duplicate-id): duplicate finding ID (F-P89-HIGH-001) in evidence-report correctly detected
+[SELF-PROBE PASS] probe-14 (er-per-severity-histogram-divergent): ER histogram mismatch (1 HIGH declared, 2 actual) correctly detected
+[SELF-PROBE PASS] probe-15 (er-tally-counts-absent): ER tally line with no severity-count tokens correctly detected
+[SELF-PROBE PASS] probe-16 (happy-path): well-formed matching input correctly passes
+[SELF-PROBE PASS] probe-17 (skip-path): no fix-burst sections correctly skipped
+[SELF-PROBE PASS] probe-18 (derive_story_id-feature): derive_story_id correctly extracted S-1.02 from feature/S-1.02
+[SELF-PROBE PASS] probe-19 (derive_story_id-develop): derive_story_id correctly returned empty for develop
+[SELF-PROBE PASS] probe-20 (derive_story_id-detached-HEAD): derive_story_id correctly returned empty for HEAD
+[SELF-PROBE PASS] probe-21 (changelog-missing-fail-closed): missing CHANGELOG.md correctly triggers fail-closed with canonical message
+[SELF-PROBE PASS] probe-22 (evidence-report-missing-fail-closed): missing evidence-report.md correctly triggers fail-closed with canonical message
+```
+
+| Finding | Severity | Disposition | Detection class | Load-bearing artifact |
+|---------|----------|-------------|-----------------|----------------------|
+| F-P61-MED-001 | MED | closed | unprobed-entry-point-layer (seventh recurrence) | `derive_story_id`, `check_changelog_exists`, `check_evidence_report_exists` functions + probes 18–22 in `run_self_probes` in `check-burst-records-parity.sh` |
+| F-P61-LOW-001 | LOW | closed | records-wrong-form (herestring-vs-pipe) | `### HIGH-001:` **Fix:** sentence in `## fix-burst-62 (pass-60 findings)` in CHANGELOG.md |
+| F-P61-LOW-002 | LOW | closed | records-nonexistent-subcommand | two corrected `deny-anyhow-in-lib` occurrences in gate-list prose of `docs/demo-evidence/S-1.02/evidence-report.md` |
 
 ## fix-burst-62 re-verification
 
 [Reviewed HEAD (adversary pass 60): 72fd7aff5307caaa87dc595ec4f7f62306877df0]
-[Re-verification HEAD (post-fix-burst-62): TBD — to be set in fix-burst-63]
+[Re-verification HEAD (post-fix-burst-62): 98665a07a9bdf180a3107aa1e53e0408f5c303f7]
 
 **Test count:** 255 passed, 5 skipped (xtask); 92 passed, 2 skipped (pregolya-core). Clause (a): no `crates/` files added or deleted — OK. Clause (b): no `crates/` files changed — OK. Clause (c): no change within `xtask/tests/fixtures/violations/`; `CREDENTIAL_FIXTURE_COUNT` unchanged — OK. Clause (d): no change to `xtask/src/` — OK. Additionally, `scripts/check-burst-records-parity.sh` received behavioral changes (probes 1–15 rewritten with `grep -qF` message assertions, probes 16–17 added, probe-6 comment replaced, `>&2` removed from counts-absent guard) and `lefthook.yml` received comment updates (probe count "fifteen" → "seventeen", scenario list updated). These files fall outside the `crates/` and `xtask/src/` clause perimeters, so clauses (a)–(d) remain valid.
 
@@ -686,7 +732,7 @@ The fix-burst-26 evidence-report docs commit (this commit) is docs-only and does
 
 **Validity-criterion clause (a):** Clause (a) triggered by rename of `open_ai_api_key_match_with_dots_passes.rs` → `open_ai_api_key_expose_secret_passes.rs` and the Anthropic sibling `anthropic_api_key_match_with_dots_passes.rs` → `anthropic_api_key_expose_secret_passes.rs`. Net change: renamed files remain `/tests/`-path-exempt; gate counts unchanged: `check-client-timeout PASSED: 25 analyzed, 16 exempt, 0 violations`; fixture-mode `14/17`; `148 codes / 0 collisions` — all unchanged from fix-burst-49.
 
-**Test count:** 345 tests pass (cargo nextest), 7 skipped (workspace) — unchanged from fix-burst-49; no Rust logic changed. All xtask gates PASSED (check-client-timeout, check-no-panic, check-error-code-registry, deny-bare-api-key, deny-anyhow, deny-description-cache-key).
+**Test count:** 345 tests pass (cargo nextest), 7 skipped (workspace) — unchanged from fix-burst-49; no Rust logic changed. All xtask gates PASSED (check-client-timeout, check-no-panic, check-error-code-registry, deny-bare-api-key, deny-anyhow-in-lib, deny-description-cache-key).
 
 **Gate output:**
 - Lefthook pre-push: `just check` PASSED; `check-burst-records-parity` PASSED (BURST-PARITY PASS)

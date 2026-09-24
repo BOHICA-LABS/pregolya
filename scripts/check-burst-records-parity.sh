@@ -1015,9 +1015,106 @@ PROBE_HEREDOC
         all_passed=1
     fi
 
+    # ── Probe 18: derive_story_id — feature branch ───────────────────────────
+    # derive_story_id must extract "S-1.02" from "feature/S-1.02".
+    local probe18_out=""
+    probe18_out=$(derive_story_id "feature/S-1.02")
+
+    if [ "$probe18_out" = "S-1.02" ]; then
+        echo "[SELF-PROBE PASS] probe-18 (derive_story_id-feature): derive_story_id correctly extracted S-1.02 from feature/S-1.02"
+    else
+        echo "[SELF-PROBE FAIL] probe-18 (derive_story_id-feature): expected 'S-1.02' but got '${probe18_out}'"
+        all_passed=1
+    fi
+
+    # ── Probe 19: derive_story_id — develop branch (no match) ────────────────
+    # derive_story_id must return empty for non-feature branches like "develop".
+    local probe19_out=""
+    probe19_out=$(derive_story_id "develop")
+
+    if [ -z "$probe19_out" ]; then
+        echo "[SELF-PROBE PASS] probe-19 (derive_story_id-develop): derive_story_id correctly returned empty for develop"
+    else
+        echo "[SELF-PROBE FAIL] probe-19 (derive_story_id-develop): expected empty but got '${probe19_out}'"
+        all_passed=1
+    fi
+
+    # ── Probe 20: derive_story_id — detached HEAD ─────────────────────────────
+    # derive_story_id must return empty for the literal string "HEAD" (detached-HEAD case).
+    local probe20_out=""
+    probe20_out=$(derive_story_id "HEAD")
+
+    if [ -z "$probe20_out" ]; then
+        echo "[SELF-PROBE PASS] probe-20 (derive_story_id-detached-HEAD): derive_story_id correctly returned empty for HEAD"
+    else
+        echo "[SELF-PROBE FAIL] probe-20 (derive_story_id-detached-HEAD): expected empty but got '${probe20_out}'"
+        all_passed=1
+    fi
+
+    # ── Probe 21: check_changelog_exists — file-missing fail-closed ──────────
+    # check_changelog_exists must emit the canonical FAIL substring and return 1
+    # when given a path that does not exist.
+    local probe21_out="" probe21_exit=0
+    probe21_out=$(check_changelog_exists "/nonexistent/CHANGELOG.md" 2>&1) || probe21_exit=$?
+
+    if [ "$probe21_exit" -ne 0 ] && echo "$probe21_out" | grep -qF "CHANGELOG.md not found — failing closed"; then
+        echo "[SELF-PROBE PASS] probe-21 (changelog-missing-fail-closed): missing CHANGELOG.md correctly triggers fail-closed with canonical message"
+    else
+        echo "[SELF-PROBE FAIL] probe-21 (changelog-missing-fail-closed): expected non-zero exit with 'CHANGELOG.md not found — failing closed' but got exit=${probe21_exit}, output='${probe21_out}'"
+        all_passed=1
+    fi
+
+    # ── Probe 22: check_evidence_report_exists — file-missing fail-closed ─────
+    # check_evidence_report_exists must emit the canonical FAIL substring and return 1
+    # when given a path that does not exist.
+    local probe22_out="" probe22_exit=0
+    probe22_out=$(check_evidence_report_exists "/nonexistent/docs/demo-evidence/S-1.02/evidence-report.md" 2>&1) || probe22_exit=$?
+
+    if [ "$probe22_exit" -ne 0 ] && echo "$probe22_out" | grep -qF "evidence-report.md not found at"; then
+        echo "[SELF-PROBE PASS] probe-22 (evidence-report-missing-fail-closed): missing evidence-report.md correctly triggers fail-closed with canonical message"
+    else
+        echo "[SELF-PROBE FAIL] probe-22 (evidence-report-missing-fail-closed): expected non-zero exit with 'evidence-report.md not found at' but got exit=${probe22_exit}, output='${probe22_out}'"
+        all_passed=1
+    fi
+
     if [ "$all_passed" -ne 0 ]; then
         exit 1
     fi
+}
+
+# ── derive_story_id <branch-name> ────────────────────────────────────────────
+#
+# Extracts the S-NNN.NNN story ID from a branch name.
+# Returns the ID string on stdout, or empty when none matches.
+# Pure function — no side effects, no git calls.
+derive_story_id() {
+    printf '%s\n' "$1" | grep -oE 'S-[0-9]+\.[0-9]+' | head -1 || true
+}
+
+# ── check_changelog_exists <changelog_path> ───────────────────────────────────
+#
+# Emits the canonical FAIL message and returns 1 when the file is absent.
+# Extracted so the self-probe suite can invoke and inspect the guard directly.
+check_changelog_exists() {
+    local cl_path="$1"
+    if [ ! -f "$cl_path" ]; then
+        echo "[BURST-PARITY FAIL] CHANGELOG.md not found — failing closed"
+        return 1
+    fi
+    return 0
+}
+
+# ── check_evidence_report_exists <er_path> ───────────────────────────────────
+#
+# Emits the canonical FAIL message and returns 1 when the file is absent.
+# Extracted so the self-probe suite can invoke and inspect the guard directly.
+check_evidence_report_exists() {
+    local er_path="$1"
+    if [ ! -f "$er_path" ]; then
+        echo "[BURST-PARITY FAIL] evidence-report.md not found at ${er_path} — failing closed"
+        return 1
+    fi
+    return 0
 }
 
 # ── Entry point ───────────────────────────────────────────────────────────────
@@ -1028,7 +1125,7 @@ fi
 
 # Normal check: derive story ID from current feature branch name.
 BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
-STORY_ID=$(printf '%s\n' "$BRANCH" | grep -oE 'S-[0-9]+\.[0-9]+' | head -1 || true)
+STORY_ID=$(derive_story_id "$BRANCH")
 
 # Parity is enforced on feature branches only.  Non-feature branches
 # (develop, main, maintenance/*) exit 0 without checking.
@@ -1040,13 +1137,7 @@ fi
 CHANGELOG_FILE="CHANGELOG.md"
 EVIDENCE_REPORT="docs/demo-evidence/${STORY_ID}/evidence-report.md"
 
-if [ ! -f "$CHANGELOG_FILE" ]; then
-    echo "[BURST-PARITY FAIL] CHANGELOG.md not found — failing closed"
-    exit 1
-fi
-if [ ! -f "$EVIDENCE_REPORT" ]; then
-    echo "[BURST-PARITY FAIL] evidence-report.md not found at ${EVIDENCE_REPORT} — failing closed"
-    exit 1
-fi
+check_changelog_exists "$CHANGELOG_FILE" || exit 1
+check_evidence_report_exists "$EVIDENCE_REPORT" || exit 1
 
 do_parity_check "$CHANGELOG_FILE" "$EVIDENCE_REPORT" || exit 1

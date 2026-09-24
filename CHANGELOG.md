@@ -16,6 +16,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`build_client()` HTTP client factory** in `pregolya-core`: `reqwest::ClientBuilder` wrapper enforcing 30-second total timeout with `rustls-tls` backend; maps `ClientBuilder::build()` failure to `PregolyaError { category: TRANSPORT, code: "E-CORE-012", retry_hint: Never }` (BC-2.14.004).
 - **Validation error propagation** (`E-CORE-005`): `OpenAiApiKey::new("")` and `::new("   ")` return `Err(PregolyaError { category: VAL, code: "E-CORE-005", message: "Validation failed for 'api_key': value must not be empty or whitespace-only", retry_hint: Never })`; no silent `None` or default returns (BC-2.14.006).
 
+## fix-burst-63 (pass-61 findings)
+
+**Pass-61 finding tally: 1 MED + 2 LOW**
+
+### MED-001: entry-point dispatch layer (story-id derivation + file-existence guards) has zero self-probe coverage (seventh recurrence of unprobed-guard class — terminal layer)
+
+**Root cause:** The entry-point block performed story-id derivation (extracting `S-NNN.NNN` from `$BRANCH` with a grep inline) and two file-existence fail-closed guards, none of which were covered by any self-probe. If the story-id extraction pattern stopped matching a legitimate feature branch, the gate would silently exit 0 (`[BURST-PARITY SKIP]`) — parity unenforced with no diagnostic output. The two file-existence guards could similarly go wrong without detection. This is the terminal layer of the unprobed-guard class: the interior of `do_parity_check` is now fully covered by probes 1–17; the entry-point dispatch paths from `main`→`derive_story_id`→file-existence guards→`do_parity_check` were the sole remaining uncovered layer.
+
+**Fix:** Extracted story-id derivation into a pure function `derive_story_id()` that takes a branch-name argument and emits the matched `S-NNN.NNN` or empty. Extracted two file-existence fail-closed guards into `check_changelog_exists()` and `check_evidence_report_exists()`, each taking the file path, emitting the canonical `[BURST-PARITY FAIL]` message, and returning 1 on failure. The entry point now calls `derive_story_id "$BRANCH"` and `check_changelog_exists` / `check_evidence_report_exists` via these functions. Canonical FAIL message strings are byte-for-byte unchanged. Added five new probes to `run_self_probes` (numbered 18–22): probe-18 (`derive_story_id-feature`) asserts `derive_story_id "feature/S-1.02"` yields `S-1.02`; probe-19 (`derive_story_id-develop`) asserts `derive_story_id "develop"` yields empty; probe-20 (`derive_story_id-detached-HEAD`) asserts `derive_story_id "HEAD"` yields empty; probe-21 (`changelog-missing-fail-closed`) asserts `check_changelog_exists` returns 1 with substring `CHANGELOG.md not found — failing closed`; probe-22 (`evidence-report-missing-fail-closed`) asserts `check_evidence_report_exists` returns 1 with substring `evidence-report.md not found at`.
+
+**Load-bearing artifact:** `derive_story_id`, `check_changelog_exists`, and `check_evidence_report_exists` functions in `scripts/check-burst-records-parity.sh`; `run_self_probes` probes 18–22 with canonical `[SELF-PROBE PASS] probe-N (label): ...` emissions.
+
+### LOW-001: fix-burst-62 HIGH-001 Fix text describes a herestring assertion form that does not exist in the script
+
+**Root cause:** The fix-burst-62 `### HIGH-001:` **Fix:** sentence stated `grep -qF "<EXPECTED-FAIL-SUBSTRING>" <<< "$out"` as the assertion form used in the rewritten probes. The actual implementation uses the pipe form: `echo "$probeN_out" | grep -qF "..."`. The `<<< "$out"` herestring form never appeared in `check-burst-records-parity.sh`; it is a nonexistent form.
+
+**Fix:** Changed the quoted assertion form in the fix-burst-62 HIGH-001 **Fix:** sentence from `grep -qF "<EXPECTED-FAIL-SUBSTRING>" <<< "$out"` to `echo "$probeN_out" | grep -qF "<EXPECTED-FAIL-SUBSTRING>"`.
+
+**Load-bearing artifact:** `### HIGH-001:` **Fix:** sentence in `## fix-burst-62 (pass-60 findings)` in CHANGELOG.md.
+
+### LOW-002: evidence-report cites non-existent xtask subcommand deny-anyhow at two sites
+
+**Root cause:** Two prose paragraphs in the evidence-report listed xtask gate names in a parenthesized list and cited the truncated form `deny-anyhow`. The canonical subcommand dispatched in `xtask/src/main.rs` is `deny-anyhow-in-lib`. The truncated form was never a valid subcommand name.
+
+**Fix:** Changed the bare `deny-anyhow` to `deny-anyhow-in-lib` at both sites in `docs/demo-evidence/S-1.02/evidence-report.md`: (1) the gate-list paragraph in the fix-burst-26 re-verification section; (2) the `**Test count:**` paragraph in the fix-burst-50 re-verification section.
+
+**Load-bearing artifact:** Two occurrences of `deny-anyhow-in-lib` (replacing the previous `deny-anyhow`) in the gate-list prose of `docs/demo-evidence/S-1.02/evidence-report.md`; verified by `grep -nE 'deny-anyhow([^-]|$)'` returning zero hits after fix.
+
+**Test count:** 255 passed, 5 skipped (xtask); 92 passed, 2 skipped (pregolya-core). Clause (a): no `crates/` files added or deleted — OK. Clause (b): no `crates/` files changed — OK. Clause (c): no change within `xtask/tests/fixtures/violations/`; `CREDENTIAL_FIXTURE_COUNT` unchanged — OK. Clause (d): no change to `xtask/src/` — OK. Additionally, `scripts/check-burst-records-parity.sh` received behavioral changes (`derive_story_id`, `check_changelog_exists`, `check_evidence_report_exists` functions extracted; probes 18–22 added to `run_self_probes`) and `lefthook.yml` received comment updates (probe count "seventeen" → "twenty-two", scenario list extended with five new probe names). These files fall outside the `crates/` and `xtask/src/` clause perimeters, so clauses (a)–(d) remain valid.
+
 ## fix-burst-62 (pass-60 findings)
 
 **Pass-60 finding tally: 1 HIGH + 2 MED + 1 LOW**
@@ -24,7 +54,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 **Root cause:** Probes 1–15 used the pattern `do_parity_check ... || probeN_exit=$?` and checked only `[ "$probeN_exit" -ne 0 ]`. This could not distinguish which guard fired — a probe targeting guard X would pass as long as any guard fired first, including an earlier unrelated guard. No probe exercised the happy-path (well-formed matching inputs → exit 0) or the skip-path (no fix-burst sections → exit 0 with SKIP message); a systematic regression in either path would be undetected.
 
-**Fix:** Rewrote probes 1–15 to capture output with `out=$(do_parity_check ... 2>&1) || probeN_exit=$?` and assert the specific expected FAIL substring using `grep -qF "<EXPECTED-FAIL-SUBSTRING>" <<< "$out"`. Added probe-16 (happy-path): well-formed matching CL+ER with one fix-burst section asserts exit 0 and `[BURST-PARITY PASS]` in output. Added probe-17 (skip-path): CHANGELOG with no fix-burst tokens asserts exit 0 and `[BURST-PARITY SKIP]` in output. Updated `lefthook.yml` comment from "fifteen" to "seventeen" probes.
+**Fix:** Rewrote probes 1–15 to capture output with `out=$(do_parity_check ... 2>&1) || probeN_exit=$?` and assert the specific expected FAIL substring using `echo "$probeN_out" | grep -qF "<EXPECTED-FAIL-SUBSTRING>"`. Added probe-16 (happy-path): well-formed matching CL+ER with one fix-burst section asserts exit 0 and `[BURST-PARITY PASS]` in output. Added probe-17 (skip-path): CHANGELOG with no fix-burst tokens asserts exit 0 and `[BURST-PARITY SKIP]` in output. Updated `lefthook.yml` comment from "fifteen" to "seventeen" probes.
 
 **Load-bearing artifact:** `run_self_probes` probes 1–17 with per-probe `grep -qF` message assertions in `check-burst-records-parity.sh`; probe-16 and probe-17 entries in `run_self_probes`.
 

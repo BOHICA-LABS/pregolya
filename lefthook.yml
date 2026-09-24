@@ -29,14 +29,19 @@ pre-push:
     check-burst-records-parity:
       run: bash scripts/check-burst-records-parity.sh
     # Self-probe: runs the script's --self-probe mode to verify the regex logic.
-    # Runs seventeen synthetic probes covering ID-mismatch, tally-divergent,
+    # Runs twenty-two synthetic probes covering ID-mismatch, tally-divergent,
     # tally-sum≠id-count, pass-number-divergent, tally-line-absent,
     # er-newest-burst-divergent, per-severity-histogram-divergent,
     # duplicate-id-detected, section-existence-missing, heading-format-drift,
     # cl-ids-empty, er-ids-empty, er-duplicate-id,
     # er-per-severity-histogram-divergent, er-tally-counts-absent,
-    # happy-path (well-formed matching input exits 0), and
-    # skip-path (no fix-burst sections exits 0) scenarios.
+    # happy-path (well-formed matching input exits 0),
+    # skip-path (no fix-burst sections exits 0),
+    # derive_story_id-feature (S-NNN.NNN extraction from feature branch),
+    # derive_story_id-develop (empty for non-feature branch),
+    # derive_story_id-detached-HEAD (empty for detached HEAD),
+    # changelog-missing-fail-closed (CHANGELOG absence triggers fail-closed), and
+    # evidence-report-missing-fail-closed (evidence-report absence triggers fail-closed) scenarios.
     # Always passes on a correctly-functioning script; fails if a regex
     # regression is introduced.
     burst-parity-self-probe:
